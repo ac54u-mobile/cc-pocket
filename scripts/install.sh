@@ -10,11 +10,13 @@
 #   wss://relay.txx.app
 #
 # 可重复执行以升级。环境变量：
-#   CC_POCKET_VERSION=vX.Y.Z     固定版本（默认 latest）
-#   CC_POCKET_REPO=owner/repo    安装脚本所属仓库（默认 ac54u-mobile/cc-pocket）
-#   CC_POCKET_ASSET_REPO=…       二进制 Release 仓库（默认先试 CC_POCKET_REPO，没有 Release 则回退 heypandax/cc-pocket）
-#   CC_POCKET_RELAY=wss://…      默认 relay（默认 wss://relay.txx.app）
+#   CC_POCKET_VERSION=daemon-vX.Y.Z  固定 daemon 版本（默认 latest；也兼容 vX.Y.Z）
+#   CC_POCKET_REPO=owner/repo        安装脚本所属仓库（默认 ac54u-mobile/cc-pocket）
+#   CC_POCKET_ASSET_REPO=…           二进制 Release 仓库（默认先试 CC_POCKET_REPO，没有则回退 heypandax/cc-pocket）
+#   CC_POCKET_RELAY=wss://…          默认 relay（默认 wss://relay.txx.app）
 #   CC_POCKET_ROOT / CC_POCKET_BIN / CC_POCKET_NO_SERVICE=1
+#
+# 版本约定：daemon 用 tag daemon-vX.Y.Z；App 安装包用 app-vX.Y.Z（本脚本只装 daemon）。
 set -euo pipefail
 
 REPO="${CC_POCKET_REPO:-ac54u-mobile/cc-pocket}"
@@ -30,10 +32,49 @@ say()  { printf '\033[1;36m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33mwarning:\033[0m %s\n' "$*" >&2; }
 err()  { printf '\033[1;31merror:\033[0m %s\n'  "$*" >&2; exit 1; }
 
+# 解析最新 **daemon** Release tag（优先 daemon-v*，跳过 app-v*）
 resolve_latest() {
-  # GitHub redirects /releases/latest -> /releases/tag/vX.Y.Z；无 Release 时 -f 失败
-  curl -fsSL -o /dev/null -w '%{url_effective}' "https://github.com/$1/releases/latest" \
+  local repo="$1" tag=""
+  if command -v python3 >/dev/null 2>&1; then
+    tag="$(curl -fsSL -H 'Accept: application/vnd.github+json' -H 'User-Agent: cc-pocket-install' \
+      "https://api.github.com/repos/$repo/releases?per_page=30" 2>/dev/null \
+      | python3 -c '
+import json, sys
+try:
+    rels = json.load(sys.stdin)
+except Exception:
+    sys.exit(0)
+def has_daemon(r):
+    return any(str(a.get("name", "")).startswith("cc-pocket-daemon-") for a in (r.get("assets") or []))
+daemon, plain = [], []
+for r in rels:
+    if r.get("draft") or not has_daemon(r):
+        continue
+    t = str(r.get("tag_name") or "")
+    if t.startswith("app-v") or t.startswith("app/"):
+        continue
+    if t.startswith("daemon-v") or t.startswith("daemon/"):
+        daemon.append(t)
+    else:
+        plain.append(t)
+pick = (daemon or plain or [""])[0]
+print(pick, end="")
+' 2>/dev/null || true)"
+  fi
+  if [ -n "$tag" ]; then
+    printf '%s\n' "$tag"
+    return 0
+  fi
+  # 回退：GitHub /releases/latest 重定向
+  curl -fsSL -o /dev/null -w '%{url_effective}' "https://github.com/$repo/releases/latest" \
     | sed -E 's#.*/tag/##'
+}
+
+# tag → 裸版本号（asset 文件名用）
+daemon_ver() {
+  local t="$1"
+  t="${t#daemon-v}"; t="${t#daemon/}"; t="${t#v}"
+  printf '%s\n' "$t"
 }
 
 # --- platform ---
@@ -58,22 +99,23 @@ if [ "$VERSION" = "latest" ]; then
   say "解析最新 Release"
   if [ -n "$ASSET_REPO" ]; then
     VERSION="$(resolve_latest "$ASSET_REPO")" \
-      || err "无法解析 $ASSET_REPO 的最新版本（可设 CC_POCKET_VERSION=vX.Y.Z）"
+      || err "无法解析 $ASSET_REPO 的最新 daemon 版本（可设 CC_POCKET_VERSION=daemon-vX.Y.Z）"
   else
-    if VERSION="$(resolve_latest "$REPO" 2>/dev/null)" && [ -n "$VERSION" ] && [[ "$VERSION" == v* || "$VERSION" =~ ^[0-9] ]]; then
+    if VERSION="$(resolve_latest "$REPO" 2>/dev/null)" && [ -n "$VERSION" ] && \
+       [[ "$VERSION" == daemon-v* || "$VERSION" == daemon/* || "$VERSION" == v* || "$VERSION" =~ ^[0-9] ]]; then
       ASSET_REPO="$REPO"
     else
-      warn "$REPO 尚无 Release，回退使用 $FALLBACK_ASSET_REPO 的二进制（relay 仍为 $RELAY）"
+      warn "$REPO 尚无 daemon Release，回退使用 $FALLBACK_ASSET_REPO 的二进制（relay 仍为 $RELAY）"
       ASSET_REPO="$FALLBACK_ASSET_REPO"
       VERSION="$(resolve_latest "$ASSET_REPO")" \
-        || err "无法解析最新版本（可设 CC_POCKET_VERSION=vX.Y.Z）"
+        || err "无法解析最新版本（可设 CC_POCKET_VERSION=daemon-vX.Y.Z）"
     fi
   fi
 else
   : "${ASSET_REPO:=$REPO}"
   # 指定版本时若本仓没有该 asset，再试上游
   if [ "$ASSET_REPO" = "$REPO" ] && [ "$REPO" != "$FALLBACK_ASSET_REPO" ]; then
-    ver_probe="${VERSION#v}"
+    ver_probe="$(daemon_ver "$VERSION")"
     probe_url="https://github.com/$ASSET_REPO/releases/download/${VERSION}/${BIN}-${ver_probe}-${plat}-${arch}.tar.gz"
     if ! curl -fsSI "$probe_url" >/dev/null 2>&1; then
       warn "$ASSET_REPO 没有 ${VERSION} 的 ${plat}/${arch} 包，回退 $FALLBACK_ASSET_REPO"
@@ -82,7 +124,7 @@ else
   fi
 fi
 [ -n "$VERSION" ] || err "版本为空"
-ver="${VERSION#v}"
+ver="$(daemon_ver "$VERSION")"
 asset="${BIN}-${ver}-${plat}-${arch}.tar.gz"
 base="https://github.com/$ASSET_REPO/releases/download/${VERSION}"
 

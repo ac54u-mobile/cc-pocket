@@ -4,6 +4,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
 import java.net.URI
 import java.net.http.HttpClient
@@ -22,7 +23,7 @@ import java.time.Duration
  * Compose Desktop client adds nothing the daemon didn't already carry.
  */
 object ReleaseClient {
-    const val DEFAULT_REPO = "heypandax/cc-pocket"
+    const val DEFAULT_REPO = "ac54u-mobile/cc-pocket"
 
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
     private val http: HttpClient = HttpClient.newBuilder()
@@ -30,32 +31,76 @@ object ReleaseClient {
         .connectTimeout(Duration.ofSeconds(15))
         .build()
 
-    /** A release: its version (no `v` prefix) and every asset's name → browser_download_url. */
+    /** A release: its version (no `v` / `daemon-v` prefix) and every asset's name → browser_download_url. */
     data class Release(val version: String, val assetUrls: Map<String, String>)
 
-    /** The newest published release, or null when GitHub is unreachable / returns nothing usable. */
+    /**
+     * Newest **daemon** release. Prefers tags `daemon-vX.Y.Z` so App-only tags (`app-v…`) never hijack
+     * self-update / install. Falls back to a plain `vX.Y.Z` (or GitHub "latest") that actually ships a
+     * `cc-pocket-daemon-*` asset.
+     */
     fun latest(repo: String = DEFAULT_REPO): Release? = try {
-        val req = HttpRequest.newBuilder(URI("https://api.github.com/repos/$repo/releases/latest"))
+        val objs = fetchJsonArray("https://api.github.com/repos/$repo/releases?per_page=30")
+            .orEmpty()
+            .mapNotNull { it as? JsonObject }
+            .filter { obj ->
+                (obj["draft"] as? JsonPrimitive)?.booleanOrNull != true &&
+                    !(obj["tag_name"] as? JsonPrimitive)?.contentOrNull.orEmpty().let {
+                        it.startsWith("app-v") || it.startsWith("app/")
+                    } &&
+                    (obj["assets"] as? JsonArray).orEmpty().any { el ->
+                        ((el as? JsonObject)?.get("name") as? JsonPrimitive)?.contentOrNull
+                            ?.startsWith("cc-pocket-daemon-") == true
+                    }
+            }
+        // Prefer daemon-v* so App releases never become the self-update target
+        val preferred = objs.firstOrNull { obj ->
+            (obj["tag_name"] as? JsonPrimitive)?.contentOrNull.orEmpty().let {
+                it.startsWith("daemon-v") || it.startsWith("daemon/")
+            }
+        } ?: objs.firstOrNull()
+        parseRelease(preferred) ?: run {
+            val obj = fetchJsonObject("https://api.github.com/repos/$repo/releases/latest")
+            parseRelease(obj)?.takeIf { it.assetUrls.keys.any { n -> n.startsWith("cc-pocket-daemon-") } }
+        }
+    } catch (_: Exception) {
+        null
+    }
+
+    private fun fetchJsonArray(url: String): JsonArray? {
+        val res = http.send(get(url), HttpResponse.BodyHandlers.ofString())
+        if (res.statusCode() != 200) return null
+        return json.parseToJsonElement(res.body()) as? JsonArray
+    }
+
+    private fun fetchJsonObject(url: String): JsonObject? {
+        val res = http.send(get(url), HttpResponse.BodyHandlers.ofString())
+        if (res.statusCode() != 200) return null
+        return json.parseToJsonElement(res.body()) as? JsonObject
+    }
+
+    private fun get(url: String): HttpRequest =
+        HttpRequest.newBuilder(URI(url))
             .header("Accept", "application/vnd.github+json")
             .header("User-Agent", "cc-pocket")
             .timeout(Duration.ofSeconds(20))
             .build()
-        val res = http.send(req, HttpResponse.BodyHandlers.ofString())
-        if (res.statusCode() != 200) null else {
-            val obj = json.parseToJsonElement(res.body()) as? JsonObject
-            val tag = (obj?.get("tag_name") as? JsonPrimitive)?.contentOrNull
-            if (obj == null || tag == null) null else {
-                val assets = (obj["assets"] as? JsonArray).orEmpty().mapNotNull { el ->
-                    val a = el as? JsonObject ?: return@mapNotNull null
-                    val name = (a["name"] as? JsonPrimitive)?.contentOrNull ?: return@mapNotNull null
-                    val url = (a["browser_download_url"] as? JsonPrimitive)?.contentOrNull ?: return@mapNotNull null
-                    name to url
-                }.toMap()
-                Release(tag.removePrefix("v"), assets)
-            }
+
+    private fun parseRelease(obj: JsonObject?): Release? {
+        if (obj == null) return null
+        val tag = (obj["tag_name"] as? JsonPrimitive)?.contentOrNull ?: return null
+        val assets = (obj["assets"] as? JsonArray).orEmpty().mapNotNull { el ->
+            val a = el as? JsonObject ?: return@mapNotNull null
+            val name = (a["name"] as? JsonPrimitive)?.contentOrNull ?: return@mapNotNull null
+            val url = (a["browser_download_url"] as? JsonPrimitive)?.contentOrNull ?: return@mapNotNull null
+            name to url
+        }.toMap()
+        val version = when {
+            tag.startsWith("daemon-v") -> tag.removePrefix("daemon-v")
+            tag.startsWith("daemon/") -> tag.removePrefix("daemon/")
+            else -> tag.removePrefix("v")
         }
-    } catch (_: Exception) {
-        null
+        return Release(version, assets)
     }
 
     /** Download [url] to [dest] (10-minute ceiling for a large artifact). Throws on a non-2xx status. */

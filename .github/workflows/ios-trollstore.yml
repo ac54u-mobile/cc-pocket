@@ -12,7 +12,7 @@ on:
         default: ""
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   trollstore:
@@ -127,3 +127,23 @@ jobs:
           path: ${{ steps.ipa.outputs.ipa }}
           if-no-files-found: error
           retention-days: 30
+
+      # App 安装包单独走 app-v* Release，与 daemon-v* 互不抢 latest
+      - name: Publish to app-v release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.stamp.outputs.version }}
+          IPA: ${{ steps.ipa.outputs.ipa }}
+          NAME: ${{ steps.ipa.outputs.name }}
+        run: |
+          TAG="app-v${VERSION}"
+          if gh release view "$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$IPA" --clobber --repo "${{ github.repository }}"
+          else
+            gh release create "$TAG" "$IPA" \
+              --repo "${{ github.repository }}" \
+              --title "App ${VERSION}" \
+              --notes "手机 / TrollStore 安装包（与 daemon 版本独立）。daemon 见 tag \`daemon-v*\`。" \
+              --latest=false
+          fi
+          echo "published $NAME → https://github.com/${{ github.repository }}/releases/tag/$TAG"

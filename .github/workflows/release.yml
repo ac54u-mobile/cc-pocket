@@ -17,7 +17,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Release version, no leading v (e.g. 1.3.0). The release tag must be v<version>."
+        description: "Daemon version, no prefix (e.g. 1.0.0). Creates/updates tag daemon-v<version>."
         required: true
       only_android:
         description: "Only build & attach the Android APK (skip daemon jobs). For testing the APK pipeline against an existing release WITHOUT re-uploading daemon tarballs (which would change their sha256 and break the published Homebrew cask)."
@@ -88,13 +88,13 @@ jobs:
           chmod +x scripts/release-macos.sh gradlew
           scripts/release-macos.sh "${{ inputs.version }}"
 
-      - name: Upload tarball to release v${{ inputs.version }}
+      - name: Upload tarball to release daemon-v${{ inputs.version }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           ARTIFACT="cc-pocket-daemon-${{ inputs.version }}-macos-${{ matrix.arch }}.tar.gz"
           echo "sha256: $(shasum -a 256 "$ARTIFACT" | awk '{print $1}')"
-          gh release upload "v${{ inputs.version }}" "$ARTIFACT" --clobber
+          gh release upload "daemon-v${{ inputs.version }}" "$ARTIFACT" --clobber
 
   windows:
     if: ${{ !inputs.only_android && !inputs.only_macos_desktop }}
@@ -111,14 +111,14 @@ jobs:
       - name: Build self-contained Windows zip
         run: pwsh scripts/release-windows.ps1 "${{ inputs.version }}"
 
-      - name: Upload zip to release v${{ inputs.version }}
+      - name: Upload zip to release daemon-v${{ inputs.version }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           $artifact = "cc-pocket-daemon-${{ inputs.version }}-windows-x86_64.zip"
           $sha = (Get-FileHash -Algorithm SHA256 $artifact).Hash.ToLower()
           Write-Host "sha256: $sha"
-          gh release upload "v${{ inputs.version }}" $artifact --clobber
+          gh release upload "daemon-v${{ inputs.version }}" $artifact --clobber
 
   linux:
     if: ${{ !inputs.only_android && !inputs.only_macos_desktop }}
@@ -146,13 +146,13 @@ jobs:
           chmod +x scripts/release-linux.sh gradlew
           scripts/release-linux.sh "${{ inputs.version }}"
 
-      - name: Upload tarball to release v${{ inputs.version }}
+      - name: Upload tarball to release daemon-v${{ inputs.version }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           ARTIFACT="cc-pocket-daemon-${{ inputs.version }}-linux-${{ matrix.arch }}.tar.gz"
           echo "sha256: $(sha256sum "$ARTIFACT" | awk '{print $1}')"
-          gh release upload "v${{ inputs.version }}" "$ARTIFACT" --clobber
+          gh release upload "daemon-v${{ inputs.version }}" "$ARTIFACT" --clobber
 
   android:
     # Builds the signed phone app (:mobile:composeApp) and attaches the APK to the release, so the
@@ -209,7 +209,7 @@ jobs:
           # daemon release scripts use).
           ./gradlew :mobile:composeApp:assembleRelease -Dorg.gradle.java.home="$JAVA_HOME"
 
-      - name: Verify signature & upload APK to release v${{ inputs.version }}
+      - name: Verify signature & upload APK to release daemon-v${{ inputs.version }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -227,7 +227,7 @@ jobs:
           ARTIFACT="cc-pocket-android.apk"
           cp "$SRC" "$ARTIFACT"
           echo "sha256: $(sha256sum "$ARTIFACT" | awk '{print $1}')"
-          gh release upload "v${{ inputs.version }}" "$ARTIFACT" --clobber
+          gh release upload "daemon-v${{ inputs.version }}" "$ARTIFACT" --clobber
 
   macos-desktop:
     # The Compose Desktop APP (.dmg) for macOS — signed + notarized, attached to the release under a stable
@@ -311,7 +311,7 @@ jobs:
           chmod +x scripts/release-desktop-macos.sh gradlew
           scripts/release-desktop-macos.sh "${{ inputs.version }}"
 
-      - name: Upload DMG to release v${{ inputs.version }}
+      - name: Upload DMG to release daemon-v${{ inputs.version }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -320,7 +320,7 @@ jobs:
           VERSIONED="cc-pocket-desktop-${VER}-macos-${ARCH}.dmg"
           # per-arch version-less permalink: releases/latest/download/cc-pocket-desktop-macos-{arm64,x86_64}.dmg
           cp "$VERSIONED" "cc-pocket-desktop-macos-${ARCH}.dmg"
-          gh release upload "v${VER}" "$VERSIONED" "cc-pocket-desktop-macos-${ARCH}.dmg" --clobber
+          gh release upload "daemon-v${VER}" "$VERSIONED" "cc-pocket-desktop-macos-${ARCH}.dmg" --clobber
 
   windows-desktop:
     # The Compose Desktop APP (.msi installer) for Windows, attached to the release under a stable version-less
@@ -377,7 +377,7 @@ jobs:
           [ "$ok" = 1 ] || { echo "::error::createDistributable failed after 3 attempts"; exit 1; }
           ./gradlew :mobile:composeApp:packageMsi --no-daemon
 
-      - name: Upload MSI to release v${{ inputs.version }}
+      - name: Upload MSI to release daemon-v${{ inputs.version }}
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
@@ -385,7 +385,7 @@ jobs:
           MSI=$(find mobile/composeApp/build/compose/binaries -name "*.msi" | head -1)
           [ -n "$MSI" ] || { echo "::error::no MSI produced (WiX missing?)"; exit 1; }
           cp "$MSI" cc-pocket-desktop-windows-x86_64.msi
-          gh release upload "v${{ inputs.version }}" cc-pocket-desktop-windows-x86_64.msi --clobber
+          gh release upload "daemon-v${{ inputs.version }}" cc-pocket-desktop-windows-x86_64.msi --clobber
 
   # Keep the Scoop bucket (heypandax/scoop-bucket) on the release we just published: without this the
   # manifest stays pinned to an old version forever (its checkver/autoupdate fields are inert — no
@@ -398,7 +398,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Update scoop manifest to v${{ inputs.version }}
+      - name: Update scoop manifest to daemon-v${{ inputs.version }}
         env:
           GH_TOKEN: ${{ github.token }}
           BUCKET_TOKEN: ${{ secrets.SCOOP_BUCKET_TOKEN }}
@@ -409,12 +409,12 @@ jobs:
           fi
           VER="${{ inputs.version }}"
           ZIP="cc-pocket-daemon-$VER-windows-x86_64.zip"
-          gh release download "v$VER" --pattern "$ZIP" --repo "${{ github.repository }}"
+          gh release download "daemon-v$VER" --pattern "$ZIP" --repo "${{ github.repository }}"
           SHA=$(sha256sum "$ZIP" | awk '{print $1}')
           # keep the repo's template manifest in lockstep, then push the same content to the bucket repo
-          jq --arg v "$VER" --arg sha "$SHA" \
+          jq --arg v "$VER" --arg sha "$SHA" --arg repo "${{ github.repository }}" \
              '.version=$v
-              | .architecture."64bit".url="https://github.com/heypandax/cc-pocket/releases/download/v\($v)/cc-pocket-daemon-\($v)-windows-x86_64.zip"
+              | .architecture."64bit".url="https://github.com/\($repo)/releases/download/daemon-v\($v)/cc-pocket-daemon-\($v)-windows-x86_64.zip"
               | .architecture."64bit".hash=$sha' \
              packaging/scoop/cc-pocket-daemon.json > manifest.json
           CONTENT=$(base64 -w0 manifest.json)
@@ -436,13 +436,13 @@ jobs:
     needs: [macos, windows, linux, android, macos-desktop, windows-desktop]
     runs-on: ubuntu-latest
     steps:
-      - name: Generate + upload SHA256SUMS for v${{ inputs.version }}
+      - name: Generate + upload SHA256SUMS for daemon-v${{ inputs.version }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir assets && cd assets
-          gh release download "v${{ inputs.version }}" --repo "${{ github.repository }}" --pattern '*'
+          gh release download "daemon-v${{ inputs.version }}" --repo "${{ github.repository }}" --pattern '*'
           rm -f SHA256SUMS
           sha256sum * > SHA256SUMS
-          gh release upload "v${{ inputs.version }}" SHA256SUMS --clobber --repo "${{ github.repository }}"
+          gh release upload "daemon-v${{ inputs.version }}" SHA256SUMS --clobber --repo "${{ github.repository }}"
           echo "──"; cat SHA256SUMS

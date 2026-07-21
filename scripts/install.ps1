@@ -19,26 +19,38 @@ $root = Join-Path $env:LOCALAPPDATA "cc-pocket"
 Write-Host "-- cc-pocket daemon 安装器 --"
 Write-Host "relay: $relay"
 
-function Get-LatestRelease($ownerRepo) {
+# 优先 daemon-v*；跳过 app-v*。无 daemon 包时再回退 /releases/latest。
+function Get-LatestDaemonRelease($ownerRepo) {
+    $rels = Invoke-RestMethod "https://api.github.com/repos/$ownerRepo/releases?per_page=30"
+    $withDaemon = @($rels | Where-Object {
+        -not $_.draft -and
+        ($_.tag_name -notlike 'app-v*') -and ($_.tag_name -notlike 'app/*') -and
+        ($_.assets | Where-Object { $_.name -like 'cc-pocket-daemon-*' })
+    })
+    $daemonTagged = @($withDaemon | Where-Object {
+        $_.tag_name -like 'daemon-v*' -or $_.tag_name -like 'daemon/*'
+    })
+    if ($daemonTagged.Count -gt 0) { return $daemonTagged[0] }
+    if ($withDaemon.Count -gt 0) { return $withDaemon[0] }
     return Invoke-RestMethod "https://api.github.com/repos/$ownerRepo/releases/latest"
 }
 
 if (-not $assetRepo) {
     try {
-        $rel = Get-LatestRelease $repo
+        $rel = Get-LatestDaemonRelease $repo
         $assetRepo = $repo
     } catch {
-        Write-Host "warning: $repo 尚无 Release，回退使用 $fallbackAssetRepo 的二进制（relay 仍为 $relay）"
+        Write-Host "warning: $repo 尚无 daemon Release，回退使用 $fallbackAssetRepo 的二进制（relay 仍为 $relay）"
         $assetRepo = $fallbackAssetRepo
-        $rel = Get-LatestRelease $assetRepo
+        $rel = Get-LatestDaemonRelease $assetRepo
     }
 } else {
-    $rel = Get-LatestRelease $assetRepo
+    $rel = Get-LatestDaemonRelease $assetRepo
 }
 
-$ver = $rel.tag_name -replace '^v', ''
+$ver = $rel.tag_name -replace '^daemon-v', '' -replace '^daemon/', '' -replace '^v', ''
 $asset = $rel.assets | Where-Object { $_.name -like "*windows-x86_64.zip" } | Select-Object -First 1
-if (-not $asset) { throw "最新 Release ($($rel.tag_name)) 没有 Windows 包 — 见 https://github.com/$assetRepo/releases" }
+if (-not $asset) { throw "最新 daemon Release ($($rel.tag_name)) 没有 Windows 包 — 见 https://github.com/$assetRepo/releases" }
 
 $zip = Join-Path $env:TEMP $asset.name
 Write-Host "下载 $($asset.name) ($($rel.tag_name)，来源 $assetRepo)..."
