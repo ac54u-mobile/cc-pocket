@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Search
@@ -29,7 +30,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -37,7 +41,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.ccpocket.app.resources.Res
+import dev.ccpocket.app.resources.settings_back
 import dev.ccpocket.app.theme.Tok
+import org.jetbrains.compose.resources.stringResource
 
 /** Uppercase section heading used across Settings hub + detail panes. */
 @Composable
@@ -73,6 +80,7 @@ fun SettingsDivider() {
 /** Top bar: back chevron + title. */
 @Composable
 fun SettingsTopBar(title: String, onBack: () -> Unit, trailing: (@Composable () -> Unit)? = null) {
+    val backLabel = stringResource(Res.string.settings_back)
     Row(
         Modifier.fillMaxWidth().background(Tok.surface).padding(horizontal = 4.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -81,11 +89,16 @@ fun SettingsTopBar(title: String, onBack: () -> Unit, trailing: (@Composable () 
             Modifier
                 .size(40.dp)
                 .clip(RoundedCornerShape(10.dp))
-                .semantics { contentDescription = "Back" }
+                .semantics { contentDescription = backLabel }
                 .clickable(onClick = onBack),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(Icons.AutoMirrored.Rounded.ArrowBack, null, tint = Tok.tx2, modifier = Modifier.size(20.dp))
+            Icon(
+                Icons.AutoMirrored.Rounded.ArrowBack,
+                contentDescription = null,
+                tint = Tok.tx2,
+                modifier = Modifier.size(20.dp),
+            )
         }
         Text(
             title,
@@ -120,6 +133,10 @@ fun SettingsNavRow(
     Row(
         modifier
             .fillMaxWidth()
+            .semantics {
+                role = Role.Button
+                contentDescription = listOfNotNull(title, subtitle, trailing).joinToString(", ")
+            }
             .clickable(onClick = onClick)
             .padding(horizontal = 14.dp, vertical = if (subtitle == null) 14.dp else 12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -319,4 +336,90 @@ fun SettingsHint(text: String, modifier: Modifier = Modifier) {
         lineHeight = 17.sp,
         modifier = modifier.padding(top = 10.dp, start = 2.dp),
     )
+}
+
+/**
+ * Consequence / scope callout — tells the user what a setting actually affects
+ * (e.g. "new sessions only"). Info = neutral; warn = narrowed reach.
+ */
+@Composable
+fun SettingsConsequenceHint(
+    text: String,
+    modifier: Modifier = Modifier,
+    warn: Boolean = false,
+) {
+    val tint = if (warn) Tok.warn else Tok.info
+    Text(
+        text,
+        color = tint,
+        fontSize = 12.sp,
+        lineHeight = 17.sp,
+        modifier = modifier
+            .padding(top = 10.dp)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .background(tint.copy(alpha = 0.09f))
+            .border(1.dp, tint.copy(alpha = 0.28f), RoundedCornerShape(10.dp))
+            .padding(horizontal = 11.dp, vertical = 9.dp),
+    )
+}
+
+/**
+ * Single-select list (preferred over long Segmented controls on small screens).
+ * [trailing] is optional monospace hint (alias / token count).
+ */
+@Composable
+fun <T> SettingsChoiceList(
+    options: List<T>,
+    selected: T,
+    label: @Composable (T) -> String,
+    onPick: (T) -> Unit,
+    modifier: Modifier = Modifier,
+    trailing: @Composable (T) -> String? = { null },
+    leading: (@Composable (T) -> Unit)? = null,
+) {
+    SettingsCard(modifier) {
+        options.forEachIndexed { i, opt ->
+            if (i > 0) SettingsDivider()
+            val sel = selected == opt
+            val title = label(opt)
+            val trail = trailing(opt)
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .semantics {
+                        role = Role.RadioButton
+                        this.selected = sel
+                        contentDescription = title
+                    }
+                    .clickable { onPick(opt) }
+                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (leading != null) leading(opt)
+                Text(
+                    title,
+                    color = if (sel) Tok.accent else Tok.tx,
+                    fontSize = 14.sp,
+                    fontWeight = if (sel) FontWeight.SemiBold else FontWeight.Normal,
+                    modifier = Modifier.weight(1f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (trail != null) {
+                    Text(
+                        trail,
+                        color = Tok.muted,
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 11.5.sp,
+                        modifier = Modifier.padding(end = 8.dp),
+                        maxLines = 1,
+                    )
+                }
+                if (sel) {
+                    Icon(Icons.Rounded.Check, null, tint = Tok.accent, modifier = Modifier.size(18.dp))
+                }
+            }
+        }
+    }
 }

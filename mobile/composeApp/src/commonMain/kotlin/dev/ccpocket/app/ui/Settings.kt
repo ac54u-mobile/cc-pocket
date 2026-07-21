@@ -311,83 +311,58 @@ private fun SettingsHub(repo: PocketRepository, onBack: () -> Unit, onOpen: (Set
 @Composable
 private fun AgentDefaultsPane(repo: PocketRepository) {
     SettingsSectionLabel(stringResource(Res.string.default_mode_section))
-    SettingsCard {
-        MODES.forEachIndexed { i, m ->
-            if (i > 0) SettingsDivider()
-            val sel = repo.defaultMode.value == m.key
-            Row(
-                Modifier.fillMaxWidth().clickable { repo.setDefaultMode(m.key) }.padding(horizontal = 14.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text("●", color = m.color, fontSize = 9.sp, modifier = Modifier.padding(end = 10.dp))
-                Text(
-                    stringResource(m.label),
-                    color = if (sel) Tok.accent else Tok.tx,
-                    fontSize = 14.sp,
-                    fontWeight = if (sel) FontWeight.SemiBold else FontWeight.Normal,
-                    modifier = Modifier.weight(1f),
-                )
-                if (sel) Text("✓", color = Tok.accent, fontSize = 13.5.sp)
-            }
-        }
-    }
+    SettingsChoiceList(
+        options = MODES,
+        selected = MODES.firstOrNull { it.key == repo.defaultMode.value } ?: MODES.first(),
+        label = { stringResource(it.label) },
+        onPick = { repo.setDefaultMode(it.key) },
+        leading = { m ->
+            Text("●", color = m.color, fontSize = 9.sp, modifier = Modifier.padding(end = 10.dp))
+        },
+    )
+    SettingsConsequenceHint(stringResource(Res.string.settings_consequence_new_session))
 
     SettingsSectionLabel(stringResource(Res.string.default_model_section))
     val modelDefaultLabel = stringResource(Res.string.value_default)
-    SettingsSegmented(
+    SettingsChoiceList(
         options = MODEL_DEFAULT_OPTS,
         selected = repo.defaultModel.value,
         label = { it ?: modelDefaultLabel },
+        trailing = { it },
         onPick = { repo.setDefaultModel(it) },
     )
-    SettingsHint(stringResource(Res.string.default_model_hint))
+    SettingsConsequenceHint(stringResource(Res.string.default_model_hint))
 
     SettingsSectionLabel(stringResource(Res.string.default_effort_section))
     val effortDefaultLabel = stringResource(Res.string.value_default)
-    SettingsSegmented(
+    SettingsChoiceList(
         options = EFFORT_DEFAULT_OPTS,
         selected = repo.defaultEffort.value,
         label = { it ?: effortDefaultLabel },
         onPick = { repo.setDefaultEffort(it) },
     )
+    SettingsConsequenceHint(stringResource(Res.string.settings_consequence_effort))
 
     SettingsSectionLabel(stringResource(Res.string.af_show_from))
-    Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Tok.surface)
-            .border(1.dp, Tok.hair, RoundedCornerShape(10.dp)).padding(3.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        val afOpts = listOf(
-            Triple("both", stringResource(Res.string.af_both), null as Color?),
-            Triple("claude", stringResource(Res.string.af_claude_only), Tok.accent),
-            Triple("codex", stringResource(Res.string.af_codex_only), Tok.codex),
-            Triple("opencode", stringResource(Res.string.af_opencode_only), Tok.opencode),
-        )
-        afOpts.forEach { (key, label, dot) ->
-            val sel = repo.agentFilter.value == key
-            Box(
-                Modifier.weight(1f).clip(RoundedCornerShape(7.dp))
-                    .then(if (sel) Modifier.background(Tok.raised).border(1.dp, Tok.hair, RoundedCornerShape(7.dp)) else Modifier)
-                    .clickable { repo.setAgentFilter(key) }.padding(vertical = 9.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    dot?.let {
-                        Box(Modifier.size(7.dp).clip(CircleShape).background(it))
-                        Spacer(Modifier.width(5.dp))
-                    }
-                    Text(
-                        label,
-                        color = if (sel) Tok.tx else Tok.muted,
-                        fontSize = 12.sp,
-                        fontWeight = if (sel) FontWeight.SemiBold else FontWeight.Normal,
-                        maxLines = 1,
-                    )
-                }
+    val afOpts = listOf(
+        Triple("both", stringResource(Res.string.af_both), null as Color?),
+        Triple("claude", stringResource(Res.string.af_claude_only), Tok.accent),
+        Triple("codex", stringResource(Res.string.af_codex_only), Tok.codex),
+        Triple("opencode", stringResource(Res.string.af_opencode_only), Tok.opencode),
+    )
+    val afSelected = afOpts.firstOrNull { it.first == repo.agentFilter.value } ?: afOpts.first()
+    SettingsChoiceList(
+        options = afOpts,
+        selected = afSelected,
+        label = { it.second },
+        onPick = { repo.setAgentFilter(it.first) },
+        leading = { opt ->
+            opt.third?.let { c ->
+                Box(Modifier.padding(end = 10.dp).size(7.dp).clip(CircleShape).background(c))
             }
-        }
-    }
-    SettingsHint(stringResource(Res.string.af_hint))
+        },
+    )
+    SettingsConsequenceHint(stringResource(Res.string.settings_consequence_filter))
 }
 
 @Composable
@@ -491,14 +466,26 @@ private fun AdvancedPane(repo: PocketRepository) {
     SettingsSectionLabel(stringResource(Res.string.context_window_section))
     val ctxDefaultLabel = stringResource(Res.string.value_default)
     var catchAllEdited by remember { mutableStateOf(false) }
-    SettingsSegmented(
+    val ctxCurrent = repo.contextWindowOverride.value
+    // Custom values aren't in the preset list — leave nothing checked (field below is the source of truth).
+    val ctxSelectedForList: Long? =
+        if (ctxCurrent == null || ctxCurrent == DEFAULT_CONTEXT_WINDOW || ctxCurrent == LARGE_CONTEXT_WINDOW) ctxCurrent
+        else -1L
+    SettingsChoiceList(
         options = CONTEXT_WINDOW_OPTS,
-        selected = repo.contextWindowOverride.value,
+        selected = ctxSelectedForList,
         label = { opt ->
             when (opt) {
                 null -> ctxDefaultLabel
                 LARGE_CONTEXT_WINDOW -> "1M"
                 else -> "${opt / 1000}K"
+            }
+        },
+        trailing = { opt ->
+            when (opt) {
+                null -> stringResource(Res.string.settings_follow_model)
+                LARGE_CONTEXT_WINDOW -> "1,000,000"
+                else -> "200,000"
             }
         },
         onPick = { catchAllEdited = true; repo.setContextWindowOverride(it) },

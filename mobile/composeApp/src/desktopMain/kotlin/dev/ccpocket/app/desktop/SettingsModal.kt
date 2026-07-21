@@ -31,10 +31,12 @@ import androidx.compose.material.icons.rounded.Devices
 import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.Keyboard
 import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.SmartToy
+import androidx.compose.material.icons.rounded.Terminal
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import dev.ccpocket.app.epochMillis
@@ -77,9 +79,44 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.ccpocket.app.resources.Res
+import dev.ccpocket.app.resources.settings_back
+import dev.ccpocket.app.resources.settings_cli_default
+import dev.ccpocket.app.resources.settings_consequence_new_session
+import dev.ccpocket.app.resources.settings_follow_model
+import dev.ccpocket.app.resources.settings_group_appearance
+import dev.ccpocket.app.resources.settings_group_appearance_sub
+import dev.ccpocket.app.resources.settings_group_context
+import dev.ccpocket.app.resources.settings_group_context_sub
+import dev.ccpocket.app.resources.settings_group_default_agent
+import dev.ccpocket.app.resources.settings_group_default_agent_sub
+import dev.ccpocket.app.resources.settings_group_default_model
+import dev.ccpocket.app.resources.settings_group_default_model_sub
+import dev.ccpocket.app.resources.settings_group_menubar
+import dev.ccpocket.app.resources.settings_group_menubar_sub
+import dev.ccpocket.app.resources.settings_group_mode
+import dev.ccpocket.app.resources.settings_group_mode_sub
+import dev.ccpocket.app.resources.settings_group_notifications
+import dev.ccpocket.app.resources.settings_group_notifications_sub
+import dev.ccpocket.app.resources.settings_group_terminal
+import dev.ccpocket.app.resources.settings_group_terminal_sub
+import dev.ccpocket.app.resources.settings_menubar_toggle
+import dev.ccpocket.app.resources.settings_phone_push
+import dev.ccpocket.app.resources.settings_phone_push_stale
+import dev.ccpocket.app.resources.settings_search_empty
+import dev.ccpocket.app.resources.settings_search_placeholder
+import dev.ccpocket.app.resources.settings_terminal_embedded
+import dev.ccpocket.app.resources.settings_terminal_external
+import dev.ccpocket.app.resources.settings_title
+import dev.ccpocket.app.resources.appearance_dark
+import dev.ccpocket.app.resources.appearance_light
+import dev.ccpocket.app.resources.appearance_system
 import dev.ccpocket.app.theme.ThemeMode
 import dev.ccpocket.app.theme.Tok
 import dev.ccpocket.app.ui.CLAUDE_MODEL_OPTIONS
+import dev.ccpocket.app.ui.SettingsConsequenceHint
+import dev.ccpocket.app.ui.SettingsSearchField
+import dev.ccpocket.app.ui.SettingsSection
 import kotlinx.coroutines.delay
 import dev.ccpocket.app.ui.AgentGlyph
 import dev.ccpocket.app.ui.agentColor
@@ -92,42 +129,72 @@ import dev.ccpocket.protocol.LARGE_CONTEXT_WINDOW
 import dev.ccpocket.protocol.PresetEnv
 import dev.ccpocket.protocol.PresetSummary
 import dev.ccpocket.protocol.PresetsState
+import org.jetbrains.compose.resources.stringResource
 
-private enum class SettingsTab(val label: String, val icon: ImageVector) {
-    GENERAL("General", Icons.Outlined.Tune),
-    ACCOUNT("Account", Icons.Rounded.Person),
-    COMPUTERS("Computers", Icons.Rounded.Devices),
-    SCHEDULES("Schedules", Icons.Rounded.Schedule),
-    SHARES("Shared", Icons.Rounded.Share),
-    BRIDGES("Bridges", Icons.Rounded.SmartToy),
-    SHORTCUTS("Shortcuts", Icons.Rounded.Keyboard),
-    ABOUT("About", Icons.Outlined.Info),
+/** Desktop rail tabs — titles come from [SettingsSection] so phone Hub + desktop stay one IA. */
+private enum class SettingsTab(val section: SettingsSection, val icon: ImageVector) {
+    AGENT(SettingsSection.AGENT, Icons.Outlined.Tune),
+    APPEARANCE(SettingsSection.APPEARANCE, Icons.Outlined.Info),
+    WORKSPACE(SettingsSection.WORKSPACE, Icons.Rounded.Terminal),
+    NOTIFICATIONS(SettingsSection.NOTIFICATIONS, Icons.Rounded.Notifications),
+    ADVANCED(SettingsSection.ADVANCED, Icons.Outlined.Tune),
+    ACCOUNT(SettingsSection.ACCOUNT, Icons.Rounded.Person),
+    COMPUTERS(SettingsSection.COMPUTERS, Icons.Rounded.Devices),
+    SCHEDULES(SettingsSection.SCHEDULES, Icons.Rounded.Schedule),
+    SHARES(SettingsSection.SHARES, Icons.Rounded.Share),
+    BRIDGES(SettingsSection.BRIDGES, Icons.Rounded.SmartToy),
+    SHORTCUTS(SettingsSection.SHORTCUTS, Icons.Rounded.Keyboard),
+    ABOUT(SettingsSection.ABOUT, Icons.Outlined.Info),
 }
 
 /**
- * The desktop preferences window — a left rail of sections + a content pane, as an in-shell modal (the app is
- * one undecorated window, so this matches the palette / focused-modal idiom rather than spawning a 2nd OS
- * window). Wired live: General sets the repo defaults, Computers renames/revokes paired daemons.
+ * The desktop preferences window — left rail + content pane (in-shell modal).
+ * Sections align with the phone Settings Hub via [SettingsSection].
  */
 @Composable
 fun SettingsModal(model: DesktopModel, onDismiss: () -> Unit) {
-    var tab by remember { mutableStateOf(SettingsTab.GENERAL) }
+    var tab by remember { mutableStateOf(SettingsTab.AGENT) }
+    var query by remember { mutableStateOf("") }
+    val titles = SettingsTab.entries.associateWith { stringResource(it.section.title) }
+    val filtered = SettingsTab.entries.filter { t -> t.section.matches(query, titles.getValue(t)) }
     Column(
-        Modifier.width(700.dp).height(500.dp).shadow(30.dp, RoundedCornerShape(16.dp)).clip(RoundedCornerShape(16.dp)).background(Tok.raised).border(1.dp, Tok.hair, RoundedCornerShape(16.dp)),
+        Modifier.width(720.dp).height(520.dp).shadow(30.dp, RoundedCornerShape(16.dp)).clip(RoundedCornerShape(16.dp)).background(Tok.raised).border(1.dp, Tok.hair, RoundedCornerShape(16.dp)),
     ) {
         Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 12.dp, top = 14.dp, bottom = 14.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("Settings", color = Tok.tx, fontFamily = Dk.ui, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-            Icon(Icons.Rounded.Close, "Close", tint = Tok.tx2, modifier = Modifier.size(22.dp).clip(RoundedCornerShape(6.dp)).clickable(onClick = onDismiss).padding(2.dp))
+            Text(stringResource(Res.string.settings_title), color = Tok.tx, fontFamily = Dk.ui, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            Icon(Icons.Rounded.Close, stringResource(Res.string.settings_back), tint = Tok.tx2, modifier = Modifier.size(22.dp).clip(RoundedCornerShape(6.dp)).clickable(onClick = onDismiss).padding(2.dp))
         }
         Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
         Row(Modifier.fillMaxWidth().weight(1f)) {
-            Column(Modifier.width(176.dp).fillMaxHeight().padding(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                SettingsTab.entries.forEach { t -> RailItem(t, selected = t == tab) { tab = t } }
+            Column(Modifier.width(188.dp).fillMaxHeight().padding(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                SettingsSearchField(
+                    query = query,
+                    onQueryChange = { query = it },
+                    placeholder = stringResource(Res.string.settings_search_placeholder),
+                    modifier = Modifier.padding(bottom = 6.dp),
+                )
+                if (filtered.isEmpty()) {
+                    Text(
+                        stringResource(Res.string.settings_search_empty),
+                        color = Tok.muted, fontFamily = Dk.ui, fontSize = 12.sp,
+                        modifier = Modifier.padding(10.dp),
+                    )
+                } else {
+                    filtered.forEach { t ->
+                        RailItem(t, selected = t == tab) { tab = t }
+                    }
+                }
             }
             Box(Modifier.width(1.dp).fillMaxHeight().background(Tok.hair))
             Box(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).padding(24.dp)) {
-                when (tab) {
-                    SettingsTab.GENERAL -> GeneralPane(model)
+                // If search hides the active tab, show the first match
+                val shown = if (tab in filtered) tab else filtered.firstOrNull() ?: tab
+                when (shown) {
+                    SettingsTab.AGENT -> AgentDefaultsDesktopPane(model)
+                    SettingsTab.APPEARANCE -> AppearanceDesktopPane(model)
+                    SettingsTab.WORKSPACE -> WorkspaceDesktopPane(model)
+                    SettingsTab.NOTIFICATIONS -> NotificationsDesktopPane(model)
+                    SettingsTab.ADVANCED -> AdvancedDesktopPane(model)
                     SettingsTab.ACCOUNT -> AccountPane(model)
                     SettingsTab.COMPUTERS -> ComputersPane(model)
                     SettingsTab.SCHEDULES -> SchedulesPane(model)
@@ -143,9 +210,14 @@ fun SettingsModal(model: DesktopModel, onDismiss: () -> Unit) {
 
 @Composable
 private fun RailItem(tab: SettingsTab, selected: Boolean, onClick: () -> Unit) {
-    Row(Modifier.fillMaxWidth().selectableRow(selected).clickable(onClick = onClick).padding(horizontal = 10.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+    val label = stringResource(tab.section.title)
+    Row(
+        Modifier.fillMaxWidth().selectableRow(selected).clickable(onClick = onClick).padding(horizontal = 10.dp, vertical = 9.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
         Icon(tab.icon, null, tint = if (selected) Tok.accent else Tok.tx2, modifier = Modifier.size(16.dp))
-        Text(tab.label, color = if (selected) Tok.tx else Tok.tx2, fontFamily = Dk.ui, fontSize = 13.sp, fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal)
+        Text(label, color = if (selected) Tok.tx else Tok.tx2, fontFamily = Dk.ui, fontSize = 13.sp, fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
@@ -160,61 +232,76 @@ private fun Group(title: String, sub: String? = null, content: @Composable () ->
 }
 
 @Composable
-private fun GeneralPane(model: DesktopModel) {
+private fun AppearanceDesktopPane(model: DesktopModel) {
+    Group(stringResource(Res.string.settings_group_appearance), stringResource(Res.string.settings_group_appearance_sub)) {
+        AppearanceRow(model)
+    }
+}
+
+@Composable
+private fun AgentDefaultsDesktopPane(model: DesktopModel) {
     Column {
-        Group("Appearance", "Light or dark theme for this app.") {
-            AppearanceRow(model)
-        }
-        Group("Default agent", "Which backend new sessions start with.") {
+        Group(stringResource(Res.string.settings_group_default_agent), stringResource(Res.string.settings_group_default_agent_sub)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 AgentCardRow(AgentKind.CLAUDE, model.defaultAgent == AgentKind.CLAUDE, Modifier.weight(1f)) { model.defaultAgent = AgentKind.CLAUDE }
                 AgentCardRow(AgentKind.CODEX, model.defaultAgent == AgentKind.CODEX, Modifier.weight(1f)) { model.defaultAgent = AgentKind.CODEX }
                 AgentCardRow(AgentKind.OPENCODE, model.defaultAgent == AgentKind.OPENCODE, Modifier.weight(1f)) { model.defaultAgent = AgentKind.OPENCODE }
             }
         }
-        Group("Default model", "Which model new Claude sessions start on (Codex sessions keep their own).") {
-            // null = follow the CLI's own default; the rest are Claude aliases shared with the ⋯ picker
-            PrefRow("Default", "cli default", selected = model.defaultModel == null) { model.defaultModel = null }
+        Group(stringResource(Res.string.settings_group_default_model), stringResource(Res.string.settings_group_default_model_sub)) {
+            PrefRow(stringResource(Res.string.settings_cli_default), "default", selected = model.defaultModel == null) { model.defaultModel = null }
             CLAUDE_MODEL_OPTIONS.forEach { (label, alias) ->
                 PrefRow(label, alias, selected = model.defaultModel == alias) { model.defaultModel = alias }
             }
         }
-        Group("Context window", "The usage statusline's 100% mark. Set this when a custom model's real window isn't 200K — the CLI can't report it.") {
-            ContextWindowRows(model)
-        }
-        Group("Default permission mode", "How much a new session may do before it asks.") {
+        SettingsConsequenceHint(stringResource(Res.string.settings_consequence_new_session))
+        Spacer(Modifier.height(12.dp))
+        Group(stringResource(Res.string.settings_group_mode), stringResource(Res.string.settings_group_mode_sub)) {
             CLAUDE_MODES.forEach { m -> ModeRow(m, selected = m.mode == model.defaultMode) { model.defaultMode = m.mode } }
         }
-        // how a terminal opens (issue #153: embedded dock is the default) + which external app (issue #44 —
-        // only terminals actually present on this machine are offered)
-        Group("Terminal", "How the chat header's >_ opens a terminal at the session's folder.") {
-            PrefRow("Embedded panel", "⌘J · docked in the session", selected = model.terminalDefaultEmbedded) {
+        SettingsConsequenceHint(stringResource(Res.string.settings_consequence_new_session))
+    }
+}
+
+@Composable
+private fun WorkspaceDesktopPane(model: DesktopModel) {
+    Column {
+        Group(stringResource(Res.string.settings_group_terminal), stringResource(Res.string.settings_group_terminal_sub)) {
+            PrefRow(stringResource(Res.string.settings_terminal_embedded), "⌘J", selected = model.terminalDefaultEmbedded) {
                 model.terminalDefaultEmbedded = true
             }
-            PrefRow("External window", "opens the app below", selected = !model.terminalDefaultEmbedded) {
+            PrefRow(stringResource(Res.string.settings_terminal_external), "app", selected = !model.terminalDefaultEmbedded) {
                 model.terminalDefaultEmbedded = false
             }
             Spacer(Modifier.height(8.dp))
-            Text("External app", color = Tok.muted, fontFamily = Dk.ui, fontSize = 11.5.sp, modifier = Modifier.padding(bottom = 7.dp))
             TerminalApp.entries.filter(TerminalLauncher::installed).forEach { t ->
                 TerminalRow(t, selected = t == model.terminalApp) { model.terminalApp = t }
             }
         }
-        // menu-bar presence (issue #151): the OS status glyph + anchored popover, on by default
-        Group("Menu bar", "A persistent status glyph — approvals and running sessions at a glance, without raising this window.") {
-            ToggleRow("Show cc-pocket in the menu bar", model.menuBarEnabled) { model.menuBarEnabled = !model.menuBarEnabled }
+        Group(stringResource(Res.string.settings_group_menubar), stringResource(Res.string.settings_group_menubar_sub)) {
+            ToggleRow(stringResource(Res.string.settings_menubar_toggle), model.menuBarEnabled) { model.menuBarEnabled = !model.menuBarEnabled }
         }
-        // daemon-side switch: silence phone alerts while working at the computer. Null = old daemon.
-        LaunchedEffect(Unit) { model.refreshPushPrefs() }
-        Group("Notifications", "Turn-complete alerts pushed to your phone by this computer.") {
-            when (val on = model.phonePush) {
-                null -> Text(
-                    "Phone alerts need the computer's daemon updated first.",
-                    color = Tok.muted, fontFamily = Dk.ui, fontSize = 12.sp,
-                )
-                else -> ToggleRow("Notify my phone when a turn finishes", on) { model.setPhonePush(!on) }
-            }
+    }
+}
+
+@Composable
+private fun NotificationsDesktopPane(model: DesktopModel) {
+    LaunchedEffect(Unit) { model.refreshPushPrefs() }
+    Group(stringResource(Res.string.settings_group_notifications), stringResource(Res.string.settings_group_notifications_sub)) {
+        when (val on = model.phonePush) {
+            null -> Text(
+                stringResource(Res.string.settings_phone_push_stale),
+                color = Tok.muted, fontFamily = Dk.ui, fontSize = 12.sp,
+            )
+            else -> ToggleRow(stringResource(Res.string.settings_phone_push), on) { model.setPhonePush(!on) }
         }
+    }
+}
+
+@Composable
+private fun AdvancedDesktopPane(model: DesktopModel) {
+    Group(stringResource(Res.string.settings_group_context), stringResource(Res.string.settings_group_context_sub)) {
+        ContextWindowRows(model)
     }
 }
 
@@ -223,9 +310,9 @@ private fun GeneralPane(model: DesktopModel) {
 @Composable
 private fun AppearanceRow(model: DesktopModel) {
     val modes = listOf(
-        ThemeMode.SYSTEM to "System",
-        ThemeMode.LIGHT to "Light",
-        ThemeMode.DARK to "Dark",
+        ThemeMode.SYSTEM to stringResource(Res.string.appearance_system),
+        ThemeMode.LIGHT to stringResource(Res.string.appearance_light),
+        ThemeMode.DARK to stringResource(Res.string.appearance_dark),
     )
     Row(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Tok.base)
@@ -320,7 +407,7 @@ private fun PrefRow(label: String, trailing: String, selected: Boolean, onClick:
 private fun ContextWindowRows(model: DesktopModel) {
     val current = model.contextWindowOverride
     val custom = current != null && current != DEFAULT_CONTEXT_WINDOW && current != LARGE_CONTEXT_WINDOW
-    PrefRow("Default", "follow model", selected = current == null) { model.contextWindowOverride = null }
+    PrefRow(stringResource(Res.string.settings_cli_default), stringResource(Res.string.settings_follow_model), selected = current == null) { model.contextWindowOverride = null }
     PrefRow("200K", "200,000", selected = current == DEFAULT_CONTEXT_WINDOW) { model.contextWindowOverride = DEFAULT_CONTEXT_WINDOW }
     PrefRow("1M", "1,000,000", selected = current == LARGE_CONTEXT_WINDOW) { model.contextWindowOverride = LARGE_CONTEXT_WINDOW }
     var draft by remember { mutableStateOf(if (custom) current.toString() else "") }
