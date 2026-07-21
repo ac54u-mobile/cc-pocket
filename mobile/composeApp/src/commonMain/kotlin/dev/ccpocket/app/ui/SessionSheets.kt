@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.ccpocket.app.data.PocketRepository
 import dev.ccpocket.app.epochMillis
+import dev.ccpocket.app.isPhonePlatform
 import dev.ccpocket.app.resources.*
 import dev.ccpocket.app.theme.Tok
 import dev.ccpocket.protocol.LARGE_CONTEXT_WINDOW
@@ -291,8 +292,14 @@ private enum class QaSub { MAIN, MODEL, EFFORT }
 fun QuickActionsSheet(repo: PocketRepository, onTerminal: () -> Unit, onMode: () -> Unit, onFiles: () -> Unit, onDismiss: () -> Unit) {
     var sub by remember { mutableStateOf(QaSub.MAIN) }
     var clearArmed by remember { mutableStateOf(false) }
-    PocketSheet(onDismiss) {
-        Column(Modifier.padding(horizontal = 16.dp).padding(bottom = 14.dp, top = 4.dp)) {
+    val goMain = { sub = QaSub.MAIN }
+    // sub-pages: system back / edge swipe / scrim pop back to MAIN before dismissing the sheet
+    PocketSheet(onDismiss = { if (sub != QaSub.MAIN) goMain() else onDismiss() }) {
+        Column(
+            Modifier
+                .padding(horizontal = 16.dp).padding(bottom = 14.dp, top = 4.dp)
+                .swipeBack(enabled = sub != QaSub.MAIN && isPhonePlatform(), onBack = goMain),
+        ) {
             when (sub) {
                 QaSub.MAIN -> {
                     Text(stringResource(Res.string.quick_actions_title), color = Tok.tx, fontSize = 20.sp, fontWeight = FontWeight.Bold)
@@ -319,12 +326,12 @@ fun QuickActionsSheet(repo: PocketRepository, onTerminal: () -> Unit, onMode: ()
                         }
                     }
                 }
-                QaSub.MODEL -> ModelPicker(repo, onBack = { sub = QaSub.MAIN }, onDone = onDismiss)
+                QaSub.MODEL -> ModelPicker(repo, onBack = goMain, onDone = onDismiss)
                 QaSub.EFFORT -> OptionPicker(
                     title = stringResource(Res.string.label_effort),
                     options = EFFORT_OPTIONS,
                     selected = repo.effort.value,
-                    onBack = { sub = QaSub.MAIN },
+                    onBack = goMain,
                 ) { repo.switchEffort(it); onDismiss() }
             }
         }
@@ -404,7 +411,9 @@ private fun ActionRow(label: String, value: String? = null, danger: Boolean = fa
 @Composable
 private fun OptionPicker(title: String, options: List<String>, selected: String?, onBack: () -> Unit, onPick: (String) -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text("‹ ", color = Tok.tx2, fontSize = 18.sp, modifier = Modifier.clickable(onClick = onBack).padding(end = 4.dp))
+        if (showBackButton()) {
+            Text("‹ ", color = Tok.tx2, fontSize = 18.sp, modifier = Modifier.clickable(onClick = onBack).padding(end = 4.dp))
+        }
         Text(title, color = Tok.tx, fontSize = 20.sp, fontWeight = FontWeight.Bold)
     }
     Column(Modifier.padding(top = 10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -482,7 +491,9 @@ internal fun ModelPicker(repo: PocketRepository, onBack: (() -> Unit)?, onDone: 
 
     Row(verticalAlignment = Alignment.CenterVertically) {
         // chip-direct opens (ModelSheet) have no quick-actions page to go back to — the title stands alone
-        if (onBack != null) Text("‹ ", color = Tok.tx2, fontSize = 18.sp, modifier = Modifier.clickable(enabled = switchingTo == null, onClick = onBack).padding(end = 4.dp))
+        if (onBack != null && showBackButton()) {
+            Text("‹ ", color = Tok.tx2, fontSize = 18.sp, modifier = Modifier.clickable(enabled = switchingTo == null, onClick = onBack).padding(end = 4.dp))
+        }
         Text(stringResource(Res.string.qa_model), color = Tok.tx, fontSize = 20.sp, fontWeight = FontWeight.Bold)
     }
     // Gateway model presets (issue #139): one-tap vendor ids for third-party gateway users. When the

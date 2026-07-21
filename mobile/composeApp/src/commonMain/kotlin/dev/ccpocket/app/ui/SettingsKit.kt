@@ -125,32 +125,37 @@ fun SettingsSelectionIndicator(selected: Boolean, modifier: Modifier = Modifier)
     )
 }
 
-/** Top bar: back chevron + title. */
+/** Top bar: back chevron + title. Phone hides the chevron (edge swipe via [BackNavHost]). */
 @Composable
 fun SettingsTopBar(title: String, onBack: () -> Unit, trailing: (@Composable () -> Unit)? = null) {
     val backLabel = stringResource(Res.string.settings_back)
     val haptics = rememberAppHaptics()
+    val showBtn = showBackButton()
     Row(
         Modifier.fillMaxWidth().background(Tok.surface).padding(horizontal = 4.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
-            Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .semantics { contentDescription = backLabel }
-                .clickable {
-                    haptics.tick()
-                    onBack()
-                },
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                Icons.AutoMirrored.Rounded.ArrowBack,
-                contentDescription = null,
-                tint = Tok.tx2,
-                modifier = Modifier.size(20.dp),
-            )
+        if (showBtn) {
+            Box(
+                Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .semantics { contentDescription = backLabel }
+                    .clickable {
+                        haptics.tick()
+                        onBack()
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    Icons.AutoMirrored.Rounded.ArrowBack,
+                    contentDescription = null,
+                    tint = Tok.tx2,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+        } else {
+            Spacer(Modifier.width(12.dp))
         }
         Text(
             title,

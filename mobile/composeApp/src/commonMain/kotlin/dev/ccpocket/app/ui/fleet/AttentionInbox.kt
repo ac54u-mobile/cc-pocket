@@ -23,7 +23,6 @@ import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -43,6 +42,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.ccpocket.app.data.PocketRepository
 import dev.ccpocket.app.theme.Tok
+import dev.ccpocket.app.ui.BackNavHost
+import dev.ccpocket.app.ui.BackTextButton
 import kotlinx.coroutines.delay
 
 /**
@@ -54,34 +55,36 @@ import kotlinx.coroutines.delay
 fun AttentionInboxScreen(repo: PocketRepository, onBack: () -> Unit) {
     val entries = repo.fleetAttention().sortedBy { it.seconds }
     val finished = repo.fleetFinished()
-    Column(Modifier.fillMaxSize().background(Tok.base)) {
-        Row(
-            Modifier.fillMaxWidth().background(Tok.surface).padding(start = 4.dp, end = 16.dp, top = 4.dp, bottom = 2.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            TextButton(onBack) { Text("←", color = Tok.tx2, fontSize = 18.sp) }
-            Text("Needs you", color = Tok.tx, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
-        }
-        FleetStripText(repo.fleetStrip(), Modifier.background(Tok.surface).fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 10.dp))
-        Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+    BackNavHost(onBack = onBack) {
+        Column(Modifier.fillMaxSize().background(Tok.base)) {
+            Row(
+                Modifier.fillMaxWidth().background(Tok.surface).padding(start = 4.dp, end = 16.dp, top = 4.dp, bottom = 2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                BackTextButton(onBack)
+                Text("Needs you", color = Tok.tx, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+            }
+            FleetStripText(repo.fleetStrip(), Modifier.background(Tok.surface).fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 10.dp))
+            Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
 
-        if (entries.isEmpty()) {
-            AllClear(Modifier.weight(1f))
-        } else {
-            Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
-                FleetSectionLabel("Needs approval")
-                entries.forEach { e ->
-                    ApprovalCard(
-                        e,
-                        onDeny = { repo.resolveAttention(e, allow = false) },
-                        onAllow = { repo.resolveAttention(e, allow = true) },
-                    )
+            if (entries.isEmpty()) {
+                AllClear(Modifier.weight(1f))
+            } else {
+                Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
+                    FleetSectionLabel("Needs approval")
+                    entries.forEach { e ->
+                        ApprovalCard(
+                            e,
+                            onDeny = { repo.resolveAttention(e, allow = false) },
+                            onAllow = { repo.resolveAttention(e, allow = true) },
+                        )
+                    }
+                    if (finished.isNotEmpty()) {
+                        FleetSectionLabel("Recently finished")
+                        finished.forEach { FinishedRow(it) }
+                    }
+                    Spacer(Modifier.height(24.dp))
                 }
-                if (finished.isNotEmpty()) {
-                    FleetSectionLabel("Recently finished")
-                    finished.forEach { FinishedRow(it) }
-                }
-                Spacer(Modifier.height(24.dp))
             }
         }
     }

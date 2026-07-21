@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.sp
 import dev.ccpocket.app.data.PocketRepository
 import dev.ccpocket.app.resources.*
 import dev.ccpocket.app.theme.Tok
+import dev.ccpocket.app.ui.BackNavHost
 import dev.ccpocket.app.ui.PocketSheet
 import dev.ccpocket.app.ui.share.ShareOutlineButton
 import dev.ccpocket.app.ui.share.ShareTopBar
@@ -61,39 +62,40 @@ import org.jetbrains.compose.resources.stringResource
  */
 @Composable
 fun BridgesScreen(repo: PocketRepository, onBack: () -> Unit) {
-    dev.ccpocket.app.SystemBackHandler(enabled = true) { onBack() }
     LaunchedEffect(Unit) { if (repo.bridgeControl.value != false) repo.fetchBridges() } // don't fire at a daemon that can't answer
     var revokeTarget by remember { mutableStateOf<BridgeInfo?>(null) }
     var editTarget by remember { mutableStateOf<BridgeInfo?>(null) }
 
-    Column(Modifier.fillMaxSize().background(Tok.base)) {
-        ShareTopBar(stringResource(Res.string.bridges_title), onBack)
-        // the repo surfaces daemon-side refusals AND the merge-loss guard verbatim — on the phone this is
-        // the only place they can appear, so it sits above the cards, impossible to scroll past unread
-        repo.bridgeError.value?.let { err ->
-            Text(
-                err, color = Tok.warn, fontSize = 12.sp, lineHeight = 17.sp,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-            )
-        }
-        repo.bridgeMergeLost.value?.let { lost ->
-            Text(
-                stringResource(Res.string.bridge_merge_lost, lost.joinToString(", ")),
-                color = Tok.danger, fontSize = 12.sp, lineHeight = 17.sp, fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-            )
-        }
-        when {
-            // old daemon told us up front it has no bridge control plane (issue #91 capability bit) — show the
-            // same "update the daemon" hint immediately, instead of waiting for a bridge fetch to time out
-            repo.bridgeControl.value == false || repo.bridgesUnavailable.value ->
-                CenteredHint(stringResource(Res.string.bridges_stale))
-            repo.bridges.isEmpty() && repo.bridgesLoaded.value -> EmptyBridges()
-            else -> Column(
-                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(top = 6.dp, bottom = 40.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                repo.bridges.forEach { b -> BridgeCard(b, repo, onRevoke = { revokeTarget = b }, onEdit = { editTarget = b }) }
+    BackNavHost(onBack = onBack) {
+        Column(Modifier.fillMaxSize().background(Tok.base)) {
+            ShareTopBar(stringResource(Res.string.bridges_title), onBack)
+            // the repo surfaces daemon-side refusals AND the merge-loss guard verbatim — on the phone this is
+            // the only place they can appear, so it sits above the cards, impossible to scroll past unread
+            repo.bridgeError.value?.let { err ->
+                Text(
+                    err, color = Tok.warn, fontSize = 12.sp, lineHeight = 17.sp,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                )
+            }
+            repo.bridgeMergeLost.value?.let { lost ->
+                Text(
+                    stringResource(Res.string.bridge_merge_lost, lost.joinToString(", ")),
+                    color = Tok.danger, fontSize = 12.sp, lineHeight = 17.sp, fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                )
+            }
+            when {
+                // old daemon told us up front it has no bridge control plane (issue #91 capability bit) — show the
+                // same "update the daemon" hint immediately, instead of waiting for a bridge fetch to time out
+                repo.bridgeControl.value == false || repo.bridgesUnavailable.value ->
+                    CenteredHint(stringResource(Res.string.bridges_stale))
+                repo.bridges.isEmpty() && repo.bridgesLoaded.value -> EmptyBridges()
+                else -> Column(
+                    Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(top = 6.dp, bottom = 40.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    repo.bridges.forEach { b -> BridgeCard(b, repo, onRevoke = { revokeTarget = b }, onEdit = { editTarget = b }) }
+                }
             }
         }
     }

@@ -186,18 +186,9 @@ fun App(scope: CoroutineScope) {
     // obscured (before the OS app-switcher snapshot) so a session is never visible in the task switcher.
     dev.ccpocket.app.OnAppBackground { appLock.onBackground() }
     dev.ccpocket.app.OnAppObscured { appLock.onWillObscure() }
-    // Android system back walks the in-app stack (chat → sessions → directories) instead of leaving
-    // the app; at the root it stays disabled so the system default (exit) applies. An open sheet
+    // Chat/Sessions/fleet overlays register BackNavHost (system back + phone edge swipe). At the
+    // directory root there is no handler so the system default (exit) applies. An open sheet
     // registers its own handler later in composition, which wins while it is showing (LIFO).
-    dev.ccpocket.app.SystemBackHandler(
-        enabled = repo.sessionActive.value && (repo.convoId.value != null || repo.sessionsDir.value != null),
-    ) {
-        if (repo.convoId.value != null) repo.backToBrowse() else repo.backToDirectories()
-    }
-    // registered after the content handler so it wins (LIFO) while a fleet overlay is up
-    dev.ccpocket.app.SystemBackHandler(enabled = fleetOpen || inboxOpen) {
-        if (inboxOpen) inboxOpen = false else fleetOpen = false
-    }
     // appearance (issue #63): PocketTheme resolves the persisted mode against the OS, so a SYSTEM pick tracks a
     // live system flip while the app is foregrounded and LIGHT/DARK force it.
     PocketTheme(mode = repo.themeMode.value, fontScale = repo.fontScale.value) {
@@ -1121,10 +1112,11 @@ internal fun SessionsScreen(repo: PocketRepository) { // internal: driven end-to
     var manageTarget by remember { mutableStateOf<SessionGroup?>(null) }
     var moveTarget by remember { mutableStateOf<SessionSummary?>(null) }
     val collapsed = remember(dir) { mutableStateMapOf<String, Boolean>() }
+    BackNavHost(onBack = { repo.backToDirectories() }) {
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
             Row(Modifier.fillMaxWidth().background(Tok.surface).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                TextButton({ repo.backToDirectories() }) { Text("←", color = Tok.tx2, fontSize = 18.sp) }
+                BackTextButton({ repo.backToDirectories() })
                 Column(Modifier.weight(1f)) {
                     Text(stringResource(Res.string.sessions_title), color = Tok.tx, fontWeight = FontWeight.SemiBold)
                     Row(verticalAlignment = Alignment.CenterVertically) { // connection bar: honest dot (green only when Ready) + workdir
@@ -1240,6 +1232,7 @@ internal fun SessionsScreen(repo: PocketRepository) { // internal: driven end-to
                 onDismiss = { moveTarget = null },
             )
         }
+    }
     }
 }
 
@@ -1359,10 +1352,12 @@ internal fun ChatScreen( // internal: rendered offscreen by ShowcaseRender (mark
     ImeFollower(listState, repo) { pinned }
     val focus = LocalFocusManager.current
     LaunchedEffect(listState.isScrollInProgress) { if (listState.isScrollInProgress) focus.clearFocus() } // scrolling dismisses the keyboard
+    val backToBrowse = { repo.saveDraft(repo.workdir.value, composer.text); repo.backToBrowse() }
+    BackNavHost(onBack = backToBrowse) {
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
             Row(Modifier.fillMaxWidth().background(Tok.surface).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                TextButton({ repo.saveDraft(repo.workdir.value, composer.text); repo.backToBrowse() }) { Text("←", color = Tok.tx2, fontSize = 18.sp) }
+                BackTextButton(backToBrowse)
                 Column(Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).clickable { showSessionInfo = true }.padding(vertical = 2.dp)) {
                     // session title leads (design); the generic "Chat" only before the first prompt names it
                     Text(
@@ -1826,6 +1821,7 @@ internal fun ChatScreen( // internal: rendered offscreen by ShowcaseRender (mark
             onAllProjects = { repo.saveDraft(draftKey, input); repo.backToDirectories() },
             onDismiss = { showSessions = false },
         )
+    }
     }
 }
 

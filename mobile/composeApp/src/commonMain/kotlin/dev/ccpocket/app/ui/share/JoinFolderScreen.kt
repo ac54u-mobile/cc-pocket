@@ -43,6 +43,7 @@ import dev.ccpocket.app.epochMillis
 import dev.ccpocket.app.pairing.decodeShareInvite
 import dev.ccpocket.app.resources.*
 import dev.ccpocket.app.theme.Tok
+import dev.ccpocket.app.ui.BackNavHost
 import dev.ccpocket.protocol.ShareInvite
 import org.jetbrains.compose.resources.stringResource
 import qrscanner.CameraLens
@@ -55,19 +56,22 @@ import qrscanner.QrScanner
  */
 @Composable
 fun JoinFolderScreen(repo: PocketRepository, onBack: () -> Unit, onJoined: () -> Unit) {
-    dev.ccpocket.app.SystemBackHandler(enabled = true) { onBack() }
     var preview by remember { mutableStateOf<ShareInvite?>(null) }
 
     val invite = preview
     if (invite != null) {
-        AcceptPreview(
-            invite,
-            onJoin = { repo.redeemShareInvite(invite); onJoined() },
-            onDecline = { preview = null },
-        )
+        BackNavHost(onBack = { preview = null }) {
+            AcceptPreview(
+                invite,
+                onJoin = { repo.redeemShareInvite(invite); onJoined() },
+                onDecline = { preview = null },
+            )
+        }
         return
     }
-    RedeemScreen(onBack = onBack, onInvite = { preview = it })
+    BackNavHost(onBack = onBack) {
+        RedeemScreen(onBack = onBack, onInvite = { preview = it })
+    }
 }
 
 // ── frame 3a / 3a-err: redeem (scan or paste) ──
@@ -162,7 +166,6 @@ private fun ScanBox(onScanned: (String) -> Unit) {
 
 @Composable
 private fun AcceptPreview(invite: ShareInvite, onJoin: () -> Unit, onDecline: () -> Unit) {
-    dev.ccpocket.app.SystemBackHandler(enabled = true) { onDecline() }
     Column(Modifier.fillMaxSize().background(Tok.base)) {
         ShareTopBar(stringResource(Res.string.join_review_title), onDecline)
         Column(

@@ -526,40 +526,43 @@ fun ScheduleScreen(repo: PocketRepository, onBack: () -> Unit) {
     LaunchedEffect(Unit) { repo.fetchSchedules() }
     var now by remember { mutableStateOf(epochMillis()) }
     LaunchedEffect(Unit) { while (true) { delay(30_000); now = epochMillis() } }
-    dev.ccpocket.app.SystemBackHandler(enabled = true) { onBack() }
-    Column(Modifier.fillMaxSize().background(Tok.base)) {
-        // nav (design TasksNav): accent back chevron + "Settings", centered title, hairline bottom rule
-        Box(Modifier.fillMaxWidth().height(48.dp)) {
-            Row(
-                Modifier.align(Alignment.CenterStart).clip(RoundedCornerShape(8.dp)).clickable(onClick = onBack)
-                    .padding(start = 6.dp, end = 10.dp, top = 6.dp, bottom = 6.dp),
-                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp),
-            ) {
-                Icon(ChevronLeftGlyph, null, tint = Tok.accent, modifier = Modifier.size(20.dp))
-                Text(stringResource(Res.string.settings_title), color = Tok.accent, fontSize = 15.sp)
+    BackNavHost(onBack = onBack) {
+        Column(Modifier.fillMaxSize().background(Tok.base)) {
+            // nav (design TasksNav): accent back chevron + "Settings", centered title, hairline bottom rule
+            Box(Modifier.fillMaxWidth().height(48.dp)) {
+                if (showBackButton()) {
+                    Row(
+                        Modifier.align(Alignment.CenterStart).clip(RoundedCornerShape(8.dp)).clickable(onClick = onBack)
+                            .padding(start = 6.dp, end = 10.dp, top = 6.dp, bottom = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp),
+                    ) {
+                        Icon(ChevronLeftGlyph, null, tint = Tok.accent, modifier = Modifier.size(20.dp))
+                        Text(stringResource(Res.string.settings_title), color = Tok.accent, fontSize = 15.sp)
+                    }
+                }
+                Text(
+                    stringResource(Res.string.schedule_tasks_title), color = Tok.tx,
+                    fontSize = 16.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.align(Alignment.Center),
+                )
             }
-            Text(
-                stringResource(Res.string.schedule_tasks_title), color = Tok.tx,
-                fontSize = 16.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.align(Alignment.Center),
-            )
-        }
-        Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
-        repo.scheduleError.value?.let {
-            Text(it, color = Tok.danger, fontSize = 12.5.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
-        }
-        val stale = repo.schedulesUnavailable.value
-        if (stale) StaleDaemonBanner()
-        if (repo.schedulesLoaded.value && !stale && repo.schedules.isEmpty()) {
-            ScheduleEmptyState()
-        } else {
-            // stale: cached tasks stay visible but dim — they're paused, not gone (design B3)
-            LazyColumn(
-                Modifier.fillMaxSize().alpha(if (stale) 0.55f else 1f),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
-                verticalArrangement = Arrangement.spacedBy(11.dp),
-            ) {
-                items(repo.schedules, key = { it.id }) { s ->
-                    ScheduleRow(s, now, onCancel = { repo.cancelSchedule(s.id) })
+            Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+            repo.scheduleError.value?.let {
+                Text(it, color = Tok.danger, fontSize = 12.5.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+            }
+            val stale = repo.schedulesUnavailable.value
+            if (stale) StaleDaemonBanner()
+            if (repo.schedulesLoaded.value && !stale && repo.schedules.isEmpty()) {
+                ScheduleEmptyState()
+            } else {
+                // stale: cached tasks stay visible but dim — they're paused, not gone (design B3)
+                LazyColumn(
+                    Modifier.fillMaxSize().alpha(if (stale) 0.55f else 1f),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
+                    verticalArrangement = Arrangement.spacedBy(11.dp),
+                ) {
+                    items(repo.schedules, key = { it.id }) { s ->
+                        ScheduleRow(s, now, onCancel = { repo.cancelSchedule(s.id) })
+                    }
                 }
             }
         }

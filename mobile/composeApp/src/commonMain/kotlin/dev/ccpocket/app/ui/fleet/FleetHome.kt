@@ -28,7 +28,6 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.KeyboardArrowRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -43,6 +42,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.ccpocket.app.data.PocketRepository
 import dev.ccpocket.app.theme.Tok
+import dev.ccpocket.app.ui.BackNavHost
+import dev.ccpocket.app.ui.BackTextButton
 
 /**
  * Fleet home — the Computers surface evolved from a picker into a live overview ("Fleet Mobile" board ②).
@@ -57,41 +58,43 @@ fun FleetHomeScreen(
 ) {
     val machines = repo.fleetMachines()
     val waiting = repo.fleetAttention().size
-    Column(Modifier.fillMaxSize().background(Tok.base)) {
-        // ── header: back · big title · FleetStrip ──
-        Row(
-            Modifier.fillMaxWidth().background(Tok.surface).padding(start = 4.dp, end = 16.dp, top = 8.dp, bottom = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            TextButton(onBack) { Text("←", color = Tok.tx2, fontSize = 18.sp) }
-            Column(Modifier.weight(1f)) {
-                Text("Your computers", color = Tok.tx, fontSize = 21.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.3).sp)
-                FleetStripText(repo.fleetStrip(), Modifier.padding(top = 3.dp))
-            }
-        }
-        Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
-
-        Column(
-            Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            if (waiting > 0) AttentionBanner(waiting, onOpenInbox)
-            machines.forEach { m ->
-                MachineCard(m) {
-                    if (m.current || repo.demoMode.value) { onBack(); return@MachineCard }
-                    repo.pairedList.firstOrNull { it.accountId == m.accountId }?.let { repo.switchDaemon(it) }
-                    onBack()
+    BackNavHost(onBack = onBack) {
+        Column(Modifier.fillMaxSize().background(Tok.base)) {
+            // ── header: back · big title · FleetStrip ──
+            Row(
+                Modifier.fillMaxWidth().background(Tok.surface).padding(start = 4.dp, end = 16.dp, top = 8.dp, bottom = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                BackTextButton(onBack)
+                Column(Modifier.weight(1f)) {
+                    Text("Your computers", color = Tok.tx, fontSize = 21.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.3).sp)
+                    FleetStripText(repo.fleetStrip(), Modifier.padding(top = 3.dp))
                 }
             }
-            // pair a new computer — close the fleet first (pairing tears the session down; without this
-            // the overlay would pop back up on its own once the new binding connects)
-            Row(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).clickable { onBack(); repo.beginAddDevice() }
-                    .padding(horizontal = 4.dp, vertical = 14.dp),
-                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
+            Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+
+            Column(
+                Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Icon(Icons.Rounded.Add, null, tint = Tok.tx2, modifier = Modifier.size(14.dp))
-                Text("Pair a new computer", color = Tok.tx2, fontSize = 13.sp)
+                if (waiting > 0) AttentionBanner(waiting, onOpenInbox)
+                machines.forEach { m ->
+                    MachineCard(m) {
+                        if (m.current || repo.demoMode.value) { onBack(); return@MachineCard }
+                        repo.pairedList.firstOrNull { it.accountId == m.accountId }?.let { repo.switchDaemon(it) }
+                        onBack()
+                    }
+                }
+                // pair a new computer — close the fleet first (pairing tears the session down; without this
+                // the overlay would pop back up on its own once the new binding connects)
+                Row(
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).clickable { onBack(); repo.beginAddDevice() }
+                        .padding(horizontal = 4.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Icon(Icons.Rounded.Add, null, tint = Tok.tx2, modifier = Modifier.size(14.dp))
+                    Text("Pair a new computer", color = Tok.tx2, fontSize = 13.sp)
+                }
             }
         }
     }

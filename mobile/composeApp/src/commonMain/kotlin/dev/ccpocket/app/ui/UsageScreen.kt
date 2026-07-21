@@ -21,7 +21,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -91,7 +90,6 @@ private fun money(v: Double): String {
  */
 @Composable
 fun UsageScreen(repo: PocketRepository, onBack: () -> Unit) {
-    dev.ccpocket.app.SystemBackHandler(enabled = true) { onBack() }
     var days by remember { mutableStateOf(1) } // default to "Today"
     var timedOut by remember { mutableStateOf(false) }
     LaunchedEffect(days) {
@@ -105,31 +103,33 @@ fun UsageScreen(repo: PocketRepository, onBack: () -> Unit) {
     val u = repo.usage.value
     val connected = repo.phase.value == ConnPhase.Ready
 
-    Column(Modifier.fillMaxSize().background(Tok.base)) {
-        // header
-        Column(Modifier.fillMaxWidth().background(Tok.base)) {
-            Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 12.dp, top = 14.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                TextButton({ onBack() }) { Text("←", color = Tok.tx2, fontSize = 18.sp) }
-                Text(stringResource(Res.string.usage_title), color = Tok.tx, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.weight(1f))
-                Row(Modifier.clip(RoundedCornerShape(999.dp)).background(Tok.surface).border(1.dp, Tok.hair, RoundedCornerShape(999.dp)).padding(2.dp)) {
-                    for ((label, d) in listOf("Today" to 1, "7d" to 7, "30d" to 30)) {
-                        val on = d == days
-                        Box(
-                            Modifier.clip(RoundedCornerShape(999.dp)).then(if (on) Modifier.background(Tok.accent) else Modifier)
-                                .clickable { days = d }.padding(horizontal = 10.dp, vertical = 4.dp),
-                        ) { Text(label, color = if (on) Tok.base else Tok.tx2, fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold) }
+    BackNavHost(onBack = onBack) {
+        Column(Modifier.fillMaxSize().background(Tok.base)) {
+            // header
+            Column(Modifier.fillMaxWidth().background(Tok.base)) {
+                Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 12.dp, top = 14.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    BackTextButton(onBack)
+                    Text(stringResource(Res.string.usage_title), color = Tok.tx, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.weight(1f))
+                    Row(Modifier.clip(RoundedCornerShape(999.dp)).background(Tok.surface).border(1.dp, Tok.hair, RoundedCornerShape(999.dp)).padding(2.dp)) {
+                        for ((label, d) in listOf("Today" to 1, "7d" to 7, "30d" to 30)) {
+                            val on = d == days
+                            Box(
+                                Modifier.clip(RoundedCornerShape(999.dp)).then(if (on) Modifier.background(Tok.accent) else Modifier)
+                                    .clickable { days = d }.padding(horizontal = 10.dp, vertical = 4.dp),
+                            ) { Text(label, color = if (on) Tok.base else Tok.tx2, fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold) }
+                        }
                     }
                 }
+                Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
             }
-            Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
-        }
 
-        when {
-            u != null && (u.tokensToday > 0 || u.models.isNotEmpty() || u.days.any { it.tokens > 0 }) -> Populated(u)
-            u != null -> Empty(u.days.size)
-            !connected || timedOut -> Offline()
-            else -> Loading()
+            when {
+                u != null && (u.tokensToday > 0 || u.models.isNotEmpty() || u.days.any { it.tokens > 0 }) -> Populated(u)
+                u != null -> Empty(u.days.size)
+                !connected || timedOut -> Offline()
+                else -> Loading()
+            }
         }
     }
 }

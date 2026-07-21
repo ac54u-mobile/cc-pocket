@@ -43,6 +43,7 @@ import dev.ccpocket.app.data.PocketRepository
 import dev.ccpocket.app.epochMillis
 import dev.ccpocket.app.resources.*
 import dev.ccpocket.app.theme.Tok
+import dev.ccpocket.app.ui.BackNavHost
 import dev.ccpocket.app.ui.PocketSheet
 import dev.ccpocket.app.ui.tilde
 import dev.ccpocket.protocol.ShareInfo
@@ -55,34 +56,35 @@ import org.jetbrains.compose.resources.stringResource
  */
 @Composable
 fun SharedFoldersScreen(repo: PocketRepository, onBack: () -> Unit, onShareAgain: (String) -> Unit = {}) {
-    dev.ccpocket.app.SystemBackHandler(enabled = true) { onBack() }
     LaunchedEffect(Unit) { repo.listShares() }
     val now = epochMillis()
     val groups = remember(repo.shares.toList(), now) { groupShares(repo.shares.toList(), now) }
     var revokeTarget by remember { mutableStateOf<ShareInfo?>(null) }
 
-    Column(Modifier.fillMaxSize().background(Tok.base)) {
-        ShareTopBar(stringResource(Res.string.shared_folders_title), onBack)
-        if (repo.shares.isEmpty() && repo.sharesLoaded.value) {
-            EmptyShares()
-        } else {
-            Column(
-                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(top = 6.dp, bottom = 40.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                if (groups.active.isNotEmpty() && groups.history.isNotEmpty()) {
-                    ShareSectionLabel(stringResource(Res.string.share_active_label), Modifier.padding(top = 4.dp))
-                }
-                groups.active.forEach { s -> ActiveShareCard(s, now) { revokeTarget = s } }
-                if (groups.history.isNotEmpty()) {
-                    ShareSectionLabel(stringResource(Res.string.share_history_label), Modifier.padding(top = 10.dp))
-                    groups.history.forEach { s -> HistoryShareCard(s) { onShareAgain(s.path) } }
-                }
-                if (groups.active.isNotEmpty()) {
-                    Text(
-                        stringResource(Res.string.share_owner_footer), color = Tok.muted, fontSize = 11.5.sp,
-                        textAlign = TextAlign.Center, lineHeight = 17.sp, modifier = Modifier.fillMaxWidth().padding(top = 8.dp, start = 16.dp, end = 16.dp),
-                    )
+    BackNavHost(onBack = onBack) {
+        Column(Modifier.fillMaxSize().background(Tok.base)) {
+            ShareTopBar(stringResource(Res.string.shared_folders_title), onBack)
+            if (repo.shares.isEmpty() && repo.sharesLoaded.value) {
+                EmptyShares()
+            } else {
+                Column(
+                    Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(top = 6.dp, bottom = 40.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    if (groups.active.isNotEmpty() && groups.history.isNotEmpty()) {
+                        ShareSectionLabel(stringResource(Res.string.share_active_label), Modifier.padding(top = 4.dp))
+                    }
+                    groups.active.forEach { s -> ActiveShareCard(s, now) { revokeTarget = s } }
+                    if (groups.history.isNotEmpty()) {
+                        ShareSectionLabel(stringResource(Res.string.share_history_label), Modifier.padding(top = 10.dp))
+                        groups.history.forEach { s -> HistoryShareCard(s) { onShareAgain(s.path) } }
+                    }
+                    if (groups.active.isNotEmpty()) {
+                        Text(
+                            stringResource(Res.string.share_owner_footer), color = Tok.muted, fontSize = 11.5.sp,
+                            textAlign = TextAlign.Center, lineHeight = 17.sp, modifier = Modifier.fillMaxWidth().padding(top = 8.dp, start = 16.dp, end = 16.dp),
+                        )
+                    }
                 }
             }
         }

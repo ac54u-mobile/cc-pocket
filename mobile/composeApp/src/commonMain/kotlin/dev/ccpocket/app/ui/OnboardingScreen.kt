@@ -76,7 +76,6 @@ private data class OStep(
  */
 @Composable
 fun OnboardingScreen(onBack: () -> Unit, onPairNow: () -> Unit) {
-    dev.ccpocket.app.SystemBackHandler(enabled = true) { onBack() }
     var os by remember { mutableStateOf("macOS") }
     val uri = LocalUriHandler.current
 
@@ -97,61 +96,63 @@ fun OnboardingScreen(onBack: () -> Unit, onPairNow: () -> Unit) {
         )
     }
 
-    Column(Modifier.fillMaxSize().background(Tok.base)) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            TextButton({ onBack() }) { Text("←", color = Tok.tx2, fontSize = 18.sp) }
-        }
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(top = 4.dp, bottom = 12.dp)) {
-            Text(stringResource(Res.string.ob_title), color = Tok.tx, fontSize = 23.sp, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(8.dp))
-            Text(stringResource(Res.string.ob_sub), color = Tok.tx2, fontSize = 14.sp, lineHeight = 21.sp)
-            Spacer(Modifier.height(20.dp))
+    BackNavHost(onBack = onBack) {
+        Column(Modifier.fillMaxSize().background(Tok.base)) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                BackTextButton(onBack)
+            }
+            Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(top = 4.dp, bottom = 12.dp)) {
+                Text(stringResource(Res.string.ob_title), color = Tok.tx, fontSize = 23.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(8.dp))
+                Text(stringResource(Res.string.ob_sub), color = Tok.tx2, fontSize = 14.sp, lineHeight = 21.sp)
+                Spacer(Modifier.height(20.dp))
 
-            // OS segmented switch
-            Row(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(11.dp)).background(Tok.surface)
-                    .border(1.dp, Tok.hair, RoundedCornerShape(11.dp)).padding(3.dp),
-                horizontalArrangement = Arrangement.spacedBy(3.dp),
-            ) {
-                for (k in listOf("macOS", "Windows", "Linux")) {
-                    val on = k == os
-                    Box(
-                        Modifier.weight(1f).clip(RoundedCornerShape(8.dp))
-                            .then(if (on) Modifier.background(Tok.raised).border(1.dp, Tok.hair, RoundedCornerShape(8.dp)) else Modifier)
-                            .clickable { os = k }.padding(vertical = 8.dp),
-                        contentAlignment = Alignment.Center,
-                    ) { Text(k, color = if (on) Tok.tx else Tok.muted, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold) }
+                // OS segmented switch
+                Row(
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(11.dp)).background(Tok.surface)
+                        .border(1.dp, Tok.hair, RoundedCornerShape(11.dp)).padding(3.dp),
+                    horizontalArrangement = Arrangement.spacedBy(3.dp),
+                ) {
+                    for (k in listOf("macOS", "Windows", "Linux")) {
+                        val on = k == os
+                        Box(
+                            Modifier.weight(1f).clip(RoundedCornerShape(8.dp))
+                                .then(if (on) Modifier.background(Tok.raised).border(1.dp, Tok.hair, RoundedCornerShape(8.dp)) else Modifier)
+                                .clickable { os = k }.padding(vertical = 8.dp),
+                            contentAlignment = Alignment.Center,
+                        ) { Text(k, color = if (on) Tok.tx else Tok.muted, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold) }
+                    }
+                }
+                Spacer(Modifier.height(22.dp))
+
+                for (s in steps) StepRow(s)
+                Spacer(Modifier.height(6.dp))
+
+                // reassuring end-to-end callout
+                Row(
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Tok.surface)
+                        .border(1.dp, Tok.hair, RoundedCornerShape(12.dp)).padding(13.dp),
+                    verticalAlignment = Alignment.Top,
+                ) {
+                    LockGlyph()
+                    Spacer(Modifier.width(10.dp))
+                    Text(stringResource(Res.string.ob_secure), color = Tok.tx2, fontSize = 12.5.sp, lineHeight = 19.sp)
                 }
             }
-            Spacer(Modifier.height(22.dp))
 
-            for (s in steps) StepRow(s)
-            Spacer(Modifier.height(6.dp))
-
-            // reassuring end-to-end callout
-            Row(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Tok.surface)
-                    .border(1.dp, Tok.hair, RoundedCornerShape(12.dp)).padding(13.dp),
-                verticalAlignment = Alignment.Top,
-            ) {
-                LockGlyph()
-                Spacer(Modifier.width(10.dp))
-                Text(stringResource(Res.string.ob_secure), color = Tok.tx2, fontSize = 12.5.sp, lineHeight = 19.sp)
-            }
-        }
-
-        // footer
-        Column(Modifier.fillMaxWidth().background(Tok.base)) {
-            Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
-            Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(top = 12.dp, bottom = 24.dp)) {
-                Button(
-                    { onPairNow() },
-                    Modifier.fillMaxWidth().height(50.dp),
-                    shape = RoundedCornerShape(13.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Tok.accent, contentColor = Tok.base),
-                ) { Text(stringResource(Res.string.ob_pair_now), fontSize = 16.sp, fontWeight = FontWeight.Bold) }
-                TextButton({ uri.openUri("https://github.com/ac54u-mobile/cc-pocket#readme") }, Modifier.fillMaxWidth()) {
-                    Text(stringResource(Res.string.ob_guide), color = Tok.tx2, fontSize = 13.5.sp)
+            // footer
+            Column(Modifier.fillMaxWidth().background(Tok.base)) {
+                Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+                Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(top = 12.dp, bottom = 24.dp)) {
+                    Button(
+                        { onPairNow() },
+                        Modifier.fillMaxWidth().height(50.dp),
+                        shape = RoundedCornerShape(13.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Tok.accent, contentColor = Tok.base),
+                    ) { Text(stringResource(Res.string.ob_pair_now), fontSize = 16.sp, fontWeight = FontWeight.Bold) }
+                    TextButton({ uri.openUri("https://github.com/ac54u-mobile/cc-pocket#readme") }, Modifier.fillMaxWidth()) {
+                        Text(stringResource(Res.string.ob_guide), color = Tok.tx2, fontSize = 13.5.sp)
+                    }
                 }
             }
         }

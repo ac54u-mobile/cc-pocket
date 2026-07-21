@@ -17,6 +17,8 @@ import platform.Foundation.timeIntervalSince1970
 // For a real device, change this in-app to your Mac's LAN IP (and run the daemon with --host 0.0.0.0).
 actual fun defaultDaemonUrl(): String = "ws://127.0.0.1:8765/v1/ws"
 
+actual fun isPhonePlatform(): Boolean = true
+
 actual fun epochMillis(): Long = (NSDate().timeIntervalSince1970 * 1000).toLong()
 
 actual fun localClock(epochMs: Long): LocalClock {

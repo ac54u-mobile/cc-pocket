@@ -24,7 +24,6 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -55,7 +54,6 @@ import org.jetbrains.compose.resources.stringResource
  */
 @Composable
 fun TerminalScreen(repo: PocketRepository, onBack: () -> Unit) {
-    dev.ccpocket.app.SystemBackHandler(enabled = true) { onBack() }
     var input by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
     val entries = repo.terminalEntries
@@ -63,60 +61,62 @@ fun TerminalScreen(repo: PocketRepository, onBack: () -> Unit) {
     LaunchedEffect(entries.size, repo.terminalBusy.value) {
         if (entries.isNotEmpty()) runCatching { listState.animateScrollToItem(entries.size - 1) }
     }
-    Column(Modifier.fillMaxSize().background(Tok.base).imePadding()) {
-        Row(
-            Modifier.fillMaxWidth().background(Tok.surface).padding(start = 6.dp, end = 12.dp, top = 10.dp, bottom = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            TextButton({ onBack() }) { Text("←", color = Tok.tx2, fontSize = 18.sp) }
-            Column(Modifier.weight(1f)) {
-                Text(stringResource(Res.string.terminal_title), color = Tok.tx, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
-                TailPathText(repo.workdir.value ?: "", fontSize = 11.sp)
-            }
-            if (entries.isNotEmpty()) {
-                Text(
-                    stringResource(Res.string.terminal_clear), color = Tok.tx2, fontSize = 13.sp,
-                    modifier = Modifier.clip(RoundedCornerShape(6.dp)).clickable { repo.clearTerminal() }.padding(horizontal = 8.dp, vertical = 6.dp),
-                )
-            }
-        }
-        Box(Modifier.weight(1f).fillMaxWidth()) {
-            if (entries.isEmpty()) {
-                Text(
-                    stringResource(Res.string.terminal_empty), color = Tok.muted, fontSize = 13.sp, textAlign = TextAlign.Center,
-                    modifier = Modifier.align(Alignment.Center).padding(horizontal = 32.dp),
-                )
-            } else {
-                LazyColumn(
-                    Modifier.fillMaxSize().padding(horizontal = 14.dp), state = listState,
-                    verticalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(vertical = 12.dp),
-                ) {
-                    items(entries) { e -> TerminalRow(e) }
+    BackNavHost(onBack = onBack) {
+        Column(Modifier.fillMaxSize().background(Tok.base).imePadding()) {
+            Row(
+                Modifier.fillMaxWidth().background(Tok.surface).padding(start = 6.dp, end = 12.dp, top = 10.dp, bottom = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                BackTextButton(onBack)
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(Res.string.terminal_title), color = Tok.tx, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                    TailPathText(repo.workdir.value ?: "", fontSize = 11.sp)
+                }
+                if (entries.isNotEmpty()) {
+                    Text(
+                        stringResource(Res.string.terminal_clear), color = Tok.tx2, fontSize = 13.sp,
+                        modifier = Modifier.clip(RoundedCornerShape(6.dp)).clickable { repo.clearTerminal() }.padding(horizontal = 8.dp, vertical = 6.dp),
+                    )
                 }
             }
-        }
-        Row(
-            Modifier.fillMaxWidth().background(Tok.surface).padding(10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            val busy = repo.terminalBusy.value
-            OutlinedTextField(
-                input, { input = it },
-                placeholder = { Text(stringResource(Res.string.terminal_hint), fontFamily = FontFamily.Monospace, fontSize = 13.sp) },
-                singleLine = true, enabled = !busy,
-                textStyle = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 14.sp),
-                modifier = Modifier.weight(1f),
-            )
-            Spacer(Modifier.width(8.dp))
-            val canRun = input.isNotBlank() && !busy
-            Box(
-                Modifier.height(54.dp).widthIn(min = 64.dp).clip(RoundedCornerShape(12.dp))
-                    .background(if (canRun) Tok.accent else Tok.raised).alpha(if (canRun) 1f else 0.6f)
-                    .clickable(enabled = canRun) { repo.runShell(input); input = "" },
-                contentAlignment = Alignment.Center,
+            Box(Modifier.weight(1f).fillMaxWidth()) {
+                if (entries.isEmpty()) {
+                    Text(
+                        stringResource(Res.string.terminal_empty), color = Tok.muted, fontSize = 13.sp, textAlign = TextAlign.Center,
+                        modifier = Modifier.align(Alignment.Center).padding(horizontal = 32.dp),
+                    )
+                } else {
+                    LazyColumn(
+                        Modifier.fillMaxSize().padding(horizontal = 14.dp), state = listState,
+                        verticalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(vertical = 12.dp),
+                    ) {
+                        items(entries) { e -> TerminalRow(e) }
+                    }
+                }
+            }
+            Row(
+                Modifier.fillMaxWidth().background(Tok.surface).padding(10.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (busy) CircularProgressIndicator(Modifier.size(18.dp), color = Tok.tx2, strokeWidth = 2.dp)
-                else Text(stringResource(Res.string.terminal_run), color = Tok.base, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                val busy = repo.terminalBusy.value
+                OutlinedTextField(
+                    input, { input = it },
+                    placeholder = { Text(stringResource(Res.string.terminal_hint), fontFamily = FontFamily.Monospace, fontSize = 13.sp) },
+                    singleLine = true, enabled = !busy,
+                    textStyle = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 14.sp),
+                    modifier = Modifier.weight(1f),
+                )
+                Spacer(Modifier.width(8.dp))
+                val canRun = input.isNotBlank() && !busy
+                Box(
+                    Modifier.height(54.dp).widthIn(min = 64.dp).clip(RoundedCornerShape(12.dp))
+                        .background(if (canRun) Tok.accent else Tok.raised).alpha(if (canRun) 1f else 0.6f)
+                        .clickable(enabled = canRun) { repo.runShell(input); input = "" },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (busy) CircularProgressIndicator(Modifier.size(18.dp), color = Tok.tx2, strokeWidth = 2.dp)
+                    else Text(stringResource(Res.string.terminal_run), color = Tok.base, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                }
             }
         }
     }

@@ -106,8 +106,6 @@ import dev.ccpocket.app.resources.settings_group_terminal_sub
 import dev.ccpocket.app.resources.settings_menubar_toggle
 import dev.ccpocket.app.resources.settings_phone_push
 import dev.ccpocket.app.resources.settings_phone_push_stale
-import dev.ccpocket.app.resources.settings_search_empty
-import dev.ccpocket.app.resources.settings_search_placeholder
 import dev.ccpocket.app.resources.settings_terminal_embedded
 import dev.ccpocket.app.resources.settings_terminal_external
 import dev.ccpocket.app.resources.settings_title
@@ -120,7 +118,6 @@ import dev.ccpocket.app.theme.Tok
 import dev.ccpocket.app.ui.CLAUDE_MODEL_OPTIONS
 import dev.ccpocket.app.ui.SettingsConsequenceHint
 import dev.ccpocket.app.ui.SettingsMetrics
-import dev.ccpocket.app.ui.SettingsSearchField
 import dev.ccpocket.app.ui.SettingsSection
 import dev.ccpocket.app.ui.SettingsSelectionIndicator
 import kotlinx.coroutines.delay
@@ -160,9 +157,6 @@ private enum class SettingsTab(val section: SettingsSection, val icon: ImageVect
 @Composable
 fun SettingsModal(model: DesktopModel, onDismiss: () -> Unit) {
     var tab by remember { mutableStateOf(SettingsTab.AGENT) }
-    var query by remember { mutableStateOf("") }
-    val titles = SettingsTab.entries.associateWith { stringResource(it.section.title) }
-    val filtered = SettingsTab.entries.filter { t -> t.section.matches(query, titles.getValue(t)) }
     Column(
         Modifier.width(720.dp).height(520.dp).shadow(30.dp, RoundedCornerShape(16.dp)).clip(RoundedCornerShape(16.dp)).background(Tok.raised).border(1.dp, Tok.hair, RoundedCornerShape(16.dp)),
     ) {
@@ -173,29 +167,13 @@ fun SettingsModal(model: DesktopModel, onDismiss: () -> Unit) {
         Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
         Row(Modifier.fillMaxWidth().weight(1f)) {
             Column(Modifier.width(188.dp).fillMaxHeight().padding(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                SettingsSearchField(
-                    query = query,
-                    onQueryChange = { query = it },
-                    placeholder = stringResource(Res.string.settings_search_placeholder),
-                    modifier = Modifier.padding(bottom = 6.dp),
-                )
-                if (filtered.isEmpty()) {
-                    Text(
-                        stringResource(Res.string.settings_search_empty),
-                        color = Tok.muted, fontFamily = Dk.ui, fontSize = 12.sp,
-                        modifier = Modifier.padding(10.dp),
-                    )
-                } else {
-                    filtered.forEach { t ->
-                        RailItem(t, selected = t == tab) { tab = t }
-                    }
+                SettingsTab.entries.forEach { t ->
+                    RailItem(t, selected = t == tab) { tab = t }
                 }
             }
             Box(Modifier.width(1.dp).fillMaxHeight().background(Tok.hair))
             Box(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).padding(24.dp)) {
-                // If search hides the active tab, show the first match
-                val shown = if (tab in filtered) tab else filtered.firstOrNull() ?: tab
-                when (shown) {
+                when (tab) {
                     SettingsTab.AGENT -> AgentDefaultsDesktopPane(model)
                     SettingsTab.APPEARANCE -> AppearanceDesktopPane(model)
                     SettingsTab.WORKSPACE -> WorkspaceDesktopPane(model)

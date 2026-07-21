@@ -82,7 +82,7 @@ private val MODEL_DEFAULT_OPTS: List<String?> = listOf(null) + CLAUDE_MODEL_OPTI
 private val CONTEXT_WINDOW_OPTS: List<Long?> = listOf(null, DEFAULT_CONTEXT_WINDOW, LARGE_CONTEXT_WINDOW)
 private val FONT_SCALE_STEPS: List<Float> = listOf(0.85f, 1.0f, 1.15f, 1.3f, 1.4f)
 
-/** Settings detail destinations. Hub is the indexed landing page with search. */
+/** Settings detail destinations. Hub is the indexed landing page. */
 private enum class SettingsDest {
     HUB, USAGE, SCHEDULES, SHARES, JOIN, BRIDGES,
     AGENT, APPEARANCE, NOTIFICATIONS, SECURITY, ADVANCED, ABOUT,
@@ -94,11 +94,10 @@ private data class HubEntry(
     val subtitle: String,
     val icon: ImageVector,
     val iconTint: Color,
-    val keywords: String,
 )
 
 /**
- * Settings: hub → category panes (searchable). Full-screen overlays (Usage / Schedules / Shares…)
+ * Settings: hub → category panes. Full-screen overlays (Usage / Schedules / Shares…)
  * keep their existing screens. [onBack] leaves Settings entirely.
  */
 @Composable
@@ -120,31 +119,29 @@ fun SettingsScreen(repo: PocketRepository, onBack: () -> Unit) {
         else -> Unit
     }
 
-    dev.ccpocket.app.SystemBackHandler(enabled = true) {
-        if (dest == SettingsDest.HUB) onBack() else dest = SettingsDest.HUB
-    }
-
-    when (dest) {
-        SettingsDest.HUB -> SettingsHub(repo, onBack = onBack, onOpen = { dest = it })
-        SettingsDest.AGENT -> SettingsPaneScaffold(stringResource(Res.string.settings_hub_agent), goHub) {
-            AgentDefaultsPane(repo)
+    BackNavHost(onBack = { if (dest == SettingsDest.HUB) onBack() else dest = SettingsDest.HUB }) {
+        when (dest) {
+            SettingsDest.HUB -> SettingsHub(onBack = onBack, onOpen = { dest = it })
+            SettingsDest.AGENT -> SettingsPaneScaffold(stringResource(Res.string.settings_hub_agent), goHub) {
+                AgentDefaultsPane(repo)
+            }
+            SettingsDest.APPEARANCE -> SettingsPaneScaffold(stringResource(Res.string.settings_hub_appearance), goHub) {
+                AppearancePane(repo)
+            }
+            SettingsDest.NOTIFICATIONS -> SettingsPaneScaffold(stringResource(Res.string.settings_hub_notifications), goHub) {
+                NotificationsPane(repo)
+            }
+            SettingsDest.SECURITY -> SettingsPaneScaffold(stringResource(Res.string.security_section), goHub) {
+                SecurityGroup(repo.appLock)
+            }
+            SettingsDest.ADVANCED -> SettingsPaneScaffold(stringResource(Res.string.settings_hub_advanced), goHub) {
+                AdvancedPane(repo)
+            }
+            SettingsDest.ABOUT -> SettingsPaneScaffold(stringResource(Res.string.about_section), goHub) {
+                AboutPane(repo, onExit = { onBack(); repo.disconnect() })
+            }
+            else -> Unit
         }
-        SettingsDest.APPEARANCE -> SettingsPaneScaffold(stringResource(Res.string.settings_hub_appearance), goHub) {
-            AppearancePane(repo)
-        }
-        SettingsDest.NOTIFICATIONS -> SettingsPaneScaffold(stringResource(Res.string.settings_hub_notifications), goHub) {
-            NotificationsPane(repo)
-        }
-        SettingsDest.SECURITY -> SettingsPaneScaffold(stringResource(Res.string.security_section), goHub) {
-            SecurityGroup(repo.appLock)
-        }
-        SettingsDest.ADVANCED -> SettingsPaneScaffold(stringResource(Res.string.settings_hub_advanced), goHub) {
-            AdvancedPane(repo)
-        }
-        SettingsDest.ABOUT -> SettingsPaneScaffold(stringResource(Res.string.about_section), goHub) {
-            AboutPane(repo, onExit = { onBack(); repo.disconnect() })
-        }
-        else -> Unit
     }
 }
 
@@ -163,70 +160,53 @@ private fun SettingsPaneScaffold(title: String, onBack: () -> Unit, content: @Co
 }
 
 @Composable
-private fun SettingsHub(repo: PocketRepository, onBack: () -> Unit, onOpen: (SettingsDest) -> Unit) {
-    var query by remember { mutableStateOf("") }
-    val q = query.trim().lowercase()
-
+private fun SettingsHub(onBack: () -> Unit, onOpen: (SettingsDest) -> Unit) {
     val entries = listOf(
         HubEntry(
             SettingsDest.USAGE, stringResource(Res.string.settings_usage),
             stringResource(Res.string.usage_title), Icons.Rounded.Insights, Tok.info,
-            "usage tokens cost chart 用量",
         ),
         HubEntry(
             SettingsDest.SCHEDULES, stringResource(Res.string.schedule_tasks_title),
             stringResource(Res.string.settings_hub_activity), Icons.Outlined.Schedule, Tok.warn,
-            "schedule cron timer 定时 任务",
         ),
         HubEntry(
             SettingsDest.SHARES, stringResource(Res.string.settings_shared_folders),
             stringResource(Res.string.settings_hub_collaboration), Icons.Rounded.Share, Tok.accent,
-            "share folder 共享 文件夹",
         ),
         HubEntry(
             SettingsDest.JOIN, stringResource(Res.string.join_title),
             stringResource(Res.string.settings_hub_collaboration), Icons.Rounded.PersonAdd, Tok.codex,
-            "join invite code 加入",
         ),
         HubEntry(
             SettingsDest.BRIDGES, stringResource(Res.string.settings_bridges),
             stringResource(Res.string.settings_hub_collaboration), Icons.Outlined.SmartToy, Tok.opencode,
-            "bridge bot feishu telegram 桥接 机器人",
         ),
         HubEntry(
             SettingsDest.AGENT, stringResource(Res.string.settings_hub_agent),
             stringResource(Res.string.settings_hub_agent_sub), Icons.Outlined.Tune, Tok.accent,
-            "mode model effort agent filter claude codex opencode 模式 模型 推理",
         ),
         HubEntry(
             SettingsDest.APPEARANCE, stringResource(Res.string.settings_hub_appearance),
             stringResource(Res.string.settings_hub_appearance_sub), Icons.Outlined.DarkMode, Tok.info,
-            "theme dark light font size appearance 主题 字号 外观",
         ),
         HubEntry(
             SettingsDest.NOTIFICATIONS, stringResource(Res.string.settings_hub_notifications),
             stringResource(Res.string.settings_hub_notifications_sub), Icons.Outlined.Notifications, Tok.warn,
-            "notify voice whisper dictation 通知 语音",
         ),
         HubEntry(
             SettingsDest.SECURITY, stringResource(Res.string.security_section),
             stringResource(Res.string.settings_hub_security_sub), Icons.Outlined.Lock, Tok.ok,
-            "face id touch lock biometric security 安全 锁屏",
         ),
         HubEntry(
             SettingsDest.ADVANCED, stringResource(Res.string.settings_hub_advanced),
             stringResource(Res.string.settings_hub_advanced_sub), Icons.Outlined.Shield, Tok.muted,
-            "context window tokens per-model advanced 上下文 窗口",
         ),
         HubEntry(
             SettingsDest.ABOUT, stringResource(Res.string.about_section),
             stringResource(Res.string.settings_hub_about_sub), Icons.Outlined.Info, Tok.tx2,
-            "about version license mit exit disconnect 关于 版本",
         ),
     )
-    val filtered = if (q.isEmpty()) entries else entries.filter { e ->
-        e.title.lowercase().contains(q) || e.subtitle.lowercase().contains(q) || e.keywords.contains(q)
-    }
 
     Column(Modifier.fillMaxSize().background(Tok.base)) {
         SettingsTopBar(stringResource(Res.string.settings_title), onBack)
@@ -235,73 +215,35 @@ private fun SettingsHub(repo: PocketRepository, onBack: () -> Unit, onOpen: (Set
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp)
-                .padding(top = 8.dp, bottom = 28.dp),
+                .padding(top = 4.dp, bottom = 28.dp),
         ) {
-            SettingsSearchField(
-                query = query,
-                onQueryChange = { query = it },
-                placeholder = stringResource(Res.string.settings_search_placeholder),
-            )
-            Spacer(Modifier.height(12.dp))
-            SettingsStatusStrip(
-                title = stringResource(Res.string.settings_connected),
-                subtitle = repo.paired.value?.displayName()
-                    ?: stringResource(Res.string.settings_direct_lan),
-                actionLabel = stringResource(Res.string.settings_switch_computer),
-                onAction = { onBack(); repo.disconnect() },
-            )
-            Spacer(Modifier.height(8.dp))
-
-            if (filtered.isEmpty()) {
-                Text(
-                    stringResource(Res.string.settings_search_empty),
-                    color = Tok.muted,
-                    fontSize = 13.sp,
-                    modifier = Modifier.padding(top = 28.dp).align(Alignment.CenterHorizontally),
-                )
-            } else if (q.isNotEmpty()) {
-                SettingsSectionLabel(stringResource(Res.string.settings_search_placeholder))
-                SettingsCard {
-                    filtered.forEachIndexed { i, e ->
-                        if (i > 0) SettingsDivider()
-                        SettingsNavRow(
-                            title = e.title,
-                            subtitle = e.subtitle,
-                            icon = e.icon,
-                            iconTint = e.iconTint,
-                            onClick = { onOpen(e.dest) },
-                        )
-                    }
+            SettingsSectionLabel(stringResource(Res.string.settings_hub_activity))
+            SettingsCard {
+                listOf(SettingsDest.USAGE, SettingsDest.SCHEDULES).forEachIndexed { i, d ->
+                    if (i > 0) SettingsDivider()
+                    val e = entries.first { it.dest == d }
+                    SettingsNavRow(e.title, { onOpen(d) }, subtitle = e.subtitle, icon = e.icon, iconTint = e.iconTint)
                 }
-            } else {
-                SettingsSectionLabel(stringResource(Res.string.settings_hub_activity))
-                SettingsCard {
-                    listOf(SettingsDest.USAGE, SettingsDest.SCHEDULES).forEachIndexed { i, d ->
-                        if (i > 0) SettingsDivider()
-                        val e = entries.first { it.dest == d }
-                        SettingsNavRow(e.title, { onOpen(d) }, subtitle = e.subtitle, icon = e.icon, iconTint = e.iconTint)
-                    }
-                }
+            }
 
-                SettingsSectionLabel(stringResource(Res.string.settings_hub_collaboration))
-                SettingsCard {
-                    listOf(SettingsDest.SHARES, SettingsDest.JOIN, SettingsDest.BRIDGES).forEachIndexed { i, d ->
-                        if (i > 0) SettingsDivider()
-                        val e = entries.first { it.dest == d }
-                        SettingsNavRow(e.title, { onOpen(d) }, icon = e.icon, iconTint = e.iconTint)
-                    }
+            SettingsSectionLabel(stringResource(Res.string.settings_hub_collaboration))
+            SettingsCard {
+                listOf(SettingsDest.SHARES, SettingsDest.JOIN, SettingsDest.BRIDGES).forEachIndexed { i, d ->
+                    if (i > 0) SettingsDivider()
+                    val e = entries.first { it.dest == d }
+                    SettingsNavRow(e.title, { onOpen(d) }, icon = e.icon, iconTint = e.iconTint)
                 }
+            }
 
-                SettingsSectionLabel(stringResource(Res.string.settings_title))
-                SettingsCard {
-                    listOf(
-                        SettingsDest.AGENT, SettingsDest.APPEARANCE, SettingsDest.NOTIFICATIONS,
-                        SettingsDest.SECURITY, SettingsDest.ADVANCED, SettingsDest.ABOUT,
-                    ).forEachIndexed { i, d ->
-                        if (i > 0) SettingsDivider()
-                        val e = entries.first { it.dest == d }
-                        SettingsNavRow(e.title, { onOpen(d) }, subtitle = e.subtitle, icon = e.icon, iconTint = e.iconTint)
-                    }
+            SettingsSectionLabel(stringResource(Res.string.settings_title))
+            SettingsCard {
+                listOf(
+                    SettingsDest.AGENT, SettingsDest.APPEARANCE, SettingsDest.NOTIFICATIONS,
+                    SettingsDest.SECURITY, SettingsDest.ADVANCED, SettingsDest.ABOUT,
+                ).forEachIndexed { i, d ->
+                    if (i > 0) SettingsDivider()
+                    val e = entries.first { it.dest == d }
+                    SettingsNavRow(e.title, { onOpen(d) }, subtitle = e.subtitle, icon = e.icon, iconTint = e.iconTint)
                 }
             }
         }

@@ -48,6 +48,8 @@ import dev.ccpocket.app.pairing.displayName
 import dev.ccpocket.app.pairing.encode
 import dev.ccpocket.app.resources.*
 import dev.ccpocket.app.theme.Tok
+import dev.ccpocket.app.ui.BackNavHost
+import dev.ccpocket.app.ui.showBackButton
 import dev.ccpocket.app.ui.tilde
 import dev.ccpocket.protocol.AccessTier
 import dev.ccpocket.protocol.DirectoryEntry
@@ -63,7 +65,6 @@ import qrgenerator.QRCodeImage
  */
 @Composable
 fun ShareFolderScreen(repo: PocketRepository, entry: DirectoryEntry, onBack: () -> Unit) {
-    dev.ccpocket.app.SystemBackHandler(enabled = true) { onBack() }
     // a stale invite from a previous share must not flash invite-ready on entry
     LaunchedEffect(entry.path) { repo.lastShareCreated.value = null }
     var config by remember { mutableStateOf(InviteConfig()) }
@@ -71,21 +72,25 @@ fun ShareFolderScreen(repo: PocketRepository, entry: DirectoryEntry, onBack: () 
     val invite = created?.takeUnless { it.ok == false }?.invite
 
     if (invite != null) {
-        InviteReady(
-            repo, invite,
-            folderPath = tilde(entry.path),
-            onNewCode = { repo.createShare(entry.path, config.tier, config.expiry.seconds) },
-            onDone = onBack,
-        )
+        BackNavHost(onBack = onBack) {
+            InviteReady(
+                repo, invite,
+                folderPath = tilde(entry.path),
+                onNewCode = { repo.createShare(entry.path, config.tier, config.expiry.seconds) },
+                onDone = onBack,
+            )
+        }
         return
     }
-    ShareComposer(
-        repo, entry, config,
-        error = created?.takeIf { it.ok == false }?.error,
-        onConfig = { config = it },
-        onCreate = { repo.createShare(entry.path, config.tier, config.expiry.seconds) },
-        onBack = onBack,
-    )
+    BackNavHost(onBack = onBack) {
+        ShareComposer(
+            repo, entry, config,
+            error = created?.takeIf { it.ok == false }?.error,
+            onConfig = { config = it },
+            onCreate = { repo.createShare(entry.path, config.tier, config.expiry.seconds) },
+            onBack = onBack,
+        )
+    }
 }
 
 // ── frame 1b: the share composer ──
@@ -191,7 +196,6 @@ private fun ExpiryPill(opt: ShareExpiryOption, selected: Boolean, modifier: Modi
 
 @Composable
 private fun InviteReady(repo: PocketRepository, invite: ShareInvite, folderPath: String, onNewCode: () -> Unit, onDone: () -> Unit) {
-    dev.ccpocket.app.SystemBackHandler(enabled = true) { onDone() }
     val blob = remember(invite) { invite.encode() }
     val clipboard = LocalClipboardManager.current
     var copied by remember { mutableStateOf(false) }
@@ -307,14 +311,19 @@ private fun shortCode(blob: String): String {
 
 @Composable
 internal fun ShareTopBar(title: String, onBack: () -> Unit, closeGlyph: Boolean = false) {
+    val showBtn = showBackButton()
     Row(
         Modifier.fillMaxWidth().background(Tok.base).border(0.dp, Color.Transparent).padding(horizontal = 8.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            if (closeGlyph) "✕" else "‹", color = Tok.tx2, fontSize = if (closeGlyph) 17.sp else 22.sp,
-            modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onBack).padding(horizontal = 10.dp, vertical = 4.dp),
-        )
+        if (showBtn) {
+            Text(
+                if (closeGlyph) "✕" else "‹", color = Tok.tx2, fontSize = if (closeGlyph) 17.sp else 22.sp,
+                modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onBack).padding(horizontal = 10.dp, vertical = 4.dp),
+            )
+        } else {
+            Spacer(Modifier.width(34.dp))
+        }
         Spacer(Modifier.weight(1f))
         Text(title, color = Tok.tx, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
         Spacer(Modifier.weight(1f))

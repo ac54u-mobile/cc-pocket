@@ -187,7 +187,6 @@ private fun ChangedFileRow(f: ChangedFile, onClick: () -> Unit) {
  */
 @Composable
 fun FileViewerScreen(repo: PocketRepository, onExit: (() -> Unit)? = null, onBack: () -> Unit) {
-    dev.ccpocket.app.SystemBackHandler(enabled = true) { onBack() }
     val path = repo.viewedFilePath.value ?: return
     val diff = repo.viewedFileDiff.value
     val ext = path.substringAfterLast('.', "").lowercase()
@@ -198,70 +197,72 @@ fun FileViewerScreen(repo: PocketRepository, onExit: (() -> Unit)? = null, onBac
     var diffTab by rememberDiffTab(path, isImage, deleted, diff)
     val wrap = rememberWrapState()
 
-    Column(Modifier.fillMaxSize().background(Tok.base)) {
-        Column(Modifier.fillMaxWidth().background(Tok.surface)) {
-            Row(
-                Modifier.fillMaxWidth().padding(start = 6.dp, end = 12.dp, top = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                TextButton({ onBack() }) { Text("←", color = Tok.tx2, fontSize = 18.sp) }
-                Column(Modifier.weight(1f)) {
-                    Text(fileNameOf(path), color = Tok.tx, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    TailPathText(parentDirOf(path), fontSize = 11.sp)
+    BackNavHost(onBack = onBack) {
+        Column(Modifier.fillMaxSize().background(Tok.base)) {
+            Column(Modifier.fillMaxWidth().background(Tok.surface)) {
+                Row(
+                    Modifier.fillMaxWidth().padding(start = 6.dp, end = 12.dp, top = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    BackTextButton(onBack)
+                    Column(Modifier.weight(1f)) {
+                        Text(fileNameOf(path), color = Tok.tx, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        TailPathText(parentDirOf(path), fontSize = 11.sp)
+                    }
+                    // share/save whatever the viewer holds (issue #67) — text files ride the sheet too
+                    val content = repo.viewedFile.value
+                    val exportable = remember(content) { exportBytesOf(content) }
+                    if (exportable != null) TextButton({ shareFile(fileNameOf(path), exportable, content?.mediaType) }) {
+                        Icon(Icons.Rounded.IosShare, stringResource(Res.string.file_share), tint = Tok.tx2, modifier = Modifier.size(18.dp))
+                    }
+                    // ← goes back UP one level (the changed-files list when that's where we came from);
+                    // ✕ skips the list and drops straight to the chat (issue #53's "一键返回").
+                    onExit?.let { TextButton(it) { Text("✕", color = Tok.tx2, fontSize = 16.sp) } }
                 }
-                // share/save whatever the viewer holds (issue #67) — text files ride the sheet too
-                val content = repo.viewedFile.value
-                val exportable = remember(content) { exportBytesOf(content) }
-                if (exportable != null) TextButton({ shareFile(fileNameOf(path), exportable, content?.mediaType) }) {
-                    Icon(Icons.Rounded.IosShare, stringResource(Res.string.file_share), tint = Tok.tx2, modifier = Modifier.size(18.dp))
+                Row(
+                    Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, top = 2.dp, bottom = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    DiffFileToggle(
+                        diffSelected = diffTab,
+                        isImage = isImage,
+                        deleted = deleted,
+                        onPick = { diffTab = it },
+                    )
+                    if (wrapApplies(diffTab, diff, repo.viewedFile.value, ext, isImage)) {
+                        val active = if (diffTab) wrap.diff else wrap.file
+                        Box(Modifier.size(8.dp))
+                        WrapToggle(on = active.value) { active.value = !active.value }
+                    }
+                    Box(Modifier.weight(1f))
+                    val (adds, dels) = shownStats(fileInfo, diff)
+                    if (!isImage && (adds != null || dels != null)) {
+                        DiffStatText(adds, dels, fontSize = 12.sp)
+                        Box(Modifier.size(9.dp))
+                    }
+                    fileInfo?.let { StatusChip(it.op) }
                 }
-                // ← goes back UP one level (the changed-files list when that's where we came from);
-                // ✕ skips the list and drops straight to the chat (issue #53's "一键返回").
-                onExit?.let { TextButton(it) { Text("✕", color = Tok.tx2, fontSize = 16.sp) } }
             }
-            Row(
-                Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, top = 2.dp, bottom = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                DiffFileToggle(
-                    diffSelected = diffTab,
-                    isImage = isImage,
-                    deleted = deleted,
-                    onPick = { diffTab = it },
+            Box(Modifier.weight(1f).fillMaxWidth()) {
+                if (diffTab) DiffPaneBody(diff, ext = ext.ifEmpty { null }, dense = false, wrap = wrap.diff.value)
+                else FileTabBody(
+                    repo.viewedFile.value, ext, path = path, wrap = wrap.file.value,
+                    // chunked-read progress (issue #134): drives the loading card's determinate bar
+                    progress = repo.viewedFileProgress.value,
+                    // a path the changed-set refused can still leave through the owner's approval gate
+                    // (issue #67 v2 / #79) — dock the request entry / waiting row under the refusal text
+                    exportSlot = when {
+                        repo.exportWaiting.value -> ({ ExportWaitingRow() })
+                        exportRequestable(repo.viewedFile.value) -> ({ ExportRequestButton { repo.requestExport() } })
+                        // read-doc-inline handoff (Component 3 error state): an optimistic path tap that can't be
+                        // reached — a typo, or a Bash file outside the synced workspace the containment gate won't
+                        // serve — lands here. Give it the design's graceful "Copy path instead" escape so a failed
+                        // tap is never a dead end (the path is still exactly what you'd paste back to the computer).
+                        repo.viewedFile.value?.ok == false -> ({ CopyPathButton(path) })
+                        else -> null
+                    },
                 )
-                if (wrapApplies(diffTab, diff, repo.viewedFile.value, ext, isImage)) {
-                    val active = if (diffTab) wrap.diff else wrap.file
-                    Box(Modifier.size(8.dp))
-                    WrapToggle(on = active.value) { active.value = !active.value }
-                }
-                Box(Modifier.weight(1f))
-                val (adds, dels) = shownStats(fileInfo, diff)
-                if (!isImage && (adds != null || dels != null)) {
-                    DiffStatText(adds, dels, fontSize = 12.sp)
-                    Box(Modifier.size(9.dp))
-                }
-                fileInfo?.let { StatusChip(it.op) }
             }
-        }
-        Box(Modifier.weight(1f).fillMaxWidth()) {
-            if (diffTab) DiffPaneBody(diff, ext = ext.ifEmpty { null }, dense = false, wrap = wrap.diff.value)
-            else FileTabBody(
-                repo.viewedFile.value, ext, path = path, wrap = wrap.file.value,
-                // chunked-read progress (issue #134): drives the loading card's determinate bar
-                progress = repo.viewedFileProgress.value,
-                // a path the changed-set refused can still leave through the owner's approval gate
-                // (issue #67 v2 / #79) — dock the request entry / waiting row under the refusal text
-                exportSlot = when {
-                    repo.exportWaiting.value -> ({ ExportWaitingRow() })
-                    exportRequestable(repo.viewedFile.value) -> ({ ExportRequestButton { repo.requestExport() } })
-                    // read-doc-inline handoff (Component 3 error state): an optimistic path tap that can't be
-                    // reached — a typo, or a Bash file outside the synced workspace the containment gate won't
-                    // serve — lands here. Give it the design's graceful "Copy path instead" escape so a failed
-                    // tap is never a dead end (the path is still exactly what you'd paste back to the computer).
-                    repo.viewedFile.value?.ok == false -> ({ CopyPathButton(path) })
-                    else -> null
-                },
-            )
         }
     }
 }

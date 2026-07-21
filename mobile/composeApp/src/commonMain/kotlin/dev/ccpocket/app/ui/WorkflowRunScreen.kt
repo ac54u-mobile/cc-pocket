@@ -67,78 +67,80 @@ internal fun WorkflowRunScreen(repo: PocketRepository, onBack: () -> Unit) {
     var tab by remember(runId, terminal) { mutableStateOf(if (terminal) WfTab.Journal else WfTab.Phases) }
     var sheetAgent by remember(runId) { mutableStateOf<WorkflowAgentSnap?>(null) }
     val scroll = rememberScrollState()
-    // Android back closes the sheet first, then the run view — never the whole chat (same as TerminalScreen)
-    dev.ccpocket.app.SystemBackHandler(enabled = true) { if (sheetAgent != null) sheetAgent = null else onBack() }
-
-    Column(Modifier.fillMaxSize().background(Tok.base)) {
-        // ── header: back · tile · name + runId · status pill ──
-        Row(
-            Modifier.fillMaxWidth().padding(start = 4.dp, end = 12.dp, top = 6.dp, bottom = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(9.dp),
-        ) {
-            Box(Modifier.size(36.dp).clip(RoundedCornerShape(9.dp)).clickable(onClick = onBack), contentAlignment = Alignment.Center) {
-                ChevronLeft(Tok.tx2, 17.dp)
-            }
-            WorkflowTile(WorkflowUi.variant(run), 26.dp, 7.dp)
-            Column(Modifier.weight(1f)) {
-                Text(
-                    run.name, color = Tok.tx, fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
-                    maxLines = 1, overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    run.runId.take(10) + "…", color = Tok.muted, fontFamily = FontFamily.Monospace, fontSize = 11.5.sp,
-                    maxLines = 1, overflow = TextOverflow.Ellipsis,
-                )
-            }
-            WorkflowStatusPill(run)
-        }
-        Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
-
-        Box(Modifier.weight(1f)) {
-            Column(Modifier.fillMaxSize().verticalScroll(scroll).padding(horizontal = 16.dp)) {
-                if (terminal) {
-                    run.finalResult?.let { fr ->
-                        Box(Modifier.padding(top = 14.dp)) { FinalReturnCard(fr) }
+    // Android back / edge swipe closes the sheet first, then the run view — never the whole chat
+    BackNavHost(onBack = { if (sheetAgent != null) sheetAgent = null else onBack() }) {
+        Column(Modifier.fillMaxSize().background(Tok.base)) {
+            // ── header: back · tile · name + runId · status pill ──
+            Row(
+                Modifier.fillMaxWidth().padding(start = 4.dp, end = 12.dp, top = 6.dp, bottom = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(9.dp),
+            ) {
+                if (showBackButton()) {
+                    Box(Modifier.size(36.dp).clip(RoundedCornerShape(9.dp)).clickable(onClick = onBack), contentAlignment = Alignment.Center) {
+                        ChevronLeft(Tok.tx2, 17.dp)
                     }
-                    Box(Modifier.padding(top = 16.dp)) {
-                        WfSegmented(tab) { tab = it }
-                    }
-                    Box(Modifier.height(12.dp))
                 }
-                when (tab) {
-                    WfTab.Phases -> {
-                        groups.forEach { g ->
-                            PhaseSection(g, defaultOpen = g.status == WorkflowPhaseStatus.ACTIVE, onOpenAgent = { sheetAgent = it })
+                WorkflowTile(WorkflowUi.variant(run), 26.dp, 7.dp)
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        run.name, color = Tok.tx, fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        run.runId.take(10) + "…", color = Tok.muted, fontFamily = FontFamily.Monospace, fontSize = 11.5.sp,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                WorkflowStatusPill(run)
+            }
+            Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+
+            Box(Modifier.weight(1f)) {
+                Column(Modifier.fillMaxSize().verticalScroll(scroll).padding(horizontal = 16.dp)) {
+                    if (terminal) {
+                        run.finalResult?.let { fr ->
+                            Box(Modifier.padding(top = 14.dp)) { FinalReturnCard(fr) }
                         }
-                        Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+                        Box(Modifier.padding(top = 16.dp)) {
+                            WfSegmented(tab) { tab = it }
+                        }
+                        Box(Modifier.height(12.dp))
                     }
-                    WfTab.Journal -> {
-                        val rows = WorkflowUi.journalRows(run)
-                        Text(
-                            "${rows.size} agent() calls · chronological",
-                            color = Tok.muted, fontFamily = FontFamily.Monospace, fontSize = 10.5.sp, letterSpacing = 0.6.sp,
-                            modifier = Modifier.padding(bottom = 4.dp),
-                        )
-                        rows.forEach { a -> JournalRow(a) { sheetAgent = a } }
-                        Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+                    when (tab) {
+                        WfTab.Phases -> {
+                            groups.forEach { g ->
+                                PhaseSection(g, defaultOpen = g.status == WorkflowPhaseStatus.ACTIVE, onOpenAgent = { sheetAgent = it })
+                            }
+                            Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+                        }
+                        WfTab.Journal -> {
+                            val rows = WorkflowUi.journalRows(run)
+                            Text(
+                                "${rows.size} agent() calls · chronological",
+                                color = Tok.muted, fontFamily = FontFamily.Monospace, fontSize = 10.5.sp, letterSpacing = 0.6.sp,
+                                modifier = Modifier.padding(bottom = 4.dp),
+                            )
+                            rows.forEach { a -> JournalRow(a) { sheetAgent = a } }
+                            Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+                        }
                     }
+                    Box(Modifier.height(if (terminal) 40.dp else 120.dp)) // tail spacer
                 }
-                Box(Modifier.height(if (terminal) 40.dp else 120.dp)) // tail spacer
-            }
-            // jump-to-active pill — live tree only, after scrolling away
-            if (!terminal && scroll.value > 400) {
-                Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 40.dp)) {
-                    val shape = RoundedCornerShape(999.dp)
-                    Row(
-                        Modifier.clip(shape).background(Tok.raised).border(1.dp, Tok.hair, shape)
-                            .clickable { /* scroll home = where the active phase expands */ }
-                            .padding(start = 13.dp, end = 15.dp, top = 8.dp, bottom = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(7.dp),
-                    ) {
-                        Box(Modifier.rotate(90f)) { ChevronRight(Tok.accent, 14.dp) }
-                        Text("Jump to active", color = Tok.tx, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold)
+                // jump-to-active pill — live tree only, after scrolling away
+                if (!terminal && scroll.value > 400) {
+                    Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 40.dp)) {
+                        val shape = RoundedCornerShape(999.dp)
+                        Row(
+                            Modifier.clip(shape).background(Tok.raised).border(1.dp, Tok.hair, shape)
+                                .clickable { /* scroll home = where the active phase expands */ }
+                                .padding(start = 13.dp, end = 15.dp, top = 8.dp, bottom = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(7.dp),
+                        ) {
+                            Box(Modifier.rotate(90f)) { ChevronRight(Tok.accent, 14.dp) }
+                            Text("Jump to active", color = Tok.tx, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold)
+                        }
                     }
                 }
             }
