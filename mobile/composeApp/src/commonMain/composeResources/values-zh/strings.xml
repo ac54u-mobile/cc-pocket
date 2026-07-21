@@ -206,6 +206,23 @@
 
     <!-- ── 设置（关于 + 已配对设备）──────────────────────────────── -->
     <string name="settings_title">设置</string>
+    <string name="settings_search_placeholder">搜索设置</string>
+    <string name="settings_search_empty">没有匹配的设置项</string>
+    <string name="settings_hub_activity">动态</string>
+    <string name="settings_hub_agent">Agent 默认值</string>
+    <string name="settings_hub_agent_sub">模式、模型、推理强度、显示哪些 Agent</string>
+    <string name="settings_hub_appearance">显示与外观</string>
+    <string name="settings_hub_appearance_sub">主题与聊天字号</string>
+    <string name="settings_hub_notifications">通知与语音</string>
+    <string name="settings_hub_notifications_sub">完成提醒与听写引擎</string>
+    <string name="settings_hub_security_sub">应用锁与自动锁定</string>
+    <string name="settings_hub_advanced">高级</string>
+    <string name="settings_hub_advanced_sub">上下文窗口与按模型覆盖</string>
+    <string name="settings_hub_about_sub">版本、许可、连接信息</string>
+    <string name="settings_hub_collaboration">协作</string>
+    <string name="settings_connected">已连接</string>
+    <string name="settings_switch_computer">切换</string>
+    <string name="settings_direct_lan">直连局域网</string>
     <string name="about_section">关于</string>
     <string name="about_version">版本</string>
     <string name="about_license">许可证</string>

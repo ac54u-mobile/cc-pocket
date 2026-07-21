@@ -206,6 +206,23 @@
 
     <!-- ── settings (about + paired devices) ─────────────────────── -->
     <string name="settings_title">Settings</string>
+    <string name="settings_search_placeholder">Search settings</string>
+    <string name="settings_search_empty">No matching settings</string>
+    <string name="settings_hub_activity">Activity</string>
+    <string name="settings_hub_agent">Agent defaults</string>
+    <string name="settings_hub_agent_sub">Mode, model, effort, which agents to show</string>
+    <string name="settings_hub_appearance">Display &amp; appearance</string>
+    <string name="settings_hub_appearance_sub">Theme and chat text size</string>
+    <string name="settings_hub_notifications">Notifications &amp; voice</string>
+    <string name="settings_hub_notifications_sub">Finish alerts and dictation engine</string>
+    <string name="settings_hub_security_sub">App Lock and auto-lock timing</string>
+    <string name="settings_hub_advanced">Advanced</string>
+    <string name="settings_hub_advanced_sub">Context window and per-model overrides</string>
+    <string name="settings_hub_about_sub">Version, license, connection</string>
+    <string name="settings_hub_collaboration">Collaboration</string>
+    <string name="settings_connected">Connected</string>
+    <string name="settings_switch_computer">Switch</string>
+    <string name="settings_direct_lan">Direct LAN</string>
     <string name="about_section">ABOUT</string>
     <string name="about_version">Version</string>
     <string name="about_license">License</string>
