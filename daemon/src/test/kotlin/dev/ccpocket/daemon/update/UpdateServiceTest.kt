@@ -45,7 +45,7 @@ class UpdateServiceTest {
 
     @Test
     fun owner_hints_name_the_right_package_manager() {
-        assertTrue("brew upgrade" in UpdateService.ownerHint(Path.of("/opt/homebrew/Caskroom/cc-pocket/1.2.0/bin/cc-pocket-daemon")))
+        assertTrue("install.sh" in UpdateService.ownerHint(Path.of("/opt/homebrew/Caskroom/cc-pocket/1.2.0/bin/cc-pocket-daemon")))
         assertTrue("scoop update" in UpdateService.ownerHint(Path.of("C:\\Users\\x\\scoop\\apps\\cc-pocket-daemon\\1.2.0\\cc-pocket-daemon.exe")))
         assertTrue("one-liner" in UpdateService.ownerHint(Path.of("/somewhere/else/cc-pocket-daemon")))
     }
