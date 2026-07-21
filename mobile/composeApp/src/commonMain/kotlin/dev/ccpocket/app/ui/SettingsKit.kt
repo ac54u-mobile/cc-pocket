@@ -1,5 +1,8 @@
 package dev.ccpocket.app.ui
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -10,6 +13,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -25,10 +29,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -41,10 +48,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.ccpocket.app.feedback.rememberAppHaptics
 import dev.ccpocket.app.resources.Res
 import dev.ccpocket.app.resources.settings_back
 import dev.ccpocket.app.theme.Tok
 import org.jetbrains.compose.resources.stringResource
+
+/** Density + motion tokens for Settings surfaces (phone Hub + detail panes). */
+object SettingsMetrics {
+    val rowMin = 52.dp
+    val rowPadH = 14.dp
+    val rowPadV = 14.dp
+    val rowPadVCompact = 12.dp
+    val sectionTop = 20.dp
+    val sectionBottom = 8.dp
+    val cardRadius = 12.dp
+    val indicatorW = 3.dp
+    val indicatorH = 22.dp
+    val animMs = 160
+}
 
 /** Uppercase section heading used across Settings hub + detail panes. */
 @Composable
@@ -55,19 +77,19 @@ fun SettingsSectionLabel(text: String, modifier: Modifier = Modifier) {
         fontSize = 11.sp,
         fontWeight = FontWeight.SemiBold,
         letterSpacing = 0.6.sp,
-        modifier = modifier.padding(top = 16.dp, bottom = 8.dp),
+        modifier = modifier.padding(top = SettingsMetrics.sectionTop, bottom = SettingsMetrics.sectionBottom),
     )
 }
 
-/** Grouped card: surface + hair border + 12dp radius. */
+/** Grouped card: surface + hair border + shared radius. */
 @Composable
 fun SettingsCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
     Column(
         modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(SettingsMetrics.cardRadius))
             .background(Tok.surface)
-            .border(1.dp, Tok.hair, RoundedCornerShape(12.dp)),
+            .border(1.dp, Tok.hair, RoundedCornerShape(SettingsMetrics.cardRadius)),
         content = content,
     )
 }
@@ -77,10 +99,37 @@ fun SettingsDivider() {
     Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
 }
 
+/** Leading accent bar — fades/scales in when [selected]. Replaces full-row accent fill. */
+@Composable
+fun SettingsSelectionIndicator(selected: Boolean, modifier: Modifier = Modifier) {
+    val alpha by animateFloatAsState(
+        targetValue = if (selected) 1f else 0f,
+        animationSpec = tween(SettingsMetrics.animMs),
+        label = "settings-indicator",
+    )
+    val scale by animateFloatAsState(
+        targetValue = if (selected) 1f else 0.55f,
+        animationSpec = tween(SettingsMetrics.animMs),
+        label = "settings-indicator-scale",
+    )
+    Box(
+        modifier
+            .width(SettingsMetrics.indicatorW)
+            .height(SettingsMetrics.indicatorH)
+            .graphicsLayer {
+                this.alpha = alpha
+                scaleY = scale
+            }
+            .clip(RoundedCornerShape(2.dp))
+            .background(Tok.accent),
+    )
+}
+
 /** Top bar: back chevron + title. */
 @Composable
 fun SettingsTopBar(title: String, onBack: () -> Unit, trailing: (@Composable () -> Unit)? = null) {
     val backLabel = stringResource(Res.string.settings_back)
+    val haptics = rememberAppHaptics()
     Row(
         Modifier.fillMaxWidth().background(Tok.surface).padding(horizontal = 4.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -90,7 +139,10 @@ fun SettingsTopBar(title: String, onBack: () -> Unit, trailing: (@Composable () 
                 .size(40.dp)
                 .clip(RoundedCornerShape(10.dp))
                 .semantics { contentDescription = backLabel }
-                .clickable(onClick = onBack),
+                .clickable {
+                    haptics.tick()
+                    onBack()
+                },
             contentAlignment = Alignment.Center,
         ) {
             Icon(
@@ -110,7 +162,6 @@ fun SettingsTopBar(title: String, onBack: () -> Unit, trailing: (@Composable () 
             overflow = TextOverflow.Ellipsis,
         )
         trailing?.invoke()
-        // silence unused when trailing null — keep layout stable
         if (trailing == null) Spacer(Modifier.width(4.dp))
     }
 }
@@ -127,18 +178,26 @@ fun SettingsNavRow(
     subtitle: String? = null,
     trailing: String? = null,
     icon: ImageVector? = null,
-    iconTint: androidx.compose.ui.graphics.Color = Tok.accent,
+    iconTint: Color = Tok.accent,
     danger: Boolean = false,
 ) {
+    val haptics = rememberAppHaptics()
     Row(
         modifier
             .fillMaxWidth()
+            .heightIn(min = SettingsMetrics.rowMin)
             .semantics {
                 role = Role.Button
                 contentDescription = listOfNotNull(title, subtitle, trailing).joinToString(", ")
             }
-            .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = if (subtitle == null) 14.dp else 12.dp),
+            .clickable {
+                haptics.tick()
+                onClick()
+            }
+            .padding(
+                horizontal = SettingsMetrics.rowPadH,
+                vertical = if (subtitle == null) SettingsMetrics.rowPadV else SettingsMetrics.rowPadVCompact,
+            ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (icon != null) {
@@ -191,15 +250,26 @@ fun SettingsToggleRow(
     sub: String? = null,
     enabled: Boolean = true,
 ) {
+    val haptics = rememberAppHaptics()
     Row(
-        Modifier.fillMaxWidth().padding(start = 14.dp, end = 8.dp, top = 10.dp, bottom = 10.dp),
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = SettingsMetrics.rowMin)
+            .padding(start = SettingsMetrics.rowPadH, end = 8.dp, top = 10.dp, bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f).padding(end = 12.dp)) {
             Text(label, color = Tok.tx, fontSize = 14.sp)
             if (sub != null) Text(sub, color = Tok.muted, fontSize = 11.5.sp, lineHeight = 15.sp)
         }
-        Switch(checked = checked, onCheckedChange = onChange, enabled = enabled)
+        Switch(
+            checked = checked,
+            onCheckedChange = {
+                haptics.tick()
+                onChange(it)
+            },
+            enabled = enabled,
+        )
     }
 }
 
@@ -213,6 +283,7 @@ fun <T> SettingsSegmented(
     modifier: Modifier = Modifier,
     mono: Boolean = true,
 ) {
+    val haptics = rememberAppHaptics()
     Row(
         modifier
             .fillMaxWidth()
@@ -224,18 +295,31 @@ fun <T> SettingsSegmented(
     ) {
         options.forEach { opt ->
             val sel = selected == opt
+            val bg by animateColorAsState(
+                targetValue = if (sel) Tok.accent else Color.Transparent,
+                animationSpec = tween(SettingsMetrics.animMs),
+                label = "seg-bg",
+            )
+            val fg by animateColorAsState(
+                targetValue = if (sel) Tok.base else Tok.tx2,
+                animationSpec = tween(SettingsMetrics.animMs),
+                label = "seg-fg",
+            )
             Box(
                 Modifier
                     .weight(1f)
                     .clip(RoundedCornerShape(7.dp))
-                    .then(if (sel) Modifier.background(Tok.accent) else Modifier)
-                    .clickable { onPick(opt) }
+                    .background(bg)
+                    .clickable {
+                        haptics.tick()
+                        onPick(opt)
+                    }
                     .padding(vertical = 9.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     label(opt),
-                    color = if (sel) Tok.base else Tok.tx2,
+                    color = fg,
                     fontFamily = if (mono) FontFamily.Monospace else FontFamily.Default,
                     fontSize = 11.sp,
                     fontWeight = if (sel) FontWeight.SemiBold else FontWeight.Normal,
@@ -257,9 +341,9 @@ fun SettingsSearchField(
     Row(
         modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(SettingsMetrics.cardRadius))
             .background(Tok.surface)
-            .border(1.dp, Tok.hair, RoundedCornerShape(12.dp))
+            .border(1.dp, Tok.hair, RoundedCornerShape(SettingsMetrics.cardRadius))
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -300,13 +384,14 @@ fun SettingsStatusStrip(
     actionLabel: String,
     onAction: () -> Unit,
 ) {
+    val haptics = rememberAppHaptics()
     Row(
         Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(SettingsMetrics.cardRadius))
             .background(Tok.surface)
-            .border(1.dp, Tok.hair, RoundedCornerShape(12.dp))
-            .padding(horizontal = 14.dp, vertical = 12.dp),
+            .border(1.dp, Tok.hair, RoundedCornerShape(SettingsMetrics.cardRadius))
+            .padding(horizontal = SettingsMetrics.rowPadH, vertical = SettingsMetrics.rowPadVCompact),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f).padding(end = 10.dp)) {
@@ -320,7 +405,10 @@ fun SettingsStatusStrip(
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
-                .clickable(onClick = onAction)
+                .clickable {
+                    haptics.tick()
+                    onAction()
+                }
                 .padding(horizontal = 8.dp, vertical = 6.dp),
         )
     }
@@ -366,7 +454,7 @@ fun SettingsConsequenceHint(
 
 /**
  * Single-select list (preferred over long Segmented controls on small screens).
- * [trailing] is optional monospace hint (alias / token count).
+ * Leading accent indicator + soft wash when selected; light haptic on pick.
  */
 @Composable
 fun <T> SettingsChoiceList(
@@ -378,24 +466,42 @@ fun <T> SettingsChoiceList(
     trailing: @Composable (T) -> String? = { null },
     leading: (@Composable (T) -> Unit)? = null,
 ) {
+    val haptics = rememberAppHaptics()
     SettingsCard(modifier) {
         options.forEachIndexed { i, opt ->
             if (i > 0) SettingsDivider()
             val sel = selected == opt
             val title = label(opt)
             val trail = trailing(opt)
+            val wash by animateFloatAsState(
+                targetValue = if (sel) 0.07f else 0f,
+                animationSpec = tween(SettingsMetrics.animMs),
+                label = "choice-wash",
+            )
             Row(
                 Modifier
                     .fillMaxWidth()
+                    .heightIn(min = SettingsMetrics.rowMin)
+                    .background(Tok.accent.copy(alpha = wash))
                     .semantics {
                         role = Role.RadioButton
                         this.selected = sel
                         contentDescription = title
                     }
-                    .clickable { onPick(opt) }
-                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                    .clickable {
+                        haptics.tick()
+                        onPick(opt)
+                    }
+                    .padding(
+                        start = 10.dp,
+                        end = SettingsMetrics.rowPadH,
+                        top = SettingsMetrics.rowPadVCompact,
+                        bottom = SettingsMetrics.rowPadVCompact,
+                    ),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                SettingsSelectionIndicator(sel)
+                Spacer(Modifier.width(10.dp))
                 if (leading != null) leading(opt)
                 Text(
                     title,
@@ -416,9 +522,17 @@ fun <T> SettingsChoiceList(
                         maxLines = 1,
                     )
                 }
-                if (sel) {
-                    Icon(Icons.Rounded.Check, null, tint = Tok.accent, modifier = Modifier.size(18.dp))
-                }
+                val checkAlpha by animateFloatAsState(
+                    targetValue = if (sel) 1f else 0f,
+                    animationSpec = tween(SettingsMetrics.animMs),
+                    label = "choice-check",
+                )
+                Icon(
+                    Icons.Rounded.Check,
+                    null,
+                    tint = Tok.accent.copy(alpha = checkAlpha),
+                    modifier = Modifier.size(18.dp).graphicsLayer { alpha = checkAlpha },
+                )
             }
         }
     }

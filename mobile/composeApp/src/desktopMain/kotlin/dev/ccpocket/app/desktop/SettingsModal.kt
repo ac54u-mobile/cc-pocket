@@ -1,5 +1,7 @@
 package dev.ccpocket.app.desktop
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -14,6 +16,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -111,12 +114,15 @@ import dev.ccpocket.app.resources.settings_title
 import dev.ccpocket.app.resources.appearance_dark
 import dev.ccpocket.app.resources.appearance_light
 import dev.ccpocket.app.resources.appearance_system
+import dev.ccpocket.app.feedback.rememberAppHaptics
 import dev.ccpocket.app.theme.ThemeMode
 import dev.ccpocket.app.theme.Tok
 import dev.ccpocket.app.ui.CLAUDE_MODEL_OPTIONS
 import dev.ccpocket.app.ui.SettingsConsequenceHint
+import dev.ccpocket.app.ui.SettingsMetrics
 import dev.ccpocket.app.ui.SettingsSearchField
 import dev.ccpocket.app.ui.SettingsSection
+import dev.ccpocket.app.ui.SettingsSelectionIndicator
 import kotlinx.coroutines.delay
 import dev.ccpocket.app.ui.AgentGlyph
 import dev.ccpocket.app.ui.agentColor
@@ -211,13 +217,41 @@ fun SettingsModal(model: DesktopModel, onDismiss: () -> Unit) {
 @Composable
 private fun RailItem(tab: SettingsTab, selected: Boolean, onClick: () -> Unit) {
     val label = stringResource(tab.section.title)
+    val haptics = rememberAppHaptics()
+    val iconTint by animateColorAsState(
+        if (selected) Tok.accent else Tok.tx2,
+        tween(SettingsMetrics.animMs),
+        label = "rail-icon",
+    )
+    val textTint by animateColorAsState(
+        if (selected) Tok.tx else Tok.tx2,
+        tween(SettingsMetrics.animMs),
+        label = "rail-text",
+    )
     Row(
-        Modifier.fillMaxWidth().selectableRow(selected).clickable(onClick = onClick).padding(horizontal = 10.dp, vertical = 9.dp),
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 40.dp)
+            .selectableRow(selected)
+            .clickable {
+                haptics.tick()
+                onClick()
+            }
+            .padding(horizontal = 10.dp, vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Icon(tab.icon, null, tint = if (selected) Tok.accent else Tok.tx2, modifier = Modifier.size(16.dp))
-        Text(label, color = if (selected) Tok.tx else Tok.tx2, fontFamily = Dk.ui, fontSize = 13.sp, fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        SettingsSelectionIndicator(selected)
+        Icon(tab.icon, null, tint = iconTint, modifier = Modifier.size(16.dp))
+        Text(
+            label,
+            color = textTint,
+            fontFamily = Dk.ui,
+            fontSize = 13.sp,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
@@ -309,6 +343,7 @@ private fun AdvancedDesktopPane(model: DesktopModel) {
 // picker. Wired to the shared repo via model.themeMode, so a pick persists and the window root re-themes live.
 @Composable
 private fun AppearanceRow(model: DesktopModel) {
+    val haptics = rememberAppHaptics()
     val modes = listOf(
         ThemeMode.SYSTEM to stringResource(Res.string.appearance_system),
         ThemeMode.LIGHT to stringResource(Res.string.appearance_light),
@@ -321,14 +356,27 @@ private fun AppearanceRow(model: DesktopModel) {
     ) {
         modes.forEach { (mode, label) ->
             val sel = model.themeMode == mode
+            val bg by animateColorAsState(
+                if (sel) Tok.accent else Color.Transparent,
+                tween(SettingsMetrics.animMs),
+                label = "appearance-bg",
+            )
+            val fg by animateColorAsState(
+                if (sel) Tok.base else Tok.tx2,
+                tween(SettingsMetrics.animMs),
+                label = "appearance-fg",
+            )
             Box(
                 Modifier.weight(1f).clip(RoundedCornerShape(7.dp))
-                    .background(if (sel) Tok.accent else Color.Transparent)
-                    .clickable { model.themeMode = mode }.padding(vertical = 8.dp),
+                    .background(bg)
+                    .clickable {
+                        haptics.tick()
+                        model.themeMode = mode
+                    }.padding(vertical = 8.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    label, color = if (sel) Tok.base else Tok.tx2, fontFamily = Dk.ui, fontSize = 12.5.sp,
+                    label, color = fg, fontFamily = Dk.ui, fontSize = 12.5.sp,
                     fontWeight = if (sel) FontWeight.SemiBold else FontWeight.Normal,
                 )
             }
@@ -338,11 +386,17 @@ private fun AppearanceRow(model: DesktopModel) {
 
 @Composable
 private fun ToggleRow(label: String, on: Boolean, onClick: () -> Unit) {
+    val haptics = rememberAppHaptics()
+    val border by animateColorAsState(if (on) Tok.accent else Tok.hair, tween(SettingsMetrics.animMs), label = "toggle-border")
+    val bg by animateColorAsState(if (on) Tok.surface else Color.Transparent, tween(SettingsMetrics.animMs), label = "toggle-bg")
     Row(
-        Modifier.fillMaxWidth().padding(bottom = 7.dp).clip(RoundedCornerShape(9.dp))
-            .background(if (on) Tok.surface else Color.Transparent)
-            .border(1.5.dp, if (on) Tok.accent else Tok.hair, RoundedCornerShape(9.dp))
-            .clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 10.dp),
+        Modifier.fillMaxWidth().padding(bottom = 7.dp).heightIn(min = 44.dp).clip(RoundedCornerShape(9.dp))
+            .background(bg)
+            .border(1.5.dp, border, RoundedCornerShape(9.dp))
+            .clickable {
+                haptics.tick()
+                onClick()
+            }.padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Dot(if (on) Tok.ok else Tok.muted, 8.dp)
@@ -354,13 +408,20 @@ private fun ToggleRow(label: String, on: Boolean, onClick: () -> Unit) {
 
 @Composable
 private fun TerminalRow(t: TerminalApp, selected: Boolean, onClick: () -> Unit) {
+    val haptics = rememberAppHaptics()
+    val border by animateColorAsState(if (selected) Tok.accent else Tok.hair, tween(SettingsMetrics.animMs), label = "term-border")
+    val bg by animateColorAsState(if (selected) Tok.surface else Color.Transparent, tween(SettingsMetrics.animMs), label = "term-bg")
     Row(
-        Modifier.fillMaxWidth().padding(bottom = 7.dp).clip(RoundedCornerShape(9.dp))
-            .background(if (selected) Tok.surface else Color.Transparent)
-            .border(1.5.dp, if (selected) Tok.accent else Tok.hair, RoundedCornerShape(9.dp))
-            .clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 10.dp),
+        Modifier.fillMaxWidth().padding(bottom = 7.dp).heightIn(min = 44.dp).clip(RoundedCornerShape(9.dp))
+            .background(bg)
+            .border(1.5.dp, border, RoundedCornerShape(9.dp))
+            .clickable {
+                haptics.tick()
+                onClick()
+            }.padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
+        SettingsSelectionIndicator(selected)
         Text(">_", color = if (selected) Tok.tx else Tok.tx2, fontFamily = Dk.mono, fontSize = 12.sp)
         Text(t.label, color = Tok.tx, fontFamily = Dk.ui, fontSize = 13.sp)
         Spacer(Modifier.weight(1f))
@@ -388,13 +449,34 @@ private fun AgentCardRow(agent: AgentKind, selected: Boolean, modifier: Modifier
 // context-window pickers (issue #60 folded two byte-identical copies into one).
 @Composable
 private fun PrefRow(label: String, trailing: String, selected: Boolean, onClick: () -> Unit) {
+    val haptics = rememberAppHaptics()
+    val border by animateColorAsState(
+        if (selected) Tok.accent else Tok.hair,
+        tween(SettingsMetrics.animMs),
+        label = "pref-border",
+    )
+    val bg by animateColorAsState(
+        if (selected) Tok.surface else Color.Transparent,
+        tween(SettingsMetrics.animMs),
+        label = "pref-bg",
+    )
     Row(
-        Modifier.fillMaxWidth().padding(bottom = 7.dp).clip(RoundedCornerShape(9.dp))
-            .background(if (selected) Tok.surface else Color.Transparent)
-            .border(1.5.dp, if (selected) Tok.accent else Tok.hair, RoundedCornerShape(9.dp))
-            .clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp),
+        Modifier
+            .fillMaxWidth()
+            .padding(bottom = 7.dp)
+            .heightIn(min = 44.dp)
+            .clip(RoundedCornerShape(9.dp))
+            .background(bg)
+            .border(1.5.dp, border, RoundedCornerShape(9.dp))
+            .clickable {
+                haptics.tick()
+                onClick()
+            }
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
+        SettingsSelectionIndicator(selected)
         Text(label, color = Tok.tx, fontFamily = Dk.ui, fontSize = 13.sp)
         Spacer(Modifier.weight(1f))
         Text(trailing, color = Tok.muted, fontFamily = Dk.mono, fontSize = 11.sp)
@@ -439,13 +521,34 @@ private fun ContextWindowRows(model: DesktopModel) {
 
 @Composable
 private fun ModeRow(m: DkMode, selected: Boolean, onClick: () -> Unit) {
+    val haptics = rememberAppHaptics()
+    val border by animateColorAsState(
+        if (selected) Tok.accent else Tok.hair,
+        tween(SettingsMetrics.animMs),
+        label = "mode-border",
+    )
+    val bg by animateColorAsState(
+        if (selected) Tok.surface else Color.Transparent,
+        tween(SettingsMetrics.animMs),
+        label = "mode-bg",
+    )
     Row(
-        Modifier.fillMaxWidth().padding(bottom = 7.dp).clip(RoundedCornerShape(9.dp))
-            .background(if (selected) Tok.surface else Color.Transparent)
-            .border(1.5.dp, if (selected) Tok.accent else Tok.hair, RoundedCornerShape(9.dp))
-            .clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp),
+        Modifier
+            .fillMaxWidth()
+            .padding(bottom = 7.dp)
+            .heightIn(min = 44.dp)
+            .clip(RoundedCornerShape(9.dp))
+            .background(bg)
+            .border(1.5.dp, border, RoundedCornerShape(9.dp))
+            .clickable {
+                haptics.tick()
+                onClick()
+            }
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
+        SettingsSelectionIndicator(selected)
         Dot(m.dot, 8.dp)
         Text(m.label, color = Tok.tx, fontFamily = Dk.ui, fontSize = 13.sp)
         if (m.danger) Icon(Icons.Rounded.Warning, null, tint = Tok.warn, modifier = Modifier.size(13.dp))
