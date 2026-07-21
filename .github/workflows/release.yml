@@ -32,8 +32,29 @@ permissions:
   contents: write
 
 jobs:
+  # Create daemon-v* once so parallel upload jobs don't race on "release not found".
+  ensure-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ensure GitHub release daemon-v${{ inputs.version }} exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="daemon-v${{ inputs.version }}"
+          if gh release view "$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            echo "release $TAG already exists"
+          else
+            gh release create "$TAG" \
+              --repo "${{ github.repository }}" \
+              --title "Daemon ${{ inputs.version }}" \
+              --notes "主机 daemon / 桌面安装包。手机 App 见 \`app-v*\`。" \
+              --latest
+          fi
+
   macos:
-    if: ${{ !inputs.only_android && !inputs.only_macos_desktop }}
+    # Needs Developer ID + notarization secrets; skip cleanly on forks that only ship Linux/Windows.
+    if: ${{ !inputs.only_android && !inputs.only_macos_desktop && secrets.MACOS_CERT_P12_BASE64 != '' }}
+    needs: [ensure-release]
     strategy:
       fail-fast: false
       matrix:
@@ -98,6 +119,7 @@ jobs:
 
   windows:
     if: ${{ !inputs.only_android && !inputs.only_macos_desktop }}
+    needs: [ensure-release]
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -122,8 +144,10 @@ jobs:
 
   linux:
     if: ${{ !inputs.only_android && !inputs.only_macos_desktop }}
+    needs: [ensure-release]
     runs-on: ${{ matrix.runner }}
     strategy:
+      fail-fast: false
       matrix:
         # jpackage bundles the HOST JRE (no cross-build), so each arch needs a native runner.
         # ubuntu-24.04-arm is GitHub's free arm64 runner for public repos (issue #34).
@@ -157,9 +181,10 @@ jobs:
   android:
     # Builds the signed phone app (:mobile:composeApp) and attaches the APK to the release, so the
     # website's "newest .apk" link always resolves to a current, release-signed build. The signing
-    # key is injected from repo secrets; if any are missing the build.gradle signing config is
-    # skipped and we FAIL the job rather than ship an unsigned APK (apksigner verify is the gate).
-    if: ${{ !inputs.only_macos_desktop }}
+    # key is injected from repo secrets; skip when the keystore secret is absent (forks / CI without
+    # Android signing) instead of failing the whole release.
+    if: ${{ !inputs.only_macos_desktop && secrets.CCPOCKET_KEYSTORE_BASE64 != '' }}
+    needs: [ensure-release]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -237,7 +262,8 @@ jobs:
     # job; we AVOID the retiring macos-13 Intel runner (jobs there queue indefinitely).
     # composeApp applies the Android + googleServices plugins, so the build needs the Android SDK at configure
     # time and a google-services.json to exist — the desktop target never touches Firebase, so a placeholder is fine.
-    if: ${{ !inputs.only_android }}
+    if: ${{ !inputs.only_android && secrets.MACOS_CERT_P12_BASE64 != '' }}
+    needs: [ensure-release]
     strategy:
       fail-fast: false
       matrix:
@@ -327,6 +353,7 @@ jobs:
     # name. jpackage can't cross-compile, so this runs on windows-latest (which ships WiX, so the MSI builds).
     # Mirrors build-windows.yml's windows-app job but uploads to the release instead of a workflow artifact.
     if: ${{ !inputs.only_android && !inputs.only_macos_desktop }}
+    needs: [ensure-release]
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -393,7 +420,7 @@ jobs:
   # Needs a repo secret SCOOP_BUCKET_TOKEN: a fine-grained PAT with contents:write on
   # ac54u-mobile/scoop-bucket. Skips gracefully (with a warning) when the secret is absent.
   bump-scoop:
-    if: ${{ !inputs.only_android && !inputs.only_macos_desktop }}
+    if: ${{ !inputs.only_android && !inputs.only_macos_desktop && !cancelled() }}
     needs: [windows]
     runs-on: ubuntu-latest
     steps:
@@ -430,10 +457,10 @@ jobs:
   # (the Claude Code pattern: manifest + per-platform checksum). Runs after all uploads so the sums
   # cover the final artifacts; --clobber makes re-runs safe.
   checksums:
-    # !cancelled() (not the default success()) so this still runs when the daemon/windows/android jobs
-    # are SKIPPED in only_macos_desktop mode — it re-sums whatever assets are on the release now.
-    if: ${{ !cancelled() && !inputs.only_android }}
-    needs: [macos, windows, linux, android, macos-desktop, windows-desktop]
+    # !cancelled() (not the default success()) so this still runs when macOS/Android jobs are skipped
+    # (missing signing secrets) or only_* modes skip peers — re-sum whatever assets are on the release.
+    if: ${{ always() && !cancelled() && !inputs.only_android }}
+    needs: [ensure-release, macos, windows, linux, android, macos-desktop, windows-desktop]
     runs-on: ubuntu-latest
     steps:
       - name: Generate + upload SHA256SUMS for daemon-v${{ inputs.version }}
