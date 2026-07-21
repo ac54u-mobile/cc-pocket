@@ -30,8 +30,8 @@ cp iosApp/iosApp/GoogleService-Info.plist.template iosApp/iosApp/GoogleService-I
 
 1. 左侧选 `iosApp` 工程 → TARGETS 选 `iosApp` → 顶部 **Signing & Capabilities**。
 2. 勾 **Automatically manage signing**。
-3. **Team** 选你当前的 Apple ID。team 已写进 `iosApp/project.yml` 的 `DEVELOPMENT_TEAM`，`xcodegen generate` 后不用重选；换账号时改那一行即可。
-4. **Bundle Identifier** 现为 `com.panda.ccpocket`——原 `dev.ccpocket.app` 已被旧账号注册（bundle ID 跨 team 全局唯一）；若再提示不可用，换一个唯一的，并同步改 `iosApp/project.yml`。
+3. **Team** 选你自己的 Apple ID（TrollStore 无签名构建可留空）。
+4. **Bundle Identifier** 为 `com.txx.ccpocket`；若不可用，换一个唯一 ID 并同步改 `iosApp/project.yml` 与 Android `applicationId`。
 
 > 用免费 Apple ID 也能上自己的真机，但 App 7 天后过期、需重装；付费开发者账号无此限制。
 
@@ -54,7 +54,7 @@ cp iosApp/iosApp/GoogleService-Info.plist.template iosApp/iosApp/GoogleService-I
 1. **daemon 外拨连 relay**（首跑自生成身份并起本地配对回环）：
 
    ```bash
-   daemon/build/install/cc-pocket-daemon/bin/cc-pocket-daemon run --relay wss://pocket.ark-nexus.cc --claude-bin ~/.local/bin/claude
+   daemon/build/install/cc-pocket-daemon/bin/cc-pocket-daemon run --relay wss://relay.txx.app --claude-bin ~/.local/bin/claude
    ```
 
 2. **配对**：另开一个终端，让 daemon 出一张一次性配对链接：
@@ -66,7 +66,7 @@ cp iosApp/iosApp/GoogleService-Info.plist.template iosApp/iosApp/GoogleService-I
 
 3. **App 里配对**：用 App 内置相机扫终端里的二维码，或手输 6 位码，或把上面的 `ccpocket://pair?...` 链接粘进「Pair」框 → Pair。配对成功后设备记住该 daemon，以后开 App 直接「Connect」。
 
-> 票据 120s 单次有效；过期就再 `pair` 一次。自托管 relay：把 `wss://pocket.ark-nexus.cc` 换成你自己的域名（`deploy/` 有 systemd + Caddyfile）。
+> 票据 120s 单次有效；过期就再 `pair` 一次。自托管 relay：把 `wss://relay.txx.app` 换成你自己的域名（`deploy/` 有 systemd + Caddyfile）。
 
 ### 进阶：同局域网直连（不经 relay）
 

@@ -12,7 +12,7 @@
 # 可重复执行以升级。环境变量：
 #   CC_POCKET_VERSION=daemon-vX.Y.Z  固定 daemon 版本（默认 latest；也兼容 vX.Y.Z）
 #   CC_POCKET_REPO=owner/repo        安装脚本所属仓库（默认 ac54u-mobile/cc-pocket）
-#   CC_POCKET_ASSET_REPO=…           二进制 Release 仓库（默认先试 CC_POCKET_REPO，没有则回退 heypandax/cc-pocket）
+#   CC_POCKET_ASSET_REPO=…           二进制 Release 仓库（默认 = CC_POCKET_REPO）
 #   CC_POCKET_RELAY=wss://…          默认 relay（默认 wss://relay.txx.app）
 #   CC_POCKET_ROOT / CC_POCKET_BIN / CC_POCKET_NO_SERVICE=1
 #
@@ -20,13 +20,12 @@
 set -euo pipefail
 
 REPO="${CC_POCKET_REPO:-ac54u-mobile/cc-pocket}"
-FALLBACK_ASSET_REPO="heypandax/cc-pocket"
 BIN="cc-pocket-daemon"
 ROOT="${CC_POCKET_ROOT:-$HOME/.local/share/cc-pocket}"
 BINDIR="${CC_POCKET_BIN:-$HOME/.local/bin}"
 VERSION="${CC_POCKET_VERSION:-latest}"
 RELAY="${CC_POCKET_RELAY:-wss://relay.txx.app}"
-ASSET_REPO="${CC_POCKET_ASSET_REPO:-}"
+ASSET_REPO="${CC_POCKET_ASSET_REPO:-$REPO}"
 
 say()  { printf '\033[1;36m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33mwarning:\033[0m %s\n' "$*" >&2; }
@@ -94,34 +93,11 @@ shasum_cmd=""
 if command -v sha256sum >/dev/null 2>&1; then shasum_cmd="sha256sum"
 elif command -v shasum   >/dev/null 2>&1; then shasum_cmd="shasum -a 256"; fi
 
-# --- resolve version + asset repo ---
+# --- resolve version ---
 if [ "$VERSION" = "latest" ]; then
-  say "解析最新 Release"
-  if [ -n "$ASSET_REPO" ]; then
-    VERSION="$(resolve_latest "$ASSET_REPO")" \
-      || err "无法解析 $ASSET_REPO 的最新 daemon 版本（可设 CC_POCKET_VERSION=daemon-vX.Y.Z）"
-  else
-    if VERSION="$(resolve_latest "$REPO" 2>/dev/null)" && [ -n "$VERSION" ] && \
-       [[ "$VERSION" == daemon-v* || "$VERSION" == daemon/* || "$VERSION" == v* || "$VERSION" =~ ^[0-9] ]]; then
-      ASSET_REPO="$REPO"
-    else
-      warn "$REPO 尚无 daemon Release，回退使用 $FALLBACK_ASSET_REPO 的二进制（relay 仍为 $RELAY）"
-      ASSET_REPO="$FALLBACK_ASSET_REPO"
-      VERSION="$(resolve_latest "$ASSET_REPO")" \
-        || err "无法解析最新版本（可设 CC_POCKET_VERSION=daemon-vX.Y.Z）"
-    fi
-  fi
-else
-  : "${ASSET_REPO:=$REPO}"
-  # 指定版本时若本仓没有该 asset，再试上游
-  if [ "$ASSET_REPO" = "$REPO" ] && [ "$REPO" != "$FALLBACK_ASSET_REPO" ]; then
-    ver_probe="$(daemon_ver "$VERSION")"
-    probe_url="https://github.com/$ASSET_REPO/releases/download/${VERSION}/${BIN}-${ver_probe}-${plat}-${arch}.tar.gz"
-    if ! curl -fsSI "$probe_url" >/dev/null 2>&1; then
-      warn "$ASSET_REPO 没有 ${VERSION} 的 ${plat}/${arch} 包，回退 $FALLBACK_ASSET_REPO"
-      ASSET_REPO="$FALLBACK_ASSET_REPO"
-    fi
-  fi
+  say "解析最新 daemon Release（$ASSET_REPO）"
+  VERSION="$(resolve_latest "$ASSET_REPO")" \
+    || err "无法解析 $ASSET_REPO 的最新 daemon 版本（可设 CC_POCKET_VERSION=daemon-vX.Y.Z）"
 fi
 [ -n "$VERSION" ] || err "版本为空"
 ver="$(daemon_ver "$VERSION")"

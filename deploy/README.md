@@ -11,16 +11,16 @@ opaque, end-to-end-encrypted binary data plane and stores only fingerprints / pu
 ## Topology
 
 ```
-client ──HTTPS──> Cloudflare (proxy, edge cert for ark-nexus.cc)
+client ──HTTPS──> Cloudflare / NPM (edge cert for relay.txx.app)
                       │  (orange-cloud; A record proxied, origin = $RELAY_HOST)
                       ▼
-        Caddy :80/:443 (origin Let's Encrypt cert for pocket.ark-nexus.cc)
+        Caddy :80/:443 (origin Let's Encrypt cert for relay.txx.app)
                       │  reverse_proxy (also upgrades WebSocket)
                       ▼
         cc-pocket-relay 127.0.0.1:9000  (SQLite at /var/lib/cc-pocket-relay/relay.db)
 ```
 
-Public URL: `https://pocket.ark-nexus.cc/healthz` → `ok`
+Public URL: `https://relay.txx.app/healthz` → `ok`
 WebSocket endpoints (proxied automatically): `/v1/daemon`, `/v1/device`. REST: `/v1/pair/redeem`, `/v1/pair/code`.
 
 ## Server facts
@@ -44,7 +44,7 @@ WebSocket endpoints (proxied automatically): `/v1/daemon`, `/v1/device`. REST: `
 | `/var/lib/cc-pocket-relay/relay.db` | SQLite store, owned `ccpocket:ccpocket` (dir `0750`) |
 | `/etc/systemd/system/cc-pocket-relay.service` | relay unit (mirrors `deploy/cc-pocket-relay.service`) |
 | `/etc/caddy/Caddyfile` | Caddy config (mirrors `deploy/Caddyfile`); `.orig` = package default backup |
-| `/var/lib/caddy/.local/share/caddy/certificates/.../pocket.ark-nexus.cc/` | LE cert + key (auto-managed) |
+| `/var/lib/caddy/.local/share/caddy/certificates/.../relay.txx.app/` | LE cert + key (auto-managed) |
 
 ## Files in this directory
 
@@ -142,17 +142,17 @@ systemctl reload caddy        # zero-downtime config reload
 curl -s http://127.0.0.1:9000/healthz                     # -> ok
 
 # health — public (through Cloudflare)
-curl -sS https://pocket.ark-nexus.cc/healthz              # -> ok
+curl -sS https://relay.txx.app/healthz              # -> ok
 
 # health — origin directly (bypass Cloudflare; validates Caddy's own LE cert)
-curl -sS --resolve pocket.ark-nexus.cc:443:$RELAY_HOST https://pocket.ark-nexus.cc/healthz
+curl -sS --resolve relay.txx.app:443:$RELAY_HOST https://relay.txx.app/healthz
 ```
 
 ## TLS / networking notes
 
-- The domain `pocket.ark-nexus.cc` is **proxied through Cloudflare** (DNS resolves to a
+- The domain `relay.txx.app` is **proxied through Cloudflare** (DNS resolves to a
   Cloudflare IP, not the origin). Two cert layers exist: Cloudflare's edge cert (client side)
-  and Caddy's **origin** Let's Encrypt cert for `pocket.ark-nexus.cc`. Both are valid; the
+  and Caddy's **origin** Let's Encrypt cert for `relay.txx.app`. Both are valid; the
   ACME `http-01` challenge completed via Cloudflare passing it through to the origin on :80.
 - Renewal is automatic (Caddy). Cert + key persist under
   `/var/lib/caddy/.local/share/caddy/certificates/...`.

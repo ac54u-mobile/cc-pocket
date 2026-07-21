@@ -6,7 +6,7 @@
 # scripts/redeploy-relay.sh afterwards, which ships the push-enabled binary and restarts with the env.
 #
 #   RELAY_HOST=<ip> SSHPASS='<root pw>'   # from .env
-#   APNS_P8=iosApp/AuthKey_XXXX.p8 APNS_KEY_ID=XXXX APNS_TEAM_ID=YYYY APNS_TOPIC=com.panda.ccpocket \
+#   APNS_P8=iosApp/AuthKey_XXXX.p8 APNS_KEY_ID=XXXX APNS_TEAM_ID=YYYY APNS_TOPIC=com.txx.ccpocket \
 #   FCM_JSON=firebase/<service-account>.json \
 #   bash scripts/provision-relay-push.sh
 set -euo pipefail
@@ -18,7 +18,7 @@ cd "$(dirname "$0")/.."
 APNS_P8="${APNS_P8:?path to the APNs .p8}"
 APNS_KEY_ID="${APNS_KEY_ID:?APNs Key ID (the 10-char id in the .p8 filename)}"
 APNS_TEAM_ID="${APNS_TEAM_ID:?Apple Team ID}"
-APNS_TOPIC="${APNS_TOPIC:-com.panda.ccpocket}"
+APNS_TOPIC="${APNS_TOPIC:-com.txx.ccpocket}"
 FCM_JSON="${FCM_JSON:?path to the FCM service-account JSON}"
 [ -f "$APNS_P8" ] || { echo "missing $APNS_P8"; exit 1; }
 [ -f "$FCM_JSON" ] || { echo "missing $FCM_JSON"; exit 1; }

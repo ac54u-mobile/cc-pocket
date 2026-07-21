@@ -106,7 +106,7 @@ android {
     namespace = "dev.ccpocket.app"
     compileSdk = libs.versions.androidCompileSdk.get().toInt()
     defaultConfig {
-        applicationId = "com.panda.ccpocket" // matches the iOS bundle id + the Firebase google-services.json client
+        applicationId = "com.txx.ccpocket" // matches the iOS bundle id
         minSdk = libs.versions.androidMinSdk.get().toInt()
         targetSdk = libs.versions.androidTargetSdk.get().toInt()
         versionCode = 14

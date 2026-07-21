@@ -11,8 +11,7 @@
 $ErrorActionPreference = "Stop"
 
 $repo = if ($env:CC_POCKET_REPO) { $env:CC_POCKET_REPO } else { "ac54u-mobile/cc-pocket" }
-$fallbackAssetRepo = "heypandax/cc-pocket"
-$assetRepo = if ($env:CC_POCKET_ASSET_REPO) { $env:CC_POCKET_ASSET_REPO } else { $null }
+$assetRepo = if ($env:CC_POCKET_ASSET_REPO) { $env:CC_POCKET_ASSET_REPO } else { $repo }
 $relay = if ($env:CC_POCKET_RELAY) { $env:CC_POCKET_RELAY } else { "wss://relay.txx.app" }
 $root = Join-Path $env:LOCALAPPDATA "cc-pocket"
 
@@ -35,19 +34,7 @@ function Get-LatestDaemonRelease($ownerRepo) {
     return Invoke-RestMethod "https://api.github.com/repos/$ownerRepo/releases/latest"
 }
 
-if (-not $assetRepo) {
-    try {
-        $rel = Get-LatestDaemonRelease $repo
-        $assetRepo = $repo
-    } catch {
-        Write-Host "warning: $repo 尚无 daemon Release，回退使用 $fallbackAssetRepo 的二进制（relay 仍为 $relay）"
-        $assetRepo = $fallbackAssetRepo
-        $rel = Get-LatestDaemonRelease $assetRepo
-    }
-} else {
-    $rel = Get-LatestDaemonRelease $assetRepo
-}
-
+$rel = Get-LatestDaemonRelease $assetRepo
 $ver = $rel.tag_name -replace '^daemon-v', '' -replace '^daemon/', '' -replace '^v', ''
 $asset = $rel.assets | Where-Object { $_.name -like "*windows-x86_64.zip" } | Select-Object -First 1
 if (-not $asset) { throw "最新 daemon Release ($($rel.tag_name)) 没有 Windows 包 — 见 https://github.com/$assetRepo/releases" }
@@ -111,8 +98,7 @@ Get-ChildItem (Join-Path $root "versions") -Directory |
     ForEach-Object { Remove-Item $_.FullName -Recurse -Force -ErrorAction SilentlyContinue }
 
 Write-Host ""
-Write-Host "已安装: $exe"
-Write-Host "relay:  $relay"
+Write-Host "安装完成。relay=$relay"
 Write-Host "命令:   cc-pocket-daemon   （请开新终端）"
 Write-Host "升级:   cc-pocket-daemon update"
 Write-Host ""

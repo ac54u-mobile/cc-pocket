@@ -70,7 +70,7 @@ jobs:
               {
                 "client_info": {
                   "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
-                  "android_client_info": { "package_name": "com.panda.ccpocket" }
+                  "android_client_info": { "package_name": "com.txx.ccpocket" }
                 },
                 "api_key": [ { "current_key": "AIzaPlaceholderKeyForCiDesktopBuildOnly0000" } ],
                 "oauth_client": [],

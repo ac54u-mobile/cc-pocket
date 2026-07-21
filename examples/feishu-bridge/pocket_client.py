@@ -99,7 +99,7 @@ class Credential:
     accountId: str
     daemonPub: str
     ticket: str
-    relay: str            # e.g. wss://pocket.ark-nexus.cc
+    relay: str            # e.g. wss://relay.txx.app
     workdirs: list
 
     @staticmethod

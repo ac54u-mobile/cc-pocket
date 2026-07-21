@@ -98,7 +98,7 @@ object UpdateService {
     fun ownerHint(exe: Path?): String {
         val s = exe?.toString()?.lowercase() ?: return genericHint()
         return when {
-            "caskroom" in s || "/homebrew/" in s -> "this install is managed by Homebrew — upgrade with:  brew upgrade --cask heypandax/tap/cc-pocket"
+            "caskroom" in s || "/homebrew/" in s -> "reinstall with:  curl -fsSL https://raw.githubusercontent.com/ac54u-mobile/cc-pocket/main/scripts/install.sh | bash"
             "scoop" in s -> "this install is managed by Scoop — upgrade with:  scoop update cc-pocket-daemon"
             else -> genericHint()
         }

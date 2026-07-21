@@ -17,7 +17,7 @@ import kotlin.test.assertTrue
 class ShareInviteCodeTest {
 
     private val invite = ShareInvite(
-        relay = "wss://pocket.ark-nexus.cc",
+        relay = "wss://relay.txx.app",
         accountId = "acct-1234",
         daemonPub = "ZGFlbW9uLXB1Yg", // any base64url-ish string
         ticket = "tkt-abc-def",

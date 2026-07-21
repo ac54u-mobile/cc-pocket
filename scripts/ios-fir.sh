@@ -8,13 +8,13 @@
 #   development     Signs with the local "Apple Development" cert; installs on the devices already in the
 #                   team's Xcode-managed provisioning profile. Needs NO distribution cert — this is what
 #                   works on a machine without an "Apple Distribution" cert for the team.
-#   release-testing Proper ad-hoc. Needs an "Apple Distribution" cert for team SC9S2SJ42G in the keychain
+#   release-testing Proper ad-hoc. Needs an "Apple Distribution" cert for team <YOUR_TEAM_ID> in the keychain
 #                   AND a valid Xcode account login (so -allowProvisioningUpdates can mint the ad-hoc profile).
 #
 # fir.im token: taken from $FIR_TOKEN, else from scripts/.fir-token (gitignored — put the token there once).
 #
 # Prereqs: Xcode, fir-cli (`gem install fir-cli`), a JDK 17 (JAVA_HOME), and an Apple ID signed into Xcode
-#   that's a member of team SC9S2SJ42G. The target device's UDID must already be registered: connect it to
+#   that's a member of team <YOUR_TEAM_ID>. The target device's UDID must already be registered: connect it to
 #   this Mac once (Xcode auto-registers), or add it in the Apple Developer portal AND re-login the Xcode
 #   account so it syncs into the managed profile — otherwise the IPA won't install on it ("unable to install").
 #

@@ -1373,7 +1373,7 @@ class SerializationRoundTripTest {
     @Test
     fun shareInvite_and_shareCreated_roundtrip_and_omit_null_error() {
         val invite = ShareInvite(
-            relay = "wss://pocket.ark-nexus.cc", accountId = "acct", daemonPub = "pub", ticket = "tkt",
+            relay = "wss://relay.txx.app", accountId = "acct", daemonPub = "pub", ticket = "tkt",
             folderName = "repo", tier = AccessTier.COLLABORATE, expiresAt = 1_800_000_000_000, ttlSec = 120,
             ownerLabel = "Pandas-MacBook-Pro",
         )
@@ -1753,7 +1753,7 @@ class SerializationRoundTripTest {
     fun bridgeCredential_roundtrips_the_shape_the_adapter_reads_from_disk() {
         val cred = BridgeCredential(
             name = "feishu-bot", accountId = "acct", daemonPub = "pub", ticket = "tkt",
-            relay = "wss://pocket.ark-nexus.cc", workdirs = listOf("/p/alpha"), ttlSec = 120,
+            relay = "wss://relay.txx.app", workdirs = listOf("/p/alpha"), ttlSec = 120,
         )
         val env = Envelope(id = "b6", ts = 0, body = BridgeCreated(ok = true, credential = cred))
         val json = PocketJson.encodeToString(env)

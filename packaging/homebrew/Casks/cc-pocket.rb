@@ -1,61 +1,28 @@
-# Homebrew CASK for the cc-pocket daemon (a prebuilt, notarized binary — NOT a buildable formula,
-# so it needs no Command Line Tools). The cask file lives in the tap repo
-# (heypandax/homebrew-tap → Casks/cc-pocket.rb); the artifact (.tar.gz) is hosted on the MAIN repo's
-# Releases (heypandax/cc-pocket) — the url below points there. The tap holds only this description.
-# Users: brew install --cask heypandax/tap/cc-pocket
+# Template cask for the cc-pocket daemon. Prefer the install script:
+#   curl -fsSL https://raw.githubusercontent.com/ac54u-mobile/cc-pocket/main/scripts/install.sh | bash
+#
+# Assets live on ac54u-mobile/cc-pocket Releases under tag daemon-v<version>.
 cask "cc-pocket" do
-  version "1.3.0"
+  version "1.0.0"
 
-  # Apple Silicon and Intel each get their own notarized build (jpackage bundles an arch-specific
-  # JRE — see .github/workflows/release.yml). `arch` maps the running CPU to the asset suffix; the
-  # sha256 differs per arch. Refresh BOTH after each release run (notarized tarballs aren't
-  # bit-reproducible, so even the arm64 sha changes on a rebuild).
   arch arm: "arm64", intel: "x86_64"
 
-  on_arm do
-    sha256 "cab2fc036d2ecf1f0ef45bd6eb4bc049459163aa75dc3ed5d25cbde5bd9e4b53"
-  end
-  on_intel do
-    sha256 "52158c47f55ad0c3ca48866af53599aef79250f7dcc682fa95fc3668e4ef8d32"
-  end
-
-  url "https://github.com/heypandax/cc-pocket/releases/download/v#{version}/cc-pocket-daemon-#{version}-macos-#{arch}.tar.gz"
+  url "https://github.com/ac54u-mobile/cc-pocket/releases/download/daemon-v#{version}/cc-pocket-daemon-#{version}-macos-#{arch}.tar.gz"
   name "CC Pocket daemon"
-  desc "Drive Claude Code on your Mac from your phone over a zero-knowledge E2E relay"
-  homepage "https://github.com/heypandax/cc-pocket"
+  desc "Drive a coding agent on your Mac from your phone over a zero-knowledge E2E relay"
+  homepage "https://github.com/ac54u-mobile/cc-pocket"
 
-  # the launcher lives in a self-contained .app (bundled JRE); symlink it onto PATH
   binary "cc-pocket-daemon.app/Contents/MacOS/cc-pocket-daemon"
 
-  # Install the login service right away so the daemon auto-starts on every boot and auto-reconnects
-  # with no extra command. service-install writes ~/Library/LaunchAgents/dev.ccpocket.daemon.plist
-  # (RunAtLoad + KeepAlive) pointing at the symlink above, with a PATH that can find `claude`.
   postflight do
     system_command "#{HOMEBREW_PREFIX}/bin/cc-pocket-daemon",
-                   args: ["service-install", "--apply"]
+                   args: ["service-install", "--apply", "--relay", "wss://relay.txx.app"]
   end
 
-  # Stop the login service on uninstall.
   uninstall launchctl: "dev.ccpocket.daemon"
 
-  # `brew uninstall --zap` also wipes the agent, logs, and the daemon identity/pairings.
   zap trash: [
-    "~/Library/LaunchAgents/dev.ccpocket.daemon.plist",
-    "~/Library/Logs/cc-pocket",
     "~/.cc-pocket",
+    "~/Library/Logs/cc-pocket",
   ]
-
-  caveats <<~EOS
-    cc-pocket drives Claude Code, so install + sign in to it first:
-      https://claude.com/claude-code   (run `claude` once to authenticate)
-
-    The daemon was installed as a login service — it auto-starts on boot and reconnects.
-    Just pair your phone:
-      cc-pocket-daemon pair                        # shows a QR + 6-digit code
-
-    Logs:  ~/Library/Logs/cc-pocket/daemon.err.log
-
-    Optional — voice input from Android/desktop clients transcribes on this Mac:
-      brew install whisper-cpp
-  EOS
 end
