@@ -28,7 +28,7 @@ private typealias Release = ReleaseClient.Release
  * is separated out for unit tests; the effectful parts are thin wrappers over tar/zip + Files.move.
  */
 object UpdateService {
-    private const val REPO = "heypandax/cc-pocket"
+    private const val REPO = "ac54u-mobile/cc-pocket"
     private val log = logger("Update")
 
     /** A curl/irm-managed install: the versions dir, the stable launcher path the service runs, and

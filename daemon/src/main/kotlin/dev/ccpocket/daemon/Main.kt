@@ -185,9 +185,9 @@ private class RunCmd : CliktCommand(name = "run") {
                 }.getOrNull()
             }
             val relayClient = RelayClient(relay, identity, core, lanUrl = directUrl, hostname = hostName, gatewayBaseUrl = gatewayUrl)
-            echo("cc-pocket daemon — claude=${exe ?: "(not found)"} — codex=${codexExe ?: "(not found)"} — opencode=${opencodeExe ?: "(not found)"} — relay=$relay")
-            echo("account id: ${identity.accountId}")
-            echo("(run `cc-pocket-daemon pair` in another terminal to add a phone)")
+            echo("cc-pocket daemon — claude=${exe ?: "(未找到)"} — codex=${codexExe ?: "(未找到)"} — opencode=${opencodeExe ?: "(未找到)"} — relay=$relay")
+            echo("账号 ID: ${identity.accountId}")
+            echo("（另开终端运行 `cc-pocket-daemon pair` 即可添加手机）")
             // E2E-gated direct listener beside the relay: paired devices on this machine/LAN connect
             // straight to us (no proxy/relay leg — the fix for flaky-uplink send/receive). Unlike the
             // plaintext --local path this REQUIRES the Noise handshake, so a wide bind stays safe. A bind
@@ -283,9 +283,9 @@ private class TestClientCmd : CliktCommand(name = "test-client") {
 private fun daemonStartHint(): String {
     val os = System.getProperty("os.name").lowercase()
     return when {
-        os.contains("win") -> "start it:  schtasks /Run /TN ${ServiceInstaller.WINDOWS_TASK}    (or run it by hand: cc-pocket-daemon run)"
-        os.contains("mac") -> "start it:  launchctl kickstart -k gui/$(id -u)/dev.ccpocket.daemon    (or run it by hand: cc-pocket-daemon run)"
-        else -> "start it:  systemctl --user start cc-pocket-daemon    (or run it by hand: cc-pocket-daemon run)"
+        os.contains("win") -> "请启动：schtasks /Run /TN ${ServiceInstaller.WINDOWS_TASK}    （或手动：cc-pocket-daemon run）"
+        os.contains("mac") -> "请启动：launchctl kickstart -k gui/\$(id -u)/dev.ccpocket.daemon    （或手动：cc-pocket-daemon run）"
+        else -> "请启动：systemctl --user start cc-pocket-daemon    （或手动：cc-pocket-daemon run）"
     }
 }
 
@@ -320,16 +320,16 @@ private class PairCmd : CliktCommand(name = "pair") {
             var waiting = false
             while (true) {
                 val body = runCatching { client.post("http://127.0.0.1:$pairPort/pair").bodyAsText() }.getOrElse {
-                    echo("✗ no daemon on 127.0.0.1:$pairPort — ${daemonStartHint()}")
+                    echo("✗ 127.0.0.1:$pairPort 上没有运行中的 daemon — ${daemonStartHint()}")
                     return@runBlocking
                 }
                 val info = runCatching { PocketJson.decodeFromString<LoopbackPair>(body) }.getOrNull()
                 if (info != null) {
                     echo("")
-                    echo("  Open CC Pocket on your phone and scan this — or type the code (valid ${info.ttlSec}s):")
+                    echo("  请在手机打开 CC Pocket，扫描下方二维码，或手动输入配对码（${info.ttlSec} 秒内有效）：")
                     echo("")
                     echo(QrTerminal.render("ccpocket://pair?code=${info.code}"))
-                    echo("        code:  ${info.code.chunked(3).joinToString(" ")}")
+                    echo("        配对码：${info.code.chunked(3).joinToString(" ")}")
                     echo("")
                     return@runBlocking
                 }
@@ -337,13 +337,13 @@ private class PairCmd : CliktCommand(name = "pair") {
                 if (System.currentTimeMillis() > deadline) break
                 if (!waiting) {
                     waiting = true
-                    echo("daemon is up but its relay link is down — waiting for it to reconnect (up to ${PAIR_RETRY_WINDOW_MS / 1000}s)…")
+                    echo("daemon 已启动，但尚未连上 relay — 正在等待重连（最多 ${PAIR_RETRY_WINDOW_MS / 1000} 秒）…")
                 }
                 kotlinx.coroutines.delay(3_000)
             }
-            echo("✗ pairing failed — the daemon can't reach the relay ($lastBody)")
-            echo("  likely: no internet, or a proxy/firewall blocking $DEFAULT_RELAY, or the relay is down.")
-            echo("  inspect: cc-pocket-daemon status")
+            echo("✗ 配对失败 — daemon 无法连接 relay（$lastBody）")
+            echo("  常见原因：无网络、代理/防火墙拦截了 $DEFAULT_RELAY，或 relay 服务异常。")
+            echo("  排查：cc-pocket-daemon status")
         } finally {
             client.close()
         }

@@ -19,8 +19,8 @@
 | 🖥️ **Desktop app** | macOS (signed .dmg) | [Apple Silicon](https://github.com/heypandax/cc-pocket/releases/latest/download/cc-pocket-desktop-macos-arm64.dmg) · [Intel](https://github.com/heypandax/cc-pocket/releases/latest/download/cc-pocket-desktop-macos-x86_64.dmg) |
 | | Windows | [.msi](https://github.com/heypandax/cc-pocket/releases/latest/download/cc-pocket-desktop-windows-x86_64.msi) (unsigned — SmartScreen → "More info → Run anyway") |
 | | Linux | build from source |
-| ⚙️ **Daemon** (the computer that runs the agent) | macOS · Linux | `curl -fsSL https://raw.githubusercontent.com/heypandax/cc-pocket/main/scripts/install.sh \| bash` |
-| | Windows | `irm https://raw.githubusercontent.com/heypandax/cc-pocket/main/scripts/install.ps1 \| iex` |
+| ⚙️ **Daemon** (the computer that runs the agent) | macOS · Linux | `curl -fsSL https://raw.githubusercontent.com/ac54u-mobile/cc-pocket/main/scripts/install.sh \| bash` |
+| | Windows | `irm https://raw.githubusercontent.com/ac54u-mobile/cc-pocket/main/scripts/install.ps1 \| iex` |
 
 On a phone, the [website](https://heypandax.github.io/cc-pocket/) links straight to the store; on a computer it shows a QR to scan. Daemon details, Homebrew/Scoop alternatives and pairing: see [Install](#install).
 
@@ -63,7 +63,7 @@ Two pieces: the **app** ([Get it](#get-it) above) and the **daemon** on the comp
 ### macOS (Apple Silicon & Intel — signed, notarized)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/heypandax/cc-pocket/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/ac54u-mobile/cc-pocket/main/scripts/install.sh | bash
 cc-pocket-daemon pair                       # prints a QR + 6-digit code
 ```
 
@@ -72,7 +72,7 @@ Verifies the download against the release's SHA256SUMS, installs under `~/.local
 ### Linux (x86_64 / arm64)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/heypandax/cc-pocket/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/ac54u-mobile/cc-pocket/main/scripts/install.sh | bash
 cc-pocket-daemon pair                       # prints a QR + 6-digit code
 ```
 
@@ -83,7 +83,7 @@ Pulls a self-contained tarball (bundled JRE — no system Java), installs under 
 Needs the [Claude Code CLI](https://github.com/anthropics/claude-code) installed — the daemon drives it.
 
 ```powershell
-irm https://raw.githubusercontent.com/heypandax/cc-pocket/main/scripts/install.ps1 | iex
+irm https://raw.githubusercontent.com/ac54u-mobile/cc-pocket/main/scripts/install.ps1 | iex
 ```
 
 One command: installs, registers a logon Scheduled Task, and drops straight into pairing. Prefer [Scoop](https://scoop.sh)? `scoop bucket add heypandax https://github.com/heypandax/scoop-bucket` then `scoop install cc-pocket-daemon`.
