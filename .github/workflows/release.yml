@@ -33,8 +33,12 @@ permissions:
 
 jobs:
   # Create daemon-v* once so parallel upload jobs don't race on "release not found".
+  # Also probe signing secrets (job-level `if:` cannot reference `secrets.*` directly).
   ensure-release:
     runs-on: ubuntu-latest
+    outputs:
+      has_macos_signing: ${{ steps.probe.outputs.has_macos_signing }}
+      has_android_signing: ${{ steps.probe.outputs.has_android_signing }}
     steps:
       - name: Ensure GitHub release daemon-v${{ inputs.version }} exists
         env:
@@ -51,9 +55,18 @@ jobs:
               --latest
           fi
 
+      - name: Probe optional signing secrets
+        id: probe
+        env:
+          MACOS_CERT: ${{ secrets.MACOS_CERT_P12_BASE64 }}
+          ANDROID_KS: ${{ secrets.CCPOCKET_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$MACOS_CERT" ]; then echo "has_macos_signing=true" >> "$GITHUB_OUTPUT"; else echo "has_macos_signing=false" >> "$GITHUB_OUTPUT"; fi
+          if [ -n "$ANDROID_KS" ]; then echo "has_android_signing=true" >> "$GITHUB_OUTPUT"; else echo "has_android_signing=false" >> "$GITHUB_OUTPUT"; fi
+
   macos:
     # Needs Developer ID + notarization secrets; skip cleanly on forks that only ship Linux/Windows.
-    if: ${{ !inputs.only_android && !inputs.only_macos_desktop && secrets.MACOS_CERT_P12_BASE64 != '' }}
+    if: ${{ !inputs.only_android && !inputs.only_macos_desktop && needs.ensure-release.outputs.has_macos_signing == 'true' }}
     needs: [ensure-release]
     strategy:
       fail-fast: false
@@ -183,7 +196,7 @@ jobs:
     # website's "newest .apk" link always resolves to a current, release-signed build. The signing
     # key is injected from repo secrets; skip when the keystore secret is absent (forks / CI without
     # Android signing) instead of failing the whole release.
-    if: ${{ !inputs.only_macos_desktop && secrets.CCPOCKET_KEYSTORE_BASE64 != '' }}
+    if: ${{ !inputs.only_macos_desktop && needs.ensure-release.outputs.has_android_signing == 'true' }}
     needs: [ensure-release]
     runs-on: ubuntu-latest
     steps:
@@ -262,7 +275,7 @@ jobs:
     # job; we AVOID the retiring macos-13 Intel runner (jobs there queue indefinitely).
     # composeApp applies the Android + googleServices plugins, so the build needs the Android SDK at configure
     # time and a google-services.json to exist — the desktop target never touches Firebase, so a placeholder is fine.
-    if: ${{ !inputs.only_android && secrets.MACOS_CERT_P12_BASE64 != '' }}
+    if: ${{ !inputs.only_android && needs.ensure-release.outputs.has_macos_signing == 'true' }}
     needs: [ensure-release]
     strategy:
       fail-fast: false
