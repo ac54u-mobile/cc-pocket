@@ -2,7 +2,7 @@ name: iosApp
 options:
   bundleIdPrefix: com.panda
   deploymentTarget:
-    iOS: "15.0"
+    iOS: "17.0"
 packages:
   Firebase:
     url: https://github.com/firebase/firebase-ios-sdk.git

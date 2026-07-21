@@ -6,7 +6,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-RELAY="${1:-wss://pocket.ark-nexus.cc}"
+RELAY="${1:-wss://relay.txx.app}"
 D=daemon/build/install/cc-pocket-daemon/bin/cc-pocket-daemon
 [ -x "$D" ] || { echo "build first: ./gradlew :daemon:installDist"; exit 1; }
 

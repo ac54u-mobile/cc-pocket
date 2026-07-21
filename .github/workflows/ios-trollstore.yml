@@ -1,0 +1,129 @@
+name: ios-trollstore
+
+# Unsigned / ad-hoc IPA for TrollStore sideload (iOS 17.0+).
+# Does NOT upload to App Store Connect. Trigger via workflow_dispatch.
+
+on:
+  workflow_dispatch:
+    inputs:
+      marketing_version:
+        description: "Marketing version override (empty = Info.plist CFBundleShortVersionString)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  trollstore:
+    runs-on: macos-26
+    timeout-minutes: 60
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.5.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Unpin the dev-box JDK from gradle.properties
+        run: sed -i '' '/^org\.gradle\.java\.home=/d' gradle.properties
+
+      - name: Restore GoogleService-Info.plist
+        env:
+          GOOGLE_SERVICE_INFO_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
+        run: |
+          OUT=iosApp/iosApp/GoogleService-Info.plist
+          if [ -n "$GOOGLE_SERVICE_INFO_PLIST" ]; then
+            if printf '%s' "$GOOGLE_SERVICE_INFO_PLIST" | base64 --decode > "$OUT" 2>/dev/null && plutil -lint "$OUT" >/dev/null 2>&1; then
+              echo "GoogleService-Info.plist: decoded from base64 secret"
+            else
+              printf '%s' "$GOOGLE_SERVICE_INFO_PLIST" > "$OUT"
+              echo "GoogleService-Info.plist: written from raw secret value"
+            fi
+            plutil -lint "$OUT"
+          else
+            cp iosApp/iosApp/GoogleService-Info.plist.template "$OUT"
+            echo "GoogleService-Info.plist: using placeholder template (no secret)"
+          fi
+
+      - name: Generate Xcode project (+ shared scheme) from project.yml
+        run: |
+          # project.yml already pins iOS 17.0; keep CI explicit
+          cd iosApp && xcodegen generate
+
+      - name: Stamp version, build number, iOS 17.0 floor
+        id: stamp
+        env:
+          MARKETING_VERSION: ${{ inputs.marketing_version }}
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: |
+          PLIST=iosApp/iosApp/Info.plist
+          REPO_VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$PLIST")
+          VERSION="${MARKETING_VERSION:-$REPO_VERSION}"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" "$PLIST"
+          # Ensure MinimumOSVersion survives archive packaging
+          /usr/libexec/PlistBuddy -c "Add :MinimumOSVersion string 17.0" "$PLIST" 2>/dev/null \
+            || /usr/libexec/PlistBuddy -c "Set :MinimumOSVersion 17.0" "$PLIST"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "building $VERSION ($BUILD_NUMBER) min iOS 17.0"
+
+      - name: Archive (Release, unsigned)
+        run: |
+          set -o pipefail
+          xcodebuild -project iosApp/iosApp.xcodeproj -scheme iosApp -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/CCPocket.xcarchive" \
+            DEVELOPMENT_TEAM="" \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            IPHONEOS_DEPLOYMENT_TARGET=17.0 \
+            archive | tee "$RUNNER_TEMP/archive.log"
+          grep -q "ARCHIVE SUCCEEDED" "$RUNNER_TEMP/archive.log"
+
+      - name: Package TrollStore IPA
+        id: ipa
+        env:
+          VERSION: ${{ steps.stamp.outputs.version }}
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: |
+          APP="$RUNNER_TEMP/CCPocket.xcarchive/Products/Applications/cc-pocket.app"
+          test -d "$APP"
+          # Clear any residual signature; TrollStore installs unsigned / ad-hoc apps.
+          codesign --remove-signature "$APP" 2>/dev/null || true
+          find "$APP" -name '_CodeSignature' -type d -exec rm -rf {} + 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Set :MinimumOSVersion 17.0" "$APP/Info.plist" 2>/dev/null \
+            || /usr/libexec/PlistBuddy -c "Add :MinimumOSVersion string 17.0" "$APP/Info.plist"
+          STAGE="$RUNNER_TEMP/ipa-stage"
+          rm -rf "$STAGE"
+          mkdir -p "$STAGE/Payload"
+          ditto "$APP" "$STAGE/Payload/cc-pocket.app"
+          # Ad-hoc sign so the Mach-O has a valid signature blob TrollStore can re-sign over.
+          codesign --force --sign - --timestamp=none "$STAGE/Payload/cc-pocket.app"
+          NAME="cc-pocket-${VERSION}-build${BUILD_NUMBER}-trollstore.ipa"
+          OUT="$RUNNER_TEMP/$NAME"
+          (
+            cd "$STAGE"
+            /usr/bin/zip -qry "$OUT" Payload
+          )
+          echo "ipa=$OUT" >> "$GITHUB_OUTPUT"
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          unzip -l "$OUT" | head -30
+          /usr/libexec/PlistBuddy -c "Print :MinimumOSVersion" "$STAGE/Payload/cc-pocket.app/Info.plist"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$STAGE/Payload/cc-pocket.app/Info.plist"
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cc-pocket-trollstore-${{ steps.stamp.outputs.version }}-build${{ github.run_number }}
+          path: ${{ steps.ipa.outputs.ipa }}
+          if-no-files-found: error
+          retention-days: 30

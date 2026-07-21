@@ -182,7 +182,7 @@ class SeedDesktopModel : DesktopModel {
     override var showSkills by mutableStateOf(false)
 
     override val appVersion = "1.5.0"
-    override val relayUrl = "wss://pocket.ark-nexus.cc"
+    override val relayUrl = "wss://relay.txx.app"
     override var defaultAgent by mutableStateOf(AgentKind.CLAUDE)
     override var defaultMode by mutableStateOf(PermissionMode.DEFAULT)
     override var defaultModel: String? by mutableStateOf(null)
