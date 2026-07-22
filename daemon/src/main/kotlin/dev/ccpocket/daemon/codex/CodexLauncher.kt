@@ -49,10 +49,9 @@ object CodexLauncher {
         val exeStr = exe.toString()
         val needsShell = isWindows && exeStr.lowercase().let { it.endsWith(".cmd") || it.endsWith(".bat") }
         val shared = ensureSharedServer(exe, needsShell)
-        val argv = buildList {
+        val argv = if (shared) managedProxyCommand() else buildList {
             if (needsShell) { add(System.getenv("ComSpec") ?: "cmd.exe"); add("/c") }
-            add(exeStr)
-            addAll(buildArgs(shared))
+            add(exeStr); addAll(buildArgs(shared = false))
         }
         return ProcessBuilder(argv).apply {
             directory(spec.workdir.toFile())
@@ -81,18 +80,13 @@ object CodexLauncher {
         // `app-server proxy` connected but unable to forward even `initialize`, which otherwise makes
         // every phone turn spin forever. Verify the actual byte path before selecting it; fail closed
         // to the proven direct stdio transport when the proxy is absent, incompatible, or wedged.
-        val ready = started && probeSharedTransport(exe, needsShell)
+        val ready = started && !isWindows && probeSharedTransport()
         sharedReady.compareAndSet(null, ready)
         return sharedReady.get() == true
     }
 
-    private fun probeSharedTransport(exe: Path, needsShell: Boolean): Boolean = runCatching {
-        val command = buildList {
-            if (needsShell) { add(System.getenv("ComSpec") ?: "cmd.exe"); add("/c") }
-            add(exe.toString())
-            addAll(buildArgs(shared = true))
-        }
-        val p = ProcessBuilder(command).redirectErrorStream(false).start()
+    private fun probeSharedTransport(): Boolean = runCatching {
+        val p = ProcessBuilder(managedProxyCommand()).redirectErrorStream(false).start()
         try {
             p.outputStream.bufferedWriter().apply {
                 write(PROBE_INITIALIZE)
@@ -107,6 +101,15 @@ object CodexLauncher {
             p.waitFor(1, TimeUnit.SECONDS)
         }
     }.getOrDefault(false)
+
+    private fun managedProxyCommand(): List<String> = listOf(
+        Path.of(System.getProperty("java.home"), "bin", if (isWindows) "java.exe" else "java").toString(),
+        "-cp",
+        System.getProperty("java.class.path"),
+        CodexManagedProxy::class.java.name,
+        System.getenv("CC_POCKET_CODEX_SOCKET")
+            ?: Path.of(System.getProperty("user.home"), ".codex", "app-server-control", "app-server-control.sock").toString(),
+    )
 
     private const val SHARED_START_TIMEOUT_SECONDS = 5L
     private const val SHARED_PROBE_TIMEOUT_SECONDS = 4L
