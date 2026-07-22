@@ -77,7 +77,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -595,7 +594,7 @@ private fun DirectoryScreen(repo: PocketRepository, onOpenFleet: () -> Unit = {}
                 onSegment = { i -> repo.browsePath.value = segs.getOrNull(i)?.second?.takeIf { it != root } },
             )
         }
-        PullToRefreshBox(isRefreshing = repo.refreshing.value, onRefresh = { repo.refreshDirectories() }, modifier = Modifier.fillMaxSize()) {
+        IslandPullToRefreshBox(isRefreshing = repo.refreshing.value, onRefresh = { repo.refreshDirectories() }, modifier = Modifier.fillMaxSize()) {
             when {
                 repo.directories.isEmpty() && repo.directoriesLoaded.value && query.isBlank() ->
                     EmptyDirectories { repo.refreshDirectories() }
@@ -1138,7 +1137,7 @@ internal fun SessionsScreen(repo: PocketRepository) { // internal: driven end-to
                     else -> true
                 }
             }
-            PullToRefreshBox(isRefreshing = repo.sessionsRefreshing.value, onRefresh = { repo.refreshSessions() }, modifier = Modifier.fillMaxSize()) {
+            IslandPullToRefreshBox(isRefreshing = repo.sessionsRefreshing.value, onRefresh = { repo.refreshSessions() }, modifier = Modifier.fillMaxSize()) {
             LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (af != "both") item { AgentFilterChip(af) { repo.setAgentFilter("both") } }
                 item {
