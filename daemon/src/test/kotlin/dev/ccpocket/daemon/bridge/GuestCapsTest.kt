@@ -77,7 +77,7 @@ class GuestCapsTest {
     fun guest_egress_whitelist_admits_asks_but_not_identity_or_management_frames() {
         val allowed = setOf(
             // the eight data-plane frames
-            "pocket/session.live", "pocket/history", "pocket/chunk", "pocket/tool",
+            "pocket/session.live", "pocket/history", "pocket/chunk", "pocket/user.external", "pocket/tool",
             "pocket/turn.done", "pocket/prompt.ack", "pocket/error", "pocket/session.gone",
             // the guest's own older-history page (issue #147; request gated on convo ownership)
             "pocket/history.older",

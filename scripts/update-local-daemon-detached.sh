@@ -16,6 +16,10 @@ cd "$(dirname "$0")/.."
 
 DELAY="${DELAY:-20}"
 LOG="${LOG:-/tmp/cc-pocket-update.log}"
+if [ -z "${JAVA_HOME:-}" ] || [ ! -x "${JAVA_HOME}/bin/java" ]; then
+  JAVAC_PATH="$(command -v javac 2>/dev/null || true)"
+  [ -n "$JAVAC_PATH" ] && JAVA_HOME="$(dirname "$(dirname "$(readlink -f "$JAVAC_PATH")")")"
+fi
 export JAVA_HOME="${JAVA_HOME:-/opt/homebrew/opt/openjdk@17}"
 
 driven=0

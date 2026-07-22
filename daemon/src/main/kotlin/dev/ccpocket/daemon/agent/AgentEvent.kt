@@ -66,6 +66,10 @@ sealed interface AgentEvent {
      *  user line, never a top-level prompt receipt. */
     data class UserReplay(val text: String? = null, val parentId: String? = null) : AgentEvent
 
+    /** Codex shared-app-server user turn. It may be our own prompt echo (settled by the ledger) or a
+     *  turn submitted by another attached client, which Conversation forwards to the phone. */
+    data class SharedUserReplay(val text: String) : AgentEvent
+
     /** Turn finished. [usage] carries the backend result's own numbers — null when the result had NO
      *  usage (interrupted turn, some error exits): absence is a null, never placeholder zeros a consumer
      *  could mistake for an empty window. NOTE: Claude's result SUMS input/cache across the turn's API

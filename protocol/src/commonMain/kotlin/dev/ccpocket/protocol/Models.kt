@@ -253,6 +253,15 @@ data class UsageDay(val label: String, val tokens: Long, val date: String? = nul
 @Serializable
 data class UsageModel(val model: String, val tokens: Long, val agent: AgentKind = AgentKind.CLAUDE)
 
+/** One Codex subscription rate-limit window reported by the Codex app-server. [resetsAtMs] is epoch
+ * milliseconds. Kept provider-specific because transcript token totals cannot infer subscription quota. */
+@Serializable
+data class CodexRateLimit(
+    val windowMinutes: Int,
+    val usedPercent: Double,
+    val resetsAtMs: Long,
+)
+
 /** What kind of background work a [BackgroundJob] is. */
 @Serializable
 enum class JobKind {

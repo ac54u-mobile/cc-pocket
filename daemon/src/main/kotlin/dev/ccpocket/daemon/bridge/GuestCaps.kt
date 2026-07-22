@@ -17,6 +17,7 @@ import dev.ccpocket.protocol.FetchHistoryPage
 import dev.ccpocket.protocol.FileContent
 import dev.ccpocket.protocol.FileContentChunk
 import dev.ccpocket.protocol.FileDiff
+import dev.ccpocket.protocol.ExternalUserMessage
 import dev.ccpocket.protocol.Frame
 import dev.ccpocket.protocol.ListDirectories
 import dev.ccpocket.protocol.ListPathEntries
@@ -70,6 +71,7 @@ object GuestCaps {
         is ConvoHistory -> true
         is ConvoHistoryPage -> true // the guest's own older-history page (issue #147, request gated above)
         is AssistantChunk -> true
+        is ExternalUserMessage -> true
         is ToolEvent -> true
         is TurnDone -> true
         is PromptAck -> true

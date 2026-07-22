@@ -13,7 +13,7 @@ plugins {
 // Single source of truth for the app version: the Android versionName AND the in-app "About" version both
 // derive from this (the latter via the generated constant below, so it can never drift — which is how it
 // got stuck at 0.1.0). Keep in lockstep with the iOS CFBundleShortVersionString in iosApp/iosApp/Info.plist.
-val appVersionName = "1.5.2"
+val appVersionName = "1.5.3"
 
 // Emit a commonMain constant from [appVersionName] so the displayed version always matches the build.
 val generateAppVersion by tasks.registering {

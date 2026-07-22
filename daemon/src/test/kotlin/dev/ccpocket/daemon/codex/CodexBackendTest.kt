@@ -69,6 +69,21 @@ class CodexBackendTest {
     }
 
     @Test
+    fun shared_server_replays_external_user_message_and_filters_other_threads() = runBlocking {
+        val w = mutableListOf<String>()
+        val b = ready(w)
+        val ours = b.parse(
+            """{"method":"item/completed","params":{"threadId":"thr-1","item":{"type":"userMessage","id":"u1","content":[{"type":"text","text":"from IDE"}]}}}""",
+        )
+        assertEquals(AgentEvent.SharedUserReplay("from IDE"), ours.single())
+
+        val foreign = b.parse(
+            """{"method":"item/completed","params":{"threadId":"thr-other","item":{"type":"userMessage","id":"u2","content":[{"type":"text","text":"must not leak"}]}}}""",
+        )
+        assertTrue(foreign.isEmpty())
+    }
+
+    @Test
     fun completed_agent_message_not_duplicated_after_deltas() = runBlocking {
         val w = mutableListOf<String>()
         val b = ready(w)

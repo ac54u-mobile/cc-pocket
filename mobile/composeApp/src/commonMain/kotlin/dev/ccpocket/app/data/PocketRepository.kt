@@ -27,6 +27,7 @@ import dev.ccpocket.app.telemetry.Telemetry
 import dev.ccpocket.protocol.AskWithdrawn
 import dev.ccpocket.protocol.AskWithdrawnReason
 import dev.ccpocket.protocol.AssistantChunk
+import dev.ccpocket.protocol.ExternalUserMessage
 import dev.ccpocket.protocol.Attached
 import dev.ccpocket.protocol.AuthError
 import dev.ccpocket.protocol.BackgroundJob
@@ -2100,6 +2101,11 @@ class PocketRepository(private val scope: CoroutineScope, private val pinnedTo: 
             // be dropped — else it renders into whatever convo is now open. Reopening the source replays its
             // full transcript via ConvoHistory, so nothing is actually lost. (Matches the BackgroundJobs guard.)
             is AssistantChunk -> if (f.convoId == convoId.value) { promptEvidence(); appendChunk(f) }
+            is ExternalUserMessage -> if (f.convoId == convoId.value) {
+                finishThinking()
+                messages.add(ChatItem.User(f.text, delivered = true))
+                streaming.value = true
+            }
             is ToolEvent -> if (f.convoId == convoId.value) { promptEvidence(); finishThinking(); onToolEvent(f) }
             is PermissionAsk -> if (f.convoId == convoId.value) { pendingAsk.value = f; Telemetry.track(TelEvent.ApprovalShown, mapOf(TelKey.Tool to f.tool)) }
             // claude withdrew the ask (interrupt / moved on) — drop the card; a question card leaves a muted notice

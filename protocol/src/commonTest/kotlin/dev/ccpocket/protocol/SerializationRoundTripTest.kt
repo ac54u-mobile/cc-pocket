@@ -62,6 +62,14 @@ class SerializationRoundTripTest {
     }
 
     @Test
+    fun external_user_message_roundtrips() {
+        val env = Envelope(id = "3", ts = 0, body = ExternalUserMessage("c1", "sent from Codex IDE"))
+        val json = PocketJson.encodeToString(env)
+        assertTrue("\"t\":\"pocket/user.external\"" in json, json)
+        assertEquals(env, PocketJson.decodeFromString<Envelope>(json))
+    }
+
+    @Test
     fun unknown_keys_are_tolerated() {
         val json =
             """{"id":"9","ts":0,"to":"PEER","body":{"t":"pocket/prompt","convoId":"c","text":"hey","future":123}}"""

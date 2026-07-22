@@ -647,6 +647,8 @@ data class Usage(
     val costUsdToday: Double? = null,
     val hours: List<UsageDay>? = null,
     val prevWindowTokens: Long? = null,
+    /** Latest primary/secondary Codex subscription windows. Trailing for old daemon/app compatibility. */
+    val codexRateLimits: List<CodexRateLimit> = emptyList(),
 ) : ToPhone
 
 /**
@@ -689,6 +691,11 @@ data class SessionLive(
 @Serializable
 @SerialName("pocket/chunk")
 data class AssistantChunk(val convoId: String, val seq: Long, val piece: StreamPiece) : ToPhone
+
+/** A user turn observed from another client attached to the same agent thread (for example Codex IDE). */
+@Serializable
+@SerialName("pocket/user.external")
+data class ExternalUserMessage(val convoId: String, val text: String, val source: String = "codex") : ToPhone
 
 /** A tool invocation surfaced to the UI (original; no Anthropic schema crosses the wire).
  *

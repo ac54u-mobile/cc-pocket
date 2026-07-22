@@ -1,6 +1,7 @@
 package dev.ccpocket.daemon.disk
 
 import dev.ccpocket.protocol.AgentKind
+import dev.ccpocket.protocol.CodexRateLimit
 import dev.ccpocket.protocol.Usage
 import dev.ccpocket.protocol.UsageDay
 import dev.ccpocket.protocol.UsageModel
@@ -58,6 +59,8 @@ object UsageService {
         var cacheReadToday = 0L
         var costToday = 0.0
         var costSeen = false
+        var codexLimitSeenAt = Long.MIN_VALUE
+        var codexRateLimits = emptyList<CodexRateLimit>()
 
         if (projectsRoot.isDirectory()) Files.newDirectoryStream(projectsRoot).use { dirs ->
             for (dir in dirs) {
@@ -119,6 +122,22 @@ object UsageService {
                     val obj = runCatching { json.parseToJsonElement(line) }.getOrNull() as? JsonObject ?: continue
                     val payload = obj["payload"] as? JsonObject ?: continue
                     if (payload.str("type") != "token_count") continue
+                    // Rate-limit data accompanies token_count independently of token usage (`info` may be
+                    // null). Keep the newest usable snapshot across all recent rollouts.
+                    val eventMs = obj.str("timestamp")?.let(::parseWhen)?.toInstant()?.toEpochMilli()
+                    val limits = payload["rate_limits"] as? JsonObject
+                    val parsedLimits = listOf("primary", "secondary").mapNotNull { key ->
+                        val window = limits?.get(key) as? JsonObject ?: return@mapNotNull null
+                        val minutes = window.long("window_minutes").toInt()
+                        val resetSec = window.long("resets_at")
+                        val used = (window["used_percent"] as? JsonPrimitive)?.doubleOrNull
+                        if (minutes <= 0 || resetSec <= 0 || used == null) null
+                        else CodexRateLimit(minutes, used.coerceIn(0.0, 100.0), resetSec * 1000L)
+                    }
+                    if (eventMs != null && parsedLimits.isNotEmpty() && eventMs >= codexLimitSeenAt) {
+                        codexLimitSeenAt = eventMs
+                        codexRateLimits = parsedLimits
+                    }
                     val info = payload["info"] as? JsonObject ?: continue // null info = rate-limit-only event
                     val last = info["last_token_usage"] as? JsonObject ?: continue
                     val total = last.long("total_tokens").takeIf { it > 0 }
@@ -166,6 +185,7 @@ object UsageService {
             costUsdToday = if (costSeen) costToday else null,
             hours = hours,
             prevWindowTokens = prevWindowTokens,
+            codexRateLimits = codexRateLimits,
         )
     }
 

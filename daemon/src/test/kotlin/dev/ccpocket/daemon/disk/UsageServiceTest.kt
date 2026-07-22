@@ -119,4 +119,27 @@ class UsageServiceTest {
             assertEquals(300L, u.models.single().tokens, "prev-window turns never feed the model bars")
         }
     }
+
+    @Test
+    fun codex_uses_latest_rate_limit_snapshot_even_when_usage_info_is_null() {
+        withProjects { root ->
+            val now = java.time.Instant.now()
+            val codex = root.resolve("rollout.jsonl")
+            codex.writeText(
+                listOf(
+                    """{"timestamp":"${now.minusSeconds(10)}","payload":{"type":"token_count","info":{"last_token_usage":{"total_tokens":10}},"rate_limits":{"primary":{"used_percent":12.0,"window_minutes":300,"resets_at":2000000000}}}}""",
+                    // Rate-only events are valid and must replace the older snapshot.
+                    """{"timestamp":"$now","payload":{"type":"token_count","info":null,"rate_limits":{"primary":{"used_percent":42.5,"window_minutes":300,"resets_at":2000000100},"secondary":{"used_percent":7.0,"window_minutes":10080,"resets_at":2000600000}}}}""",
+                ).joinToString("\n") + "\n",
+            )
+
+            val u = UsageService.aggregate(1, projectsRoot = root, codexFiles = listOf(codex))
+
+            assertEquals(2, u.codexRateLimits.size)
+            assertEquals(42.5, u.codexRateLimits[0].usedPercent)
+            assertEquals(300, u.codexRateLimits[0].windowMinutes)
+            assertEquals(2_000_000_100_000L, u.codexRateLimits[0].resetsAtMs)
+            assertEquals(10_080, u.codexRateLimits[1].windowMinutes)
+        }
+    }
 }

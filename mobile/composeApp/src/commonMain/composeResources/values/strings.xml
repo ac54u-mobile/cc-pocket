@@ -403,6 +403,11 @@
     <string name="usage_vs_prev_days">vs prev %1$dd</string>
     <string name="usage_selected">%1$s · %2$s tokens</string>
     <string name="usage_na">not available yet</string>
+    <string name="usage_codex_limit">Codex limits</string>
+    <string name="usage_codex_used">%1$s%% used</string>
+    <string name="usage_codex_resets">Resets %1$s at %2$s</string>
+    <string name="usage_codex_window_hours">%1$dh window</string>
+    <string name="usage_codex_window_days">%1$dd window</string>
     <string name="terminal_open">Terminal</string>
     <string name="terminal_title">Terminal</string>
     <string name="terminal_hint">git status</string>

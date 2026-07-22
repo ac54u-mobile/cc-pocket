@@ -17,6 +17,7 @@ import dev.ccpocket.daemon.disk.WorkflowFiles
 import dev.ccpocket.daemon.util.logger
 import dev.ccpocket.protocol.AgentKind
 import dev.ccpocket.protocol.AssistantChunk
+import dev.ccpocket.protocol.ExternalUserMessage
 import dev.ccpocket.protocol.BackgroundJobs
 import dev.ccpocket.protocol.CommandList
 import dev.ccpocket.protocol.contextWindowFor
@@ -325,12 +326,13 @@ class Conversation(
 
     /** The CLI replayed a consumed user message — settle the first ledger entry with matching text.
      *  Injected plumbing turns (task-notifications, compact summaries) never match a recorded prompt. */
-    private fun settlePromptReplay(text: String?) {
-        text ?: return
+    private fun settlePromptReplay(text: String?): Boolean {
+        text ?: return false
         synchronized(promptLedger) {
             val iter = promptLedger.iterator()
-            while (iter.hasNext()) if (iter.next().text == text) { iter.remove(); return }
+            while (iter.hasNext()) if (iter.next().text == text) { iter.remove(); return true }
         }
+        return false
     }
 
     // which generation already settled its launch prompt — the settle runs ONCE per process (SessionInit
@@ -1086,6 +1088,9 @@ class Conversation(
                     // matching prompt reached the model — settle its ledger entry. A parent-tagged
                     // replay is a sub-agent's inner user line, never one of ours.
                     is AgentEvent.UserReplay -> if (ev.parentId == null) settlePromptReplay(ev.text)
+                    is AgentEvent.SharedUserReplay -> if (!settlePromptReplay(ev.text)) {
+                        sink.emit(ExternalUserMessage(convoId, ev.text))
+                    }
                     is AgentEvent.Ignored -> {}
                     is AgentEvent.Unparseable -> {}
                 }

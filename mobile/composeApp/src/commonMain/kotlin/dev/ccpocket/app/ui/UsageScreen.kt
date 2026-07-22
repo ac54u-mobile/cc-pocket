@@ -42,10 +42,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.ccpocket.app.data.ConnPhase
 import dev.ccpocket.app.data.PocketRepository
+import dev.ccpocket.app.localClock
 import dev.ccpocket.app.resources.Res
 import dev.ccpocket.app.resources.usage_by_model
 import dev.ccpocket.app.resources.usage_cache
 import dev.ccpocket.app.resources.usage_cost
+import dev.ccpocket.app.resources.usage_codex_limit
+import dev.ccpocket.app.resources.usage_codex_resets
+import dev.ccpocket.app.resources.usage_codex_used
+import dev.ccpocket.app.resources.usage_codex_window_days
+import dev.ccpocket.app.resources.usage_codex_window_hours
 import dev.ccpocket.app.resources.usage_empty
 import dev.ccpocket.app.resources.usage_empty_hint
 import dev.ccpocket.app.resources.usage_empty_range
@@ -67,6 +73,7 @@ import dev.ccpocket.app.resources.usage_vs_prev_days
 import dev.ccpocket.app.resources.usage_vs_yesterday
 import dev.ccpocket.app.theme.Tok
 import dev.ccpocket.protocol.AgentKind
+import dev.ccpocket.protocol.CodexRateLimit
 import dev.ccpocket.protocol.Usage
 import dev.ccpocket.protocol.UsageDay
 import dev.ccpocket.protocol.UsageModel
@@ -125,7 +132,7 @@ fun UsageScreen(repo: PocketRepository, onBack: () -> Unit) {
             }
 
             when {
-                u != null && (u.tokensToday > 0 || u.models.isNotEmpty() || u.days.any { it.tokens > 0 }) -> Populated(u)
+                u != null && (u.codexRateLimits.isNotEmpty() || u.tokensToday > 0 || u.models.isNotEmpty() || u.days.any { it.tokens > 0 }) -> Populated(u)
                 u != null -> Empty(u.days.size)
                 !connected || timedOut -> Offline()
                 else -> Loading()
@@ -137,6 +144,10 @@ fun UsageScreen(repo: PocketRepository, onBack: () -> Unit) {
 @Composable
 private fun Populated(u: Usage) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
+        if (u.codexRateLimits.isNotEmpty()) {
+            CodexLimitsCard(u.codexRateLimits)
+            Spacer(Modifier.height(10.dp))
+        }
         // Range-scoped headline: the Tokens hero is the WINDOW total (== the sum of the trend it sits above),
         // so the top number and the chart never contradict, and switching Today/7d/30d visibly changes it.
         // Derive the scope tag from the reply's own span (u.days.size), mirroring the header toggle's tokens —
@@ -201,6 +212,54 @@ private fun Populated(u: Usage) {
             for (m in u.models) ModelRow(m, max)
         }
         Spacer(Modifier.height(20.dp))
+    }
+}
+
+@Composable
+private fun CodexLimitsCard(limits: List<CodexRateLimit>) {
+    Column(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Tok.surface)
+            .border(1.dp, Tok.hair, RoundedCornerShape(14.dp)).padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        Text(stringResource(Res.string.usage_codex_limit), color = Tok.tx, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+        limits.forEach { limit ->
+            val percent = limit.usedPercent.coerceIn(0.0, 100.0)
+            val percentText = if (percent % 1.0 == 0.0) percent.toInt().toString() else ((percent * 10).toInt() / 10.0).toString()
+            val clock = localClock(limit.resetsAtMs)
+            val date = "${clock.monthOfYear.toString().padStart(2, '0')}/${clock.dayOfMonth.toString().padStart(2, '0')}"
+            val time = "${clock.hour.toString().padStart(2, '0')}:${clock.minute.toString().padStart(2, '0')}"
+            val window = if (limit.windowMinutes % (24 * 60) == 0) {
+                stringResource(Res.string.usage_codex_window_days, limit.windowMinutes / (24 * 60))
+            } else {
+                stringResource(Res.string.usage_codex_window_hours, (limit.windowMinutes + 59) / 60)
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text(window, color = Tok.tx2, fontSize = 12.5.sp, modifier = Modifier.weight(1f))
+                    Text(
+                        stringResource(Res.string.usage_codex_used, percentText),
+                        color = if (percent >= 90.0) Tok.warn else Tok.tx,
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 12.5.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+                Box(Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(99.dp)).background(Tok.raised)) {
+                    Box(
+                        Modifier.fillMaxWidth((percent / 100.0).toFloat()).fillMaxHeight()
+                            .clip(RoundedCornerShape(99.dp))
+                            .background(if (percent >= 90.0) Tok.warn else Tok.codex),
+                    )
+                }
+                Text(
+                    stringResource(Res.string.usage_codex_resets, date, time),
+                    color = Tok.muted,
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 11.5.sp,
+                )
+            }
+        }
     }
 }
 

@@ -12,9 +12,19 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-JAVA_HOME="${JAVA_HOME:-/opt/homebrew/opt/openjdk@17}"; export JAVA_HOME
+if [ -z "${JAVA_HOME:-}" ] || [ ! -x "${JAVA_HOME}/bin/java" ]; then
+  JAVAC_PATH="$(command -v javac 2>/dev/null || true)"
+  [ -n "$JAVAC_PATH" ] && JAVA_HOME="$(dirname "$(dirname "$(readlink -f "$JAVAC_PATH")")")"
+fi
+: "${JAVA_HOME:=/opt/homebrew/opt/openjdk@17}"
+export JAVA_HOME
 RELAY="${RELAY:-wss://relay.txx.app}"
-DEST="$HOME/Library/Application Support/cc-pocket/cc-pocket-daemon"
+OS="$(uname -s)"
+if [ "$OS" = "Darwin" ]; then
+  DEST="$HOME/Library/Application Support/cc-pocket/cc-pocket-daemon"
+else
+  DEST="$HOME/.local/share/cc-pocket/local/cc-pocket-daemon"
+fi
 DIST="daemon/build/install/cc-pocket-daemon"
 BIN="$DEST/bin/cc-pocket-daemon"
 UID_N="$(id -u)"
@@ -27,7 +37,11 @@ rm -rf "$DEST"; mkdir -p "$DEST"
 cp -R "$DIST/bin" "$DIST/lib" "$DEST/"
 
 echo "── 3/6 停掉所有现存 daemon（保证单实例）──"
-launchctl bootout "gui/$UID_N/dev.ccpocket.daemon" 2>/dev/null || true
+if [ "$OS" = "Darwin" ]; then
+  launchctl bootout "gui/$UID_N/dev.ccpocket.daemon" 2>/dev/null || true
+else
+  systemctl --user stop cc-pocket-daemon.service 2>/dev/null || true
+fi
 pkill -f "cc-pocket-daemon run" 2>/dev/null || true
 pkill -f "Application Support/cc-pocket.*MainKt" 2>/dev/null || true
 pkill -f "build/install/cc-pocket.*MainKt" 2>/dev/null || true
@@ -46,7 +60,12 @@ PID="$(pgrep -f 'Application Support/cc-pocket.*MainKt' | head -1 || true)"
 COUNT="$(pgrep -f 'cc-pocket-daemon run|Application Support/cc-pocket.*MainKt|build/install/cc-pocket.*MainKt' | wc -l | tr -d ' ')"
 SOCK=0; [ -n "$PID" ] && SOCK="$(lsof -nP -p "$PID" 2>/dev/null | grep -c ':443.*ESTABLISHED' || true)"
 echo "   daemon 进程数=$COUNT  pid=$PID  relay-socket=$SOCK"
-echo "   服务: $(launchctl list | grep -i ccpocket || echo '未加载')"
+if [ "$OS" = "Darwin" ]; then
+  SERVICE_STATE="$(launchctl list | grep -i ccpocket || echo '未加载')"
+else
+  SERVICE_STATE="$(systemctl --user is-active cc-pocket-daemon.service 2>/dev/null || echo '未加载')"
+fi
+echo "   服务: $SERVICE_STATE"
 if [ "$COUNT" = "1" ] && [ "$SOCK" -ge 1 ]; then
   echo "✅ 完成：单实例已连上 relay，手机可用"
 else

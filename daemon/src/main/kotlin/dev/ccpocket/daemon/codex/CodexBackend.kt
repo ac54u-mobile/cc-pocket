@@ -157,10 +157,14 @@ class CodexBackend(private val codexBin: String?) : AgentBackend {
 
     private suspend fun handleNotification(method: String, params: JsonObject?): List<AgentEvent> {
         params ?: return emptyList()
+        val eventThreadId = params.str("threadId") ?: params.obj("thread")?.str("id")
+        val expectedThreadId = threadId ?: resumeId
+        // A managed app-server can carry many IDE/app conversations. Never leak another thread's
+        // notifications into this Conversation. Before our correlated open response arrives, ignore
+        // broadcasts entirely; that response is the sole authority that binds this backend to a thread.
+        if (expectedThreadId == null || (eventThreadId != null && eventThreadId != expectedThreadId)) return emptyList()
         return when (method) {
-            "thread/started" -> { // backup path: usually the thread/start RESULT lands first
-                if (threadId == null) onThreadReady(buildJsonObject { params.obj("thread")?.let { put("thread", it) } }) else emptyList()
-            }
+            "thread/started" -> emptyList()
             "turn/started" -> { currentTurnId = params.obj("turn")?.str("id"); emptyList() }
             "item/agentMessage/delta" -> params.str("delta")?.let { d ->
                 params.str("itemId")?.let { deltaSeen.add(it) }
@@ -219,6 +223,13 @@ class CodexBackend(private val codexBin: String?) : AgentBackend {
         item ?: return emptyList()
         val id = item.str("id")
         return when (item.str("type")) {
+            "userMessage" -> {
+                val text = item.arr("content")
+                    ?.mapNotNull { (it as? JsonObject)?.takeIf { block -> block.str("type") == "text" }?.str("text") }
+                    ?.joinToString("\n")
+                    ?.takeIf { it.isNotBlank() }
+                text?.let { listOf(AgentEvent.SharedUserReplay(it)) } ?: emptyList()
+            }
             "agentMessage" -> {
                 val text = item.str("text")
                 if (text != null) lastAgentText = text
@@ -265,6 +276,12 @@ class CodexBackend(private val codexBin: String?) : AgentBackend {
     // ---- inbound: server→client requests (approvals) ----
 
     private suspend fun handleServerRequest(method: String, idEl: JsonElement, params: JsonObject?): List<AgentEvent> {
+        val eventThreadId = params?.str("threadId")
+        val expectedThreadId = threadId ?: resumeId
+        if (expectedThreadId == null || (eventThreadId != null && eventThreadId != expectedThreadId)) {
+            rpcRespondError(idEl, -32600, "thread is not attached to this cc-pocket session")
+            return emptyList()
+        }
         val askId = (idEl as? JsonPrimitive)?.contentOrNull ?: idEl.toString()
         return when (method) {
             "item/commandExecution/requestApproval" -> {

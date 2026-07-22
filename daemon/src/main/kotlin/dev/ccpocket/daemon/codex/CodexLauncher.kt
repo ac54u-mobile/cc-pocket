@@ -4,6 +4,8 @@ import dev.ccpocket.daemon.agent.AgentSpec
 import dev.ccpocket.daemon.agent.ExecutableResolver
 import java.io.File
 import java.nio.file.Path
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Resolves the real `codex` binary and builds the `codex app-server` launch command. Mirrors
@@ -14,6 +16,8 @@ import java.nio.file.Path
 object CodexLauncher {
     private val isWindows: Boolean = System.getProperty("os.name").lowercase().contains("win")
     private val envBin: String? = System.getenv("CC_POCKET_CODEX_BIN")
+    private val sharedOverride: String? = System.getenv("CC_POCKET_CODEX_SHARED")
+    private val sharedReady = AtomicReference<Boolean?>(null)
 
     private val exeNames: List<String> =
         if (isWindows) listOf("codex.exe", "codex.cmd", "codex.bat", "codex") else listOf("codex")
@@ -34,20 +38,47 @@ object CodexLauncher {
     fun resolveExecutable(explicit: String? = null): Path =
         ExecutableResolver.resolve(explicit, envBin, exeNames, fallbackDirs, "codex executable not found. Install the Codex CLI, or set CC_POCKET_CODEX_BIN / pass --codex-bin.")
 
-    /** argv for the persistent JSON-RPC server. cwd / model / approval / sandbox are set per thread+turn, not here. */
-    fun buildArgs(): List<String> = listOf("app-server")
+    /** argv for the JSON-RPC transport. A managed app-server is the only transport that can fan the same
+     * thread's notifications out to Codex IDE and cc-pocket simultaneously. Older CLIs (and an explicit
+     * CC_POCKET_CODEX_SHARED=0) retain the private stdio server. */
+    fun buildArgs(shared: Boolean = false): List<String> =
+        if (shared) listOf("app-server", "proxy") else listOf("app-server")
 
     fun processBuilder(exe: Path, spec: AgentSpec): ProcessBuilder {
         val exeStr = exe.toString()
         val needsShell = isWindows && exeStr.lowercase().let { it.endsWith(".cmd") || it.endsWith(".bat") }
+        val shared = ensureSharedServer(exe, needsShell)
         val argv = buildList {
             if (needsShell) { add(System.getenv("ComSpec") ?: "cmd.exe"); add("/c") }
             add(exeStr)
-            addAll(buildArgs())
+            addAll(buildArgs(shared))
         }
         return ProcessBuilder(argv).apply {
             directory(spec.workdir.toFile())
             redirectErrorStream(false) // keep stderr off the stdout JSON-RPC stream
         }
     }
+
+    /** Start Codex's official managed app-server once, then let this conversation attach through its proxy.
+     * The capability was added after cc-pocket's original app-server integration, so probing is deliberately
+     * runtime + fail-closed. Starting is idempotent according to the CLI contract. */
+    private fun ensureSharedServer(exe: Path, needsShell: Boolean): Boolean {
+        if (sharedOverride?.lowercase() in setOf("0", "false", "off", "no")) return false
+        sharedReady.get()?.let { return it }
+        val command = buildList {
+            if (needsShell) { add(System.getenv("ComSpec") ?: "cmd.exe"); add("/c") }
+            add(exe.toString())
+            addAll(listOf("app-server", "daemon", "start"))
+        }
+        val ready = runCatching {
+            val p = ProcessBuilder(command).redirectErrorStream(true).start()
+            val exited = p.waitFor(SHARED_START_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            if (!exited) p.destroyForcibly()
+            exited && p.exitValue() == 0
+        }.getOrDefault(false)
+        sharedReady.compareAndSet(null, ready)
+        return sharedReady.get() == true
+    }
+
+    private const val SHARED_START_TIMEOUT_SECONDS = 5L
 }
