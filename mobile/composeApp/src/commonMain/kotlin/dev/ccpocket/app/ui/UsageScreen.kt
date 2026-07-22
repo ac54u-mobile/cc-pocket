@@ -238,7 +238,7 @@ private fun CodexLimitsCard(limits: List<CodexRateLimit>) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text(window, color = Tok.tx2, fontSize = 12.5.sp, modifier = Modifier.weight(1f))
                     Text(
-                        stringResource(Res.string.usage_codex_used, percentText),
+                        stringResource(Res.string.usage_codex_used, "$percentText%"),
                         color = if (percent >= 90.0) Tok.warn else Tok.tx,
                         fontFamily = FontFamily.Monospace,
                         fontSize = 12.5.sp,

@@ -404,7 +404,7 @@
     <string name="usage_selected">%1$s · %2$s tokens</string>
     <string name="usage_na">暂无数据</string>
     <string name="usage_codex_limit">Codex 限额</string>
-    <string name="usage_codex_used">已用 %1$s%%</string>
+    <string name="usage_codex_used">已用 %1$s</string>
     <string name="usage_codex_resets">%1$s %2$s 重置</string>
     <string name="usage_codex_window_hours">%1$d 小时周期</string>
     <string name="usage_codex_window_days">%1$d 天周期</string>
