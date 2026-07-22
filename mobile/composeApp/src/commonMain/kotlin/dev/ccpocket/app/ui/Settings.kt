@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -149,13 +150,16 @@ fun SettingsScreen(repo: PocketRepository, onBack: () -> Unit) {
 private fun SettingsPaneScaffold(title: String, onBack: () -> Unit, content: @Composable () -> Unit) {
     Column(Modifier.fillMaxSize().background(Tok.base)) {
         SettingsTopBar(title, onBack)
-        Column(
-            Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp)
-                .padding(top = 4.dp, bottom = 28.dp),
-        ) { content() }
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+            Column(
+                Modifier
+                    .widthIn(max = 680.dp)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 4.dp, bottom = 32.dp),
+            ) { content() }
+        }
     }
 }
 
@@ -164,23 +168,23 @@ private fun SettingsHub(onBack: () -> Unit, onOpen: (SettingsDest) -> Unit) {
     val entries = listOf(
         HubEntry(
             SettingsDest.USAGE, stringResource(Res.string.settings_usage),
-            stringResource(Res.string.usage_title), Icons.Rounded.Insights, Tok.info,
+            stringResource(Res.string.settings_hub_usage_sub), Icons.Rounded.Insights, Tok.info,
         ),
         HubEntry(
             SettingsDest.SCHEDULES, stringResource(Res.string.schedule_tasks_title),
-            stringResource(Res.string.settings_hub_activity), Icons.Outlined.Schedule, Tok.warn,
+            stringResource(Res.string.settings_hub_schedules_sub), Icons.Outlined.Schedule, Tok.warn,
         ),
         HubEntry(
             SettingsDest.SHARES, stringResource(Res.string.settings_shared_folders),
-            stringResource(Res.string.settings_hub_collaboration), Icons.Rounded.Share, Tok.accent,
+            stringResource(Res.string.settings_hub_shares_sub), Icons.Rounded.Share, Tok.accent,
         ),
         HubEntry(
             SettingsDest.JOIN, stringResource(Res.string.join_title),
-            stringResource(Res.string.settings_hub_collaboration), Icons.Rounded.PersonAdd, Tok.codex,
+            stringResource(Res.string.settings_hub_join_sub), Icons.Rounded.PersonAdd, Tok.codex,
         ),
         HubEntry(
             SettingsDest.BRIDGES, stringResource(Res.string.settings_bridges),
-            stringResource(Res.string.settings_hub_collaboration), Icons.Outlined.SmartToy, Tok.opencode,
+            stringResource(Res.string.settings_hub_bridges_sub), Icons.Outlined.SmartToy, Tok.opencode,
         ),
         HubEntry(
             SettingsDest.AGENT, stringResource(Res.string.settings_hub_agent),
@@ -207,44 +211,50 @@ private fun SettingsHub(onBack: () -> Unit, onOpen: (SettingsDest) -> Unit) {
             stringResource(Res.string.settings_hub_about_sub), Icons.Outlined.Info, Tok.tx2,
         ),
     )
+    @Composable
+    fun SettingsGroup(label: String, destinations: List<SettingsDest>) {
+        val groupEntries = destinations.map { d -> entries.first { it.dest == d } }
+        SettingsSectionLabel(label)
+        SettingsCard {
+            groupEntries.forEachIndexed { i, entry ->
+                if (i > 0) SettingsDivider()
+                SettingsNavRow(
+                    entry.title,
+                    { onOpen(entry.dest) },
+                    subtitle = entry.subtitle,
+                    icon = entry.icon,
+                    iconTint = entry.iconTint,
+                )
+            }
+        }
+    }
 
     Column(Modifier.fillMaxSize().background(Tok.base)) {
         SettingsTopBar(stringResource(Res.string.settings_title), onBack)
-        Column(
-            Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp)
-                .padding(top = 4.dp, bottom = 28.dp),
-        ) {
-            SettingsSectionLabel(stringResource(Res.string.settings_hub_activity))
-            SettingsCard {
-                listOf(SettingsDest.USAGE, SettingsDest.SCHEDULES).forEachIndexed { i, d ->
-                    if (i > 0) SettingsDivider()
-                    val e = entries.first { it.dest == d }
-                    SettingsNavRow(e.title, { onOpen(d) }, subtitle = e.subtitle, icon = e.icon, iconTint = e.iconTint)
-                }
-            }
-
-            SettingsSectionLabel(stringResource(Res.string.settings_hub_collaboration))
-            SettingsCard {
-                listOf(SettingsDest.SHARES, SettingsDest.JOIN, SettingsDest.BRIDGES).forEachIndexed { i, d ->
-                    if (i > 0) SettingsDivider()
-                    val e = entries.first { it.dest == d }
-                    SettingsNavRow(e.title, { onOpen(d) }, icon = e.icon, iconTint = e.iconTint)
-                }
-            }
-
-            SettingsSectionLabel(stringResource(Res.string.settings_title))
-            SettingsCard {
-                listOf(
-                    SettingsDest.AGENT, SettingsDest.APPEARANCE, SettingsDest.NOTIFICATIONS,
-                    SettingsDest.SECURITY, SettingsDest.ADVANCED, SettingsDest.ABOUT,
-                ).forEachIndexed { i, d ->
-                    if (i > 0) SettingsDivider()
-                    val e = entries.first { it.dest == d }
-                    SettingsNavRow(e.title, { onOpen(d) }, subtitle = e.subtitle, icon = e.icon, iconTint = e.iconTint)
-                }
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+            Column(
+                Modifier
+                    .widthIn(max = 680.dp)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 4.dp, bottom = 32.dp),
+            ) {
+                SettingsGroup(
+                    stringResource(Res.string.settings_hub_activity),
+                    listOf(SettingsDest.USAGE, SettingsDest.SCHEDULES),
+                )
+                SettingsGroup(
+                    stringResource(Res.string.settings_hub_collaboration),
+                    listOf(SettingsDest.SHARES, SettingsDest.JOIN, SettingsDest.BRIDGES),
+                )
+                SettingsGroup(
+                    stringResource(Res.string.settings_title),
+                    listOf(
+                        SettingsDest.AGENT, SettingsDest.APPEARANCE, SettingsDest.NOTIFICATIONS,
+                        SettingsDest.SECURITY, SettingsDest.ADVANCED, SettingsDest.ABOUT,
+                    ),
+                )
             }
         }
     }
@@ -312,34 +322,18 @@ private fun AppearancePane(repo: PocketRepository) {
     SettingsSectionLabel(stringResource(Res.string.appearance_section))
     SettingsCard {
         Column(Modifier.padding(14.dp)) {
-            Row(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Tok.base)
-                    .border(1.dp, Tok.hair, RoundedCornerShape(10.dp)).padding(3.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                val modes = listOf(
-                    ThemeMode.SYSTEM to stringResource(Res.string.appearance_system),
-                    ThemeMode.LIGHT to stringResource(Res.string.appearance_light),
-                    ThemeMode.DARK to stringResource(Res.string.appearance_dark),
-                )
-                modes.forEach { (mode, label) ->
-                    val sel = repo.themeMode.value == mode
-                    Box(
-                        Modifier.weight(1f).clip(RoundedCornerShape(7.dp))
-                            .then(if (sel) Modifier.background(Tok.accent) else Modifier)
-                            .clickable { repo.setThemeMode(mode) }.padding(vertical = 9.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            label,
-                            color = if (sel) Tok.base else Tok.tx2,
-                            fontSize = 13.sp,
-                            fontWeight = if (sel) FontWeight.SemiBold else FontWeight.Normal,
-                            maxLines = 1,
-                        )
-                    }
-                }
-            }
+            val modes = listOf(
+                ThemeMode.SYSTEM to stringResource(Res.string.appearance_system),
+                ThemeMode.LIGHT to stringResource(Res.string.appearance_light),
+                ThemeMode.DARK to stringResource(Res.string.appearance_dark),
+            )
+            SettingsSegmented(
+                options = modes,
+                selected = modes.first { it.first == repo.themeMode.value },
+                label = { it.second },
+                onPick = { repo.setThemeMode(it.first) },
+                mono = false,
+            )
             SettingsHint(stringResource(Res.string.appearance_hint), Modifier.padding(top = 10.dp, start = 0.dp))
         }
     }
@@ -348,14 +342,13 @@ private fun AppearancePane(repo: PocketRepository) {
     SettingsCard {
         Column(Modifier.padding(14.dp)) {
             Row(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Tok.base)
-                    .border(1.dp, Tok.hair, RoundedCornerShape(10.dp)).padding(3.dp),
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp)).background(Tok.raised).padding(4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 FONT_SCALE_STEPS.forEachIndexed { i, s ->
                     val sel = repo.fontScale.value in (s - 0.04f)..(s + 0.04f)
                     Box(
-                        Modifier.weight(1f).clip(RoundedCornerShape(7.dp))
+                        Modifier.weight(1f).clip(RoundedCornerShape(10.dp))
                             .then(if (sel) Modifier.background(Tok.accent) else Modifier)
                             .clickable { repo.setFontScale(s) }.padding(vertical = 8.dp),
                         contentAlignment = Alignment.Center,
@@ -370,8 +363,8 @@ private fun AppearancePane(repo: PocketRepository) {
                 }
             }
             Box(
-                Modifier.fillMaxWidth().padding(top = 12.dp).clip(RoundedCornerShape(8.dp)).background(Tok.base)
-                    .border(1.dp, Tok.hair, RoundedCornerShape(8.dp)).padding(12.dp),
+                Modifier.fillMaxWidth().padding(top = 14.dp).clip(RoundedCornerShape(13.dp)).background(Tok.raised)
+                    .padding(14.dp),
             ) {
                 Text(stringResource(Res.string.text_size_sample), color = Tok.tx, fontSize = 14.sp * repo.fontScale.value)
             }
@@ -453,9 +446,10 @@ private fun AboutPane(repo: PocketRepository, onExit: () -> Unit) {
         )
     }
     Row(
-        Modifier.fillMaxWidth().padding(top = 16.dp).clip(RoundedCornerShape(12.dp)).background(Tok.surface)
-            .border(1.dp, Tok.hair, RoundedCornerShape(12.dp))
-            .clickable(onClick = onExit).padding(vertical = 14.dp),
+        Modifier.fillMaxWidth().padding(top = 16.dp).clip(RoundedCornerShape(14.dp))
+            .background(Tok.danger.copy(alpha = 0.09f))
+            .border(1.dp, Tok.danger.copy(alpha = 0.22f), RoundedCornerShape(14.dp))
+            .clickable(onClick = onExit).padding(vertical = 13.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {

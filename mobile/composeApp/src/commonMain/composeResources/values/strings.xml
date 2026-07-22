@@ -243,6 +243,11 @@
     <string name="settings_cli_default">CLI default</string>
     <string name="settings_follow_model">Follow model</string>
     <string name="settings_hub_activity">Activity</string>
+    <string name="settings_hub_usage_sub">Review usage, limits, and context consumption</string>
+    <string name="settings_hub_schedules_sub">Manage tasks that run automatically</string>
+    <string name="settings_hub_shares_sub">Manage folders shared with other people</string>
+    <string name="settings_hub_join_sub">Join a shared workspace with an invite</string>
+    <string name="settings_hub_bridges_sub">Connect external platforms and message channels</string>
     <string name="settings_hub_agent">Agent defaults</string>
     <string name="settings_hub_agent_sub">Mode, model, effort, which agents to show</string>
     <string name="settings_hub_appearance">Display &amp; appearance</string>

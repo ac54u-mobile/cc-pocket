@@ -6,6 +6,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -56,16 +57,16 @@ import org.jetbrains.compose.resources.stringResource
 
 /** Density + motion tokens for Settings surfaces (phone Hub + detail panes). */
 object SettingsMetrics {
-    val rowMin = 52.dp
+    val rowMin = 54.dp
     val rowPadH = 14.dp
-    val rowPadV = 14.dp
-    val rowPadVCompact = 12.dp
-    val sectionTop = 20.dp
-    val sectionBottom = 8.dp
-    val cardRadius = 12.dp
+    val rowPadV = 13.dp
+    val rowPadVCompact = 11.dp
+    val sectionTop = 18.dp
+    val sectionBottom = 7.dp
+    val cardRadius = 14.dp
     val indicatorW = 3.dp
     val indicatorH = 22.dp
-    val animMs = 160
+    val animMs = 220
 }
 
 /** Uppercase section heading used across Settings hub + detail panes. */
@@ -76,8 +77,12 @@ fun SettingsSectionLabel(text: String, modifier: Modifier = Modifier) {
         color = Tok.muted,
         fontSize = 11.sp,
         fontWeight = FontWeight.SemiBold,
-        letterSpacing = 0.6.sp,
-        modifier = modifier.padding(top = SettingsMetrics.sectionTop, bottom = SettingsMetrics.sectionBottom),
+        letterSpacing = 0.35.sp,
+        modifier = modifier.padding(
+            start = 2.dp,
+            top = SettingsMetrics.sectionTop,
+            bottom = SettingsMetrics.sectionBottom,
+        ),
     )
 }
 
@@ -89,14 +94,14 @@ fun SettingsCard(modifier: Modifier = Modifier, content: @Composable ColumnScope
             .fillMaxWidth()
             .clip(RoundedCornerShape(SettingsMetrics.cardRadius))
             .background(Tok.surface)
-            .border(1.dp, Tok.hair, RoundedCornerShape(SettingsMetrics.cardRadius)),
+            .border(1.dp, Tok.hair.copy(alpha = 0.72f), RoundedCornerShape(SettingsMetrics.cardRadius)),
         content = content,
     )
 }
 
 @Composable
 fun SettingsDivider() {
-    Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+    Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair.copy(alpha = 0.7f)))
 }
 
 /** Leading accent bar — fades/scales in when [selected]. Replaces full-row accent fill. */
@@ -132,7 +137,10 @@ fun SettingsTopBar(title: String, onBack: () -> Unit, trailing: (@Composable () 
     val haptics = rememberAppHaptics()
     val showBtn = showBackButton()
     Row(
-        Modifier.fillMaxWidth().background(Tok.surface).padding(horizontal = 4.dp, vertical = 6.dp),
+        Modifier
+            .fillMaxWidth()
+            .background(Tok.surface)
+            .padding(horizontal = 6.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (showBtn) {
@@ -140,6 +148,7 @@ fun SettingsTopBar(title: String, onBack: () -> Unit, trailing: (@Composable () 
                 Modifier
                     .size(40.dp)
                     .clip(RoundedCornerShape(10.dp))
+                    .background(Tok.raised)
                     .semantics { contentDescription = backLabel }
                     .clickable {
                         haptics.tick()
@@ -162,13 +171,15 @@ fun SettingsTopBar(title: String, onBack: () -> Unit, trailing: (@Composable () 
             color = Tok.tx,
             fontSize = 18.sp,
             fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.weight(1f).padding(start = 2.dp),
+            letterSpacing = (-0.1).sp,
+            modifier = Modifier.weight(1f).padding(start = 5.dp),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
         trailing?.invoke()
         if (trailing == null) Spacer(Modifier.width(4.dp))
     }
+    Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
 }
 
 /**
@@ -209,13 +220,14 @@ fun SettingsNavRow(
             Box(
                 Modifier
                     .size(32.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(iconTint.copy(alpha = 0.14f)),
+                    .clip(RoundedCornerShape(9.dp))
+                    .background(iconTint.copy(alpha = 0.12f))
+                    .border(1.dp, iconTint.copy(alpha = 0.10f), RoundedCornerShape(9.dp)),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(icon, null, tint = iconTint, modifier = Modifier.size(17.dp))
             }
-            Spacer(Modifier.width(12.dp))
+            Spacer(Modifier.width(11.dp))
         }
         Column(Modifier.weight(1f).padding(end = 10.dp)) {
             Text(
@@ -230,8 +242,8 @@ fun SettingsNavRow(
                 Text(
                     subtitle,
                     color = Tok.muted,
-                    fontSize = 12.sp,
-                    lineHeight = 16.sp,
+                    fontSize = 11.5.sp,
+                    lineHeight = 15.sp,
                     modifier = Modifier.padding(top = 2.dp),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
@@ -242,7 +254,12 @@ fun SettingsNavRow(
             Text(trailing, color = Tok.tx2, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Spacer(Modifier.width(6.dp))
         }
-        Icon(Icons.Rounded.ChevronRight, null, tint = Tok.muted, modifier = Modifier.size(18.dp))
+        Box(
+            Modifier.size(24.dp).clip(RoundedCornerShape(8.dp)).background(Tok.raised),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(Icons.Rounded.ChevronRight, null, tint = Tok.tx2, modifier = Modifier.size(15.dp))
+        }
     }
 }
 
@@ -260,19 +277,25 @@ fun SettingsToggleRow(
         Modifier
             .fillMaxWidth()
             .heightIn(min = SettingsMetrics.rowMin)
-            .padding(start = SettingsMetrics.rowPadH, end = 8.dp, top = 10.dp, bottom = 10.dp),
+            .toggleable(
+                value = checked,
+                enabled = enabled,
+                role = Role.Switch,
+                onValueChange = {
+                    haptics.tick()
+                    onChange(it)
+                },
+            )
+            .padding(start = SettingsMetrics.rowPadH, end = 8.dp, top = 9.dp, bottom = 9.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-            Text(label, color = Tok.tx, fontSize = 14.sp)
-            if (sub != null) Text(sub, color = Tok.muted, fontSize = 11.5.sp, lineHeight = 15.sp)
+            Text(label, color = Tok.tx, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+            if (sub != null) Text(sub, color = Tok.muted, fontSize = 11.5.sp, lineHeight = 15.sp, modifier = Modifier.padding(top = 2.dp))
         }
         Switch(
             checked = checked,
-            onCheckedChange = {
-                haptics.tick()
-                onChange(it)
-            },
+            onCheckedChange = null,
             enabled = enabled,
         )
     }
@@ -292,10 +315,9 @@ fun <T> SettingsSegmented(
     Row(
         modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .background(Tok.surface)
-            .border(1.dp, Tok.hair, RoundedCornerShape(10.dp))
-            .padding(3.dp),
+            .clip(RoundedCornerShape(13.dp))
+            .background(Tok.raised)
+            .padding(4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         options.forEach { opt ->
@@ -313,20 +335,20 @@ fun <T> SettingsSegmented(
             Box(
                 Modifier
                     .weight(1f)
-                    .clip(RoundedCornerShape(7.dp))
+                    .clip(RoundedCornerShape(10.dp))
                     .background(bg)
                     .clickable {
                         haptics.tick()
                         onPick(opt)
                     }
-                    .padding(vertical = 9.dp),
+                    .padding(vertical = 10.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     label(opt),
                     color = fg,
                     fontFamily = if (mono) FontFamily.Monospace else FontFamily.Default,
-                    fontSize = 11.sp,
+                    fontSize = 11.5.sp,
                     fontWeight = if (sel) FontWeight.SemiBold else FontWeight.Normal,
                     maxLines = 1,
                 )
@@ -479,7 +501,7 @@ fun <T> SettingsChoiceList(
             val title = label(opt)
             val trail = trailing(opt)
             val wash by animateFloatAsState(
-                targetValue = if (sel) 0.07f else 0f,
+                targetValue = if (sel) 0.10f else 0f,
                 animationSpec = tween(SettingsMetrics.animMs),
                 label = "choice-wash",
             )
@@ -498,7 +520,7 @@ fun <T> SettingsChoiceList(
                         onPick(opt)
                     }
                     .padding(
-                        start = 10.dp,
+                        start = 12.dp,
                         end = SettingsMetrics.rowPadH,
                         top = SettingsMetrics.rowPadVCompact,
                         bottom = SettingsMetrics.rowPadVCompact,
@@ -532,12 +554,16 @@ fun <T> SettingsChoiceList(
                     animationSpec = tween(SettingsMetrics.animMs),
                     label = "choice-check",
                 )
-                Icon(
-                    Icons.Rounded.Check,
-                    null,
-                    tint = Tok.accent.copy(alpha = checkAlpha),
-                    modifier = Modifier.size(18.dp).graphicsLayer { alpha = checkAlpha },
-                )
+                Box(
+                    Modifier
+                        .size(24.dp)
+                        .graphicsLayer { alpha = checkAlpha }
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Tok.accent),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(Icons.Rounded.Check, null, tint = Tok.base, modifier = Modifier.size(15.dp))
+                }
             }
         }
     }

@@ -243,6 +243,11 @@
     <string name="settings_cli_default">CLI 默认</string>
     <string name="settings_follow_model">跟随模型</string>
     <string name="settings_hub_activity">动态</string>
+    <string name="settings_hub_usage_sub">查看用量、额度与上下文消耗</string>
+    <string name="settings_hub_schedules_sub">管理自动运行的任务与时间</string>
+    <string name="settings_hub_shares_sub">管理已授权给他人的文件夹</string>
+    <string name="settings_hub_join_sub">通过邀请码加入共享工作区</string>
+    <string name="settings_hub_bridges_sub">连接外部平台与消息渠道</string>
     <string name="settings_hub_agent">Agent 默认值</string>
     <string name="settings_hub_agent_sub">模式、模型、推理强度、显示哪些 Agent</string>
     <string name="settings_hub_appearance">显示与外观</string>
