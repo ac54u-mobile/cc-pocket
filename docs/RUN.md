@@ -55,6 +55,8 @@ quit
 
 **Codex 后端**：daemon 除了 Claude Code，现在也能驱动 OpenAI Codex。它会自动探测 PATH 上的 `codex` CLI；要指定路径就在 `run` 上加 `--codex-bin <path>`（`service-install` 会把它透传进常驻配置）。后端由**客户端**（手机或桌面）在新建会话时选——Claude 或 Codex——两者的远程逐步命令 / 文件批准用法完全一样。一个会话始终绑定一个后端。
 
+Codex IDE 与 iOS 的共享 thread 依赖 managed app-server 的 Unix Socket WebSocket `/rpc` transport。用户安装及验证步骤见 [`CODEX_IDE_SYNC.md`](./CODEX_IDE_SYNC.md)。开发时不要同时启动第二个 managed app-server 或第二个 CC Pocket daemon。
+
 ---
 
 ## 3. M1 —— 经云端 relay（端到端加密 + 配对）

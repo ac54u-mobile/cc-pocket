@@ -32,6 +32,7 @@
 ## 文档
 
 - [USAGE](docs/USAGE.md) — 日常使用
+- [Codex IDE ↔ iOS 实时同步](docs/CODEX_IDE_SYNC.md) — managed app-server 安装与排错教程
 - [SECURITY](docs/SECURITY.md) — 威胁模型
 - [RUN](docs/RUN.md) — 本地开发
 - [RELEASE](docs/RELEASE.md) — 发版说明

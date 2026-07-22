@@ -41,6 +41,7 @@ flowchart LR
 ## Docs
 
 - [USAGE](docs/USAGE.md) — daily use
+- [Codex IDE ↔ iOS sync](docs/CODEX_IDE_SYNC.md) — managed app-server setup and troubleshooting
 - [SECURITY](docs/SECURITY.md) — threat model
 - [RUN](docs/RUN.md) — local development
 - [RELEASE](docs/RELEASE.md) — publishing notes

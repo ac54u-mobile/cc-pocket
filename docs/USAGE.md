@@ -49,6 +49,7 @@ irm https://raw.githubusercontent.com/ac54u-mobile/cc-pocket/main/scripts/instal
 
 - Claude 用 app 的赤陶色（terracotta）主题色；**Codex 用青色（teal）**，并且只有 Codex 会在列表与标题里被标记，Claude 保持不标。
 - 一个会话**始终绑定一个后端**：中途不能在 Claude 与 Codex 之间切换，想换就新建一个会话。
+- Codex IDE 与 iOS 打开同一 thread 后可实时双向同步；这需要 App `1.5.3+`、daemon `1.0.3+` 和 installer 管理的 standalone Codex。完整安装、验收与排错见 [iOS 与 Codex IDE 实时双向同步教程](./CODEX_IDE_SYNC.md)。
 - Codex 会话用一档**权限预设**，对应 Codex 的 approval-policy × sandbox 两个维度：
 
 | 预设 | 大致含义 |
