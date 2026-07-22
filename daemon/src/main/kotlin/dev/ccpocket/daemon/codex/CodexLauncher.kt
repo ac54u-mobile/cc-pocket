@@ -4,6 +4,7 @@ import dev.ccpocket.daemon.agent.AgentSpec
 import dev.ccpocket.daemon.agent.ExecutableResolver
 import java.io.File
 import java.nio.file.Path
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
@@ -70,15 +71,46 @@ object CodexLauncher {
             add(exe.toString())
             addAll(listOf("app-server", "daemon", "start"))
         }
-        val ready = runCatching {
+        val started = runCatching {
             val p = ProcessBuilder(command).redirectErrorStream(true).start()
             val exited = p.waitFor(SHARED_START_TIMEOUT_SECONDS, TimeUnit.SECONDS)
             if (!exited) p.destroyForcibly()
             exited && p.exitValue() == 0
         }.getOrDefault(false)
+        // `daemon start` only proves that the supervisor is alive. Codex 0.145.0 on Linux can leave
+        // `app-server proxy` connected but unable to forward even `initialize`, which otherwise makes
+        // every phone turn spin forever. Verify the actual byte path before selecting it; fail closed
+        // to the proven direct stdio transport when the proxy is absent, incompatible, or wedged.
+        val ready = started && probeSharedTransport(exe, needsShell)
         sharedReady.compareAndSet(null, ready)
         return sharedReady.get() == true
     }
 
+    private fun probeSharedTransport(exe: Path, needsShell: Boolean): Boolean = runCatching {
+        val command = buildList {
+            if (needsShell) { add(System.getenv("ComSpec") ?: "cmd.exe"); add("/c") }
+            add(exe.toString())
+            addAll(buildArgs(shared = true))
+        }
+        val p = ProcessBuilder(command).redirectErrorStream(false).start()
+        try {
+            p.outputStream.bufferedWriter().apply {
+                write(PROBE_INITIALIZE)
+                newLine()
+                flush()
+            }
+            val response = CompletableFuture.supplyAsync { p.inputStream.bufferedReader().readLine() }
+                .get(SHARED_PROBE_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            response?.contains("\"id\":$PROBE_ID") == true && response.contains("\"result\"")
+        } finally {
+            p.destroyForcibly()
+            p.waitFor(1, TimeUnit.SECONDS)
+        }
+    }.getOrDefault(false)
+
     private const val SHARED_START_TIMEOUT_SECONDS = 5L
+    private const val SHARED_PROBE_TIMEOUT_SECONDS = 4L
+    private const val PROBE_ID = 991_337
+    private const val PROBE_INITIALIZE =
+        "{\"id\":$PROBE_ID,\"method\":\"initialize\",\"params\":{\"clientInfo\":{\"name\":\"cc-pocket-probe\",\"version\":\"1\"},\"capabilities\":{\"experimentalApi\":false}}}"
 }
