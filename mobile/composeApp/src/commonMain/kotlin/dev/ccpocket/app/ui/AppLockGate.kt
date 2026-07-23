@@ -131,7 +131,7 @@ fun AppLockGate(c: AppLockController) {
         t.animateFloat(0.35f, 1f, infiniteRepeatable(tween(900), RepeatMode.Reverse)).value
     } else 1f
 
-    Box(Modifier.fillMaxSize().background(Tok.base)) {
+    Box(Modifier.fillMaxSize().background(AppicaTok.base)) {
         Column(
             Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBars).padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -178,7 +178,7 @@ fun AppLockGate(c: AppLockController) {
  */
 @Composable
 fun AppLockCover() {
-    Box(Modifier.fillMaxSize().background(Tok.base), contentAlignment = Alignment.Center) {
+    Box(Modifier.fillMaxSize().background(AppicaTok.base), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             AppMarkGlyph(color = Tok.tx2, width = 28.dp)
             Spacer(Modifier.height(15.dp))
@@ -207,7 +207,7 @@ private fun FilledAction(label: String, enabled: Boolean, onClick: () -> Unit) {
             .background(if (enabled) Tok.accent else Tok.accent.copy(alpha = 0.4f))
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { Text(label, color = Tok.base, fontSize = 16.sp, fontWeight = FontWeight.Bold) }
+    ) { Text(label, color = AppicaTok.base, fontSize = 16.sp, fontWeight = FontWeight.Bold) }
 }
 
 @Composable

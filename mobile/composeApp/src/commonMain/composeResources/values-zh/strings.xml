@@ -208,6 +208,7 @@
     <string name="settings_title">设置</string>
     <string name="settings_search_placeholder">搜索设置</string>
     <string name="settings_search_empty">没有匹配的设置项</string>
+    <string name="settings_intro">统一管理 Agent、工作区、隐私与显示体验。</string>
     <string name="settings_back">返回</string>
     <string name="settings_consequence_new_session">仅影响新会话——当前聊天不会变。</string>
     <string name="settings_consequence_effort">仅影响新会话。进行中的会话请用 ⋯ → 推理强度 修改。</string>
@@ -491,6 +492,7 @@
     <string name="session_actions_open">会话操作</string>
     <string name="quick_actions_title">快捷操作</string>
     <string name="qa_model">切换模型</string>
+    <string name="model_search_placeholder">搜索模型</string>
     <string name="qa_context_gauge">上下文占用——打开会话信息</string>
     <string name="qa_clear">清空会话</string>
     <string name="qa_clear_hint">再次点击确认</string>

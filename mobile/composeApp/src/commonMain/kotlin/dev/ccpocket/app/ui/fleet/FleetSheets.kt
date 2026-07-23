@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import dev.ccpocket.app.data.PocketRepository
 import dev.ccpocket.app.theme.Tok
 import dev.ccpocket.app.ui.PocketSheet
+import dev.ccpocket.app.ui.AppicaTok
 import dev.ccpocket.app.ui.fmtMmSs
 import dev.ccpocket.app.ui.tilde
 import kotlinx.coroutines.delay
@@ -83,7 +84,7 @@ fun MachineSwitcherSheet(repo: PocketRepository, onDismiss: () -> Unit, onManage
                     if (m.current) Icon(Icons.Rounded.Check, null, tint = Tok.accent, modifier = Modifier.size(17.dp))
                 }
             }
-            Box(Modifier.fillMaxWidth().padding(top = 8.dp).height(1.dp).background(Tok.hair))
+            Box(Modifier.fillMaxWidth().padding(top = 8.dp).height(1.dp).background(AppicaTok.hair))
             Text(
                 "Manage computers", color = Tok.muted, fontSize = 12.5.sp,
                 modifier = Modifier.clickable { onDismiss(); onManage() }.padding(horizontal = 18.dp, vertical = 12.dp),
@@ -105,7 +106,7 @@ fun CrossMachineBanner(entries: List<AttentionEntry>, onReview: () -> Unit, modi
     LaunchedEffect(soonest.askId) { while (seconds > 0) { delay(1000); seconds -= 1 } }
     Row(
         modifier.fillMaxWidth().shadow(10.dp, RoundedCornerShape(8.dp))
-            .clip(RoundedCornerShape(8.dp)).background(Tok.raised.copy(alpha = 0.97f))
+            .clip(RoundedCornerShape(8.dp)).background(AppicaTok.raised.copy(alpha = 0.97f))
             .border(1.dp, Tok.accent.copy(alpha = 0.45f), RoundedCornerShape(8.dp))
             .padding(horizontal = 11.dp, vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp),
@@ -131,7 +132,7 @@ fun CrossMachineBanner(entries: List<AttentionEntry>, onReview: () -> Unit, modi
             color = Tok.warn, fontFamily = FontFamily.Monospace, fontSize = 11.sp,
         )
         Text(
-            "Review", color = Tok.base, fontSize = 12.sp, fontWeight = FontWeight.Bold,
+            "Review", color = AppicaTok.base, fontSize = 12.sp, fontWeight = FontWeight.Bold,
             modifier = Modifier.clip(RoundedCornerShape(999.dp)).background(Tok.accent)
                 .clickable(onClick = onReview).padding(horizontal = 12.dp, vertical = 5.dp),
         )

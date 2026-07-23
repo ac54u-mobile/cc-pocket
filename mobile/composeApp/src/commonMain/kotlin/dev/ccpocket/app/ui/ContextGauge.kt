@@ -97,7 +97,7 @@ fun ContextGauge(
     val known = window != null && window > 0L
     val frac = if (known) (used.toFloat() / window!!).coerceIn(0f, 1f) else 0f
     val color = contextColor(frac, Tok.tx2)
-    val track = Tok.hair
+    val track = AppicaTok.hair
     val a11y = stringResource(Res.string.qa_context_gauge)
     BoxWithConstraints(
         modifier
@@ -117,7 +117,7 @@ fun ContextGauge(
                 // bare: a 30x30 slot with the ring centred. With a number it grows rightward only.
                 .then(if (showNumber) Modifier else Modifier.width(CAPSULE))
                 .clip(RoundedCornerShape(999.dp))
-                .background(Tok.raised)
+                .background(AppicaTok.raised)
                 .then(if (showNumber) Modifier.padding(start = 9.dp, end = 10.dp) else Modifier),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,

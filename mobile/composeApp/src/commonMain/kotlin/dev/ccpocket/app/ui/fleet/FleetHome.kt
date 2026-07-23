@@ -44,6 +44,8 @@ import dev.ccpocket.app.data.PocketRepository
 import dev.ccpocket.app.theme.Tok
 import dev.ccpocket.app.ui.BackNavHost
 import dev.ccpocket.app.ui.BackTextButton
+import dev.ccpocket.app.ui.AppicaMetrics
+import dev.ccpocket.app.ui.AppicaTok
 
 /**
  * Fleet home — the Computers surface evolved from a picker into a live overview ("Fleet Mobile" board ②).
@@ -59,19 +61,21 @@ fun FleetHomeScreen(
     val machines = repo.fleetMachines()
     val waiting = repo.fleetAttention().size
     BackNavHost(onBack = onBack) {
-        Column(Modifier.fillMaxSize().background(Tok.base)) {
+        Column(Modifier.fillMaxSize().background(AppicaTok.base)) {
             // ── header: back · big title · FleetStrip ──
             Row(
-                Modifier.fillMaxWidth().background(Tok.surface).padding(start = 4.dp, end = 16.dp, top = 8.dp, bottom = 12.dp),
+                Modifier.fillMaxWidth().background(AppicaTok.background)
+                    .border(1.dp, AppicaTok.borderMuted)
+                    .padding(start = 4.dp, end = 16.dp, top = 8.dp, bottom = 9.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 BackTextButton(onBack)
                 Column(Modifier.weight(1f)) {
-                    Text("Your computers", color = Tok.tx, fontSize = 21.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.3).sp)
+                    Text("Your computers", color = AppicaTok.foregroundIntense, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                     FleetStripText(repo.fleetStrip(), Modifier.padding(top = 3.dp))
                 }
             }
-            Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+            Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair))
 
             Column(
                 Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 14.dp),
@@ -117,7 +121,7 @@ private fun AttentionBanner(waiting: Int, onOpen: () -> Unit) {
             color = Tok.accent, fontSize = 13.5.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f),
         )
         Text(
-            "Review", color = Tok.base, fontSize = 12.5.sp, fontWeight = FontWeight.Bold,
+            "Review", color = AppicaTok.base, fontSize = 12.5.sp, fontWeight = FontWeight.Bold,
             modifier = Modifier.clip(RoundedCornerShape(999.dp)).background(Tok.accent).padding(horizontal = 14.dp, vertical = 6.dp),
         )
     }
@@ -128,8 +132,8 @@ private fun MachineCard(m: FleetMachine, onClick: () -> Unit) {
     val reconnecting = m.status == MachineStatus.RECONNECTING
     val dim = m.status == MachineStatus.OFFLINE && !m.current
     Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Tok.surface)
-            .border(1.dp, Tok.hair, RoundedCornerShape(12.dp))
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(AppicaMetrics.radiusSm)).background(AppicaTok.background)
+            .border(1.dp, AppicaTok.border, RoundedCornerShape(AppicaMetrics.radiusSm))
             .clickable(onClick = onClick)
             .alpha(if (dim) 0.5f else 1f),
     ) {

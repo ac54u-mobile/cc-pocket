@@ -1,5 +1,7 @@
 package dev.ccpocket.app.ui.share
 
+import dev.ccpocket.app.ui.AppicaTok
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -92,7 +94,7 @@ fun TierBadge(tier: AccessTier) {
 @Composable
 fun SharedPill() {
     Row(
-        Modifier.clip(RoundedCornerShape(6.dp)).border(1.dp, Tok.hair, RoundedCornerShape(6.dp)).padding(horizontal = 7.dp, vertical = 2.dp),
+        Modifier.clip(RoundedCornerShape(6.dp)).border(1.dp, AppicaTok.hair, RoundedCornerShape(6.dp)).padding(horizontal = 7.dp, vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text("🔗", fontSize = 9.sp) // link glyph
@@ -131,7 +133,7 @@ private fun BoundaryItem(get: Boolean, text: String) {
 @Composable
 fun BoundaryCard(modifier: Modifier = Modifier) {
     Column(
-        modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Tok.surface).border(1.dp, Tok.hair, RoundedCornerShape(16.dp)),
+        modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(AppicaTok.surface).border(1.dp, AppicaTok.hair, RoundedCornerShape(16.dp)),
     ) {
         Column(Modifier.padding(16.dp)) {
             Text(stringResource(Res.string.share_boundary_get), color = Tok.ok, fontSize = 12.sp, fontWeight = FontWeight.Bold)
@@ -142,7 +144,7 @@ fun BoundaryCard(modifier: Modifier = Modifier) {
                 BoundaryItem(true, stringResource(Res.string.share_boundary_get_env))
             }
         }
-        Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+        Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair))
         Column(Modifier.padding(16.dp)) {
             Text(stringResource(Res.string.share_boundary_not), color = Tok.muted, fontSize = 12.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(12.dp))
@@ -169,7 +171,7 @@ fun BoundaryCard(modifier: Modifier = Modifier) {
 @Composable
 fun SharePrimaryButton(text: String, enabled: Boolean = true, onClick: () -> Unit) {
     Text(
-        text, color = Tok.base, fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
+        text, color = AppicaTok.base, fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
         textAlign = androidx.compose.ui.text.style.TextAlign.Center,
         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
             .background(if (enabled) Tok.accent else Tok.accent.copy(alpha = 0.4f))
@@ -183,7 +185,7 @@ fun ShareOutlineButton(text: String, modifier: Modifier = Modifier, color: Color
     Text(
         text, color = color, fontSize = 14.sp, fontWeight = FontWeight.Medium,
         textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-        modifier = modifier.clip(RoundedCornerShape(13.dp)).border(1.dp, Tok.hair, RoundedCornerShape(13.dp))
+        modifier = modifier.clip(RoundedCornerShape(13.dp)).border(1.dp, AppicaTok.hair, RoundedCornerShape(13.dp))
             .clickable(onClick = onClick).padding(vertical = 13.dp),
     )
 }

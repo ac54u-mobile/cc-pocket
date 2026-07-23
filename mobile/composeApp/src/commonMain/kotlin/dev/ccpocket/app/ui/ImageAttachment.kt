@@ -90,7 +90,7 @@ private fun TrayThumb(img: PendingImage, onRemove: () -> Unit) {
             val shape = RoundedCornerShape(10.dp)
             val bmp = rememberImageBitmap(img.bytes)
             Box(
-                Modifier.matchParentSize().clip(shape).background(Tok.raised).border(1.dp, Tok.hair, shape)
+                Modifier.matchParentSize().clip(shape).background(AppicaTok.raised).border(1.dp, AppicaTok.hair, shape)
                     .alpha(if (rejected) 0.4f else 1f),
             ) {
                 if (bmp != null) Image(bmp, null, Modifier.matchParentSize(), contentScale = ContentScale.Crop)
@@ -105,12 +105,12 @@ private fun TrayThumb(img: PendingImage, onRemove: () -> Unit) {
                 Box(
                     Modifier.align(Alignment.TopStart).padding(6.dp).size(16.dp).clip(CircleShape).background(Tok.danger),
                     contentAlignment = Alignment.Center,
-                ) { BangGlyph(Tok.base, 9.dp) }
+                ) { BangGlyph(AppicaTok.base, 9.dp) }
             }
             if (!compressing) {
                 Box(
-                    Modifier.align(Alignment.TopEnd).padding(4.dp).size(20.dp).clip(CircleShape).background(Tok.raised)
-                        .border(1.dp, Tok.hair, CircleShape).clickable { onRemove() },
+                    Modifier.align(Alignment.TopEnd).padding(4.dp).size(20.dp).clip(CircleShape).background(AppicaTok.raised)
+                        .border(1.dp, AppicaTok.hair, CircleShape).clickable { onRemove() },
                     contentAlignment = Alignment.Center,
                 ) { XGlyph(Tok.tx2, 9.dp) }
             }
@@ -132,7 +132,7 @@ fun SentImages(images: List<ByteArray>, onOpen: (Int) -> Unit) {
         val shape = RoundedCornerShape(12.dp)
         Box(
             Modifier.fillMaxWidth(0.62f).widthIn(max = 240.dp).aspectRatio(ar).clip(shape)
-                .background(Tok.raised).border(1.dp, Tok.hair, shape).clickable { onOpen(0) },
+                .background(AppicaTok.raised).border(1.dp, AppicaTok.hair, shape).clickable { onOpen(0) },
         ) { if (bmp != null) Image(bmp, null, Modifier.matchParentSize(), contentScale = ContentScale.Crop) }
         return
     }
@@ -146,8 +146,8 @@ fun SentImages(images: List<ByteArray>, onOpen: (Int) -> Unit) {
                     val shape = RoundedCornerShape(10.dp)
                     val bmp = rememberImageBitmap(bytes)
                     Box(
-                        Modifier.weight(1f).aspectRatio(1f).clip(shape).background(Tok.raised)
-                            .border(1.dp, Tok.hair, shape).clickable { onOpen(idx) },
+                        Modifier.weight(1f).aspectRatio(1f).clip(shape).background(AppicaTok.raised)
+                            .border(1.dp, AppicaTok.hair, shape).clickable { onOpen(idx) },
                     ) { if (bmp != null) Image(bmp, null, Modifier.matchParentSize(), contentScale = ContentScale.Crop) }
                 }
                 if (row.size == 1) Spacer(Modifier.weight(1f))
@@ -184,7 +184,7 @@ fun ImageViewer(images: List<ByteArray>, startIndex: Int, onClose: () -> Unit) {
                     Image(
                         bmp, null,
                         Modifier.fillMaxWidth(0.92f).aspectRatio(ar).graphicsLayer { scaleX = scale; scaleY = scale }
-                            .clip(shape).border(1.dp, Tok.hair, shape).clickable { zoom = !zoom },
+                            .clip(shape).border(1.dp, AppicaTok.hair, shape).clickable { zoom = !zoom },
                         contentScale = ContentScale.Fit,
                     )
                 }
@@ -211,7 +211,7 @@ fun ImageViewer(images: List<ByteArray>, startIndex: Int, onClose: () -> Unit) {
             ) {
                 images.indices.forEach { i ->
                     val cur = i == pager.currentPage
-                    Box(Modifier.size(width = if (cur) 18.dp else 6.dp, height = 6.dp).clip(CircleShape).background(if (cur) Tok.accent else Tok.hair))
+                    Box(Modifier.size(width = if (cur) 18.dp else 6.dp, height = 6.dp).clip(CircleShape).background(if (cur) Tok.accent else AppicaTok.hair))
                 }
             }
         }

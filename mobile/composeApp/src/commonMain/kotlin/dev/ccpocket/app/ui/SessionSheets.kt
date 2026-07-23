@@ -143,10 +143,10 @@ fun contextColor(frac: Float, base: Color = Tok.accent): Color = when {
 fun SessionInfoSheet(repo: PocketRepository, onDismiss: () -> Unit) {
     PocketSheet(onDismiss) {
         Column(Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp, top = 4.dp)) {
-            Text(stringResource(Res.string.session_info_title), color = Tok.tx, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(Res.string.session_info_title), color = AppicaTok.foregroundIntense, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
             Column(
-                Modifier.padding(top = 14.dp).fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                    .background(Tok.surface).border(1.dp, Tok.hair, RoundedCornerShape(12.dp)),
+                Modifier.padding(top = 14.dp).fillMaxWidth().clip(RoundedCornerShape(AppicaMetrics.radiusSm))
+                    .background(AppicaTok.background).border(1.dp, AppicaTok.border, RoundedCornerShape(AppicaMetrics.radiusSm)),
             ) {
                 Row(
                     Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 11.dp),
@@ -187,7 +187,7 @@ private fun ContextBar(used: Long?, total: Long?) {
         }
         val frac = if (used == null || total == null || total <= 0) 0f else (used.toFloat() / total).coerceIn(0f, 1f)
         val fill = contextColor(frac)
-        Box(Modifier.padding(top = 7.dp).fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)).background(Tok.hair)) {
+        Box(Modifier.padding(top = 7.dp).fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)).background(AppicaTok.hair)) {
             if (frac > 0f) Box(Modifier.fillMaxWidth(frac).height(4.dp).clip(RoundedCornerShape(2.dp)).background(fill))
         }
     }
@@ -214,7 +214,7 @@ internal fun PerModelWindowRow(repo: PocketRepository) {
     if (editing) {
         Column(
             Modifier.padding(top = 14.dp).fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                .background(Tok.base).border(1.dp, Tok.accent, RoundedCornerShape(12.dp))
+                .background(AppicaTok.base).border(1.dp, Tok.accent, RoundedCornerShape(12.dp))
                 .padding(start = 13.dp, end = 13.dp, top = 13.dp, bottom = 14.dp),
         ) {
             Text(stringResource(Res.string.ctx_window_for, model), color = Tok.tx2, fontSize = 12.sp)
@@ -237,11 +237,11 @@ internal fun PerModelWindowRow(repo: PocketRepository) {
                         },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(stringResource(Res.string.ctx_save_for_model), color = Tok.base, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(Res.string.ctx_save_for_model), color = AppicaTok.base, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                 }
                 Box(
                     Modifier.padding(start = 8.dp).height(44.dp).clip(RoundedCornerShape(10.dp))
-                        .border(1.dp, Tok.hair, RoundedCornerShape(10.dp))
+                        .border(1.dp, AppicaTok.hair, RoundedCornerShape(10.dp))
                         .clickable { draft = own?.toString() ?: ""; editing = false }
                         .padding(horizontal = 16.dp),
                     contentAlignment = Alignment.Center,
@@ -255,7 +255,7 @@ internal fun PerModelWindowRow(repo: PocketRepository) {
 
     Row(
         Modifier.padding(top = 14.dp).fillMaxWidth().heightIn(min = 44.dp).clip(RoundedCornerShape(12.dp))
-            .background(Tok.base).border(1.dp, Tok.hair, RoundedCornerShape(12.dp))
+            .background(AppicaTok.base).border(1.dp, AppicaTok.hair, RoundedCornerShape(12.dp))
             .clickable { draft = own?.toString() ?: ""; editing = true }
             .padding(horizontal = 13.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -281,7 +281,7 @@ internal fun PerModelWindowRow(repo: PocketRepository) {
 }
 
 @Composable
-private fun Hairline() = Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+private fun Hairline() = Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair))
 
 // ════════════════════════════════════════════════════════════════════
 //  Quick actions: switch model / effort, compact, clear, simplify
@@ -302,7 +302,7 @@ fun QuickActionsSheet(repo: PocketRepository, onTerminal: () -> Unit, onMode: ()
         ) {
             when (sub) {
                 QaSub.MAIN -> {
-                    Text(stringResource(Res.string.quick_actions_title), color = Tok.tx, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text(stringResource(Res.string.quick_actions_title), color = AppicaTok.foregroundIntense, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                     Column(Modifier.padding(top = 10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         ActionRow(stringResource(Res.string.qa_model), value = modelChipLabel(repo.model.value).ifBlank { stringResource(Res.string.value_default) }, chevron = true) { sub = QaSub.MODEL }
                         ActionRow(stringResource(Res.string.label_effort), value = repo.effort.value ?: stringResource(Res.string.value_default), chevron = true) { sub = QaSub.EFFORT }
@@ -351,8 +351,8 @@ internal fun ModelChip(label: String, open: Boolean, enabled: Boolean, contentDe
     val chev by animateFloatAsState(if (open) 180f else 0f, label = "chipChevron")
     val cd = contentDescription
     Row(
-        Modifier.height(30.dp).clip(RoundedCornerShape(999.dp)).background(Tok.raised)
-            .border(1.dp, if (open) Tok.accent else Tok.hair, RoundedCornerShape(999.dp))
+        Modifier.height(30.dp).clip(RoundedCornerShape(999.dp)).background(AppicaTok.raised)
+            .border(1.dp, if (open) Tok.accent else AppicaTok.hair, RoundedCornerShape(999.dp))
             .clickable(enabled = enabled, onClick = onClick)
             .alpha(if (enabled) 1f else 0.42f)
             .padding(start = 10.dp, end = 8.dp)
@@ -398,7 +398,8 @@ fun ModelSheet(repo: PocketRepository, onDismiss: () -> Unit) {
 @Composable
 private fun ActionRow(label: String, value: String? = null, danger: Boolean = false, chevron: Boolean = false, onClick: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Tok.surface)
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(AppicaMetrics.radiusSm)).background(AppicaTok.background)
+            .border(1.dp, AppicaTok.border, RoundedCornerShape(AppicaMetrics.radiusSm))
             .clickable(onClick = onClick).padding(horizontal = 14.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -414,14 +415,19 @@ private fun OptionPicker(title: String, options: List<String>, selected: String?
         if (showBackButton()) {
             Text("‹ ", color = Tok.tx2, fontSize = 18.sp, modifier = Modifier.clickable(onClick = onBack).padding(end = 4.dp))
         }
-        Text(title, color = Tok.tx, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Text(title, color = AppicaTok.foregroundIntense, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
     }
     Column(Modifier.padding(top = 10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         options.forEach { opt ->
             val isSel = opt.equals(selected, ignoreCase = true)
             Row(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                    .background(if (isSel) Tok.accent.copy(alpha = 0.12f) else Tok.surface)
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(AppicaMetrics.radiusSm))
+                    .background(AppicaTok.background)
+                    .border(
+                        1.dp,
+                        if (isSel) AppicaTok.primary else AppicaTok.border,
+                        RoundedCornerShape(AppicaMetrics.radiusSm),
+                    )
                     .clickable { onPick(opt) }.padding(horizontal = 14.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -440,9 +446,10 @@ private data class ModelChoice(val name: String, val id: String, val pick: Strin
 @Composable
 private fun CtxPill(ctx: String, big: Boolean) {
     Text(
-        ctx, color = if (big) Tok.base else Tok.muted, fontFamily = FontFamily.Monospace, fontSize = 10.5.sp, fontWeight = FontWeight.SemiBold,
+        ctx, color = if (big) AppicaTok.primaryForeground else AppicaTok.foregroundMuted,
+        fontFamily = FontFamily.Monospace, fontSize = 10.5.sp, fontWeight = FontWeight.SemiBold,
         modifier = Modifier.clip(RoundedCornerShape(999.dp))
-            .then(if (big) Modifier.background(Tok.accent) else Modifier.border(1.dp, Tok.hair, RoundedCornerShape(999.dp)))
+            .then(if (big) Modifier.background(AppicaTok.primary) else Modifier.border(1.dp, AppicaTok.borderStrong, RoundedCornerShape(999.dp)))
             .padding(horizontal = 8.dp, vertical = 2.dp),
     )
 }
@@ -477,6 +484,12 @@ internal fun ModelPicker(repo: PocketRepository, onBack: (() -> Unit)?, onDone: 
         val big = contextWindowFor(alias) == LARGE_CONTEXT_WINDOW
         ModelChoice(name, alias, alias, if (big) "1M" else "200K", big)
     }
+    var query by remember { mutableStateOf("") }
+    val visibleChoices = remember(choices, query) {
+        if (query.isBlank()) choices else choices.filter {
+            it.name.contains(query, ignoreCase = true) || it.id.contains(query, ignoreCase = true)
+        }
+    }
     val selected = if (codex || opencode) repo.model.value else modelAlias(repo.model.value)
     var switchingTo by remember { mutableStateOf<String?>(null) }
     // close once the daemon confirms the switch (model re-announced through SessionLive)…
@@ -489,13 +502,22 @@ internal fun ModelPicker(repo: PocketRepository, onBack: (() -> Unit)?, onDone: 
     // …or after a short timeout, so a silent relaunch never leaves the sheet stuck spinning
     LaunchedEffect(switchingTo) { if (switchingTo != null) { delay(4000); onDone() } }
 
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         // chip-direct opens (ModelSheet) have no quick-actions page to go back to — the title stands alone
         if (onBack != null && showBackButton()) {
             Text("‹ ", color = Tok.tx2, fontSize = 18.sp, modifier = Modifier.clickable(enabled = switchingTo == null, onClick = onBack).padding(end = 4.dp))
         }
-        Text(stringResource(Res.string.qa_model), color = Tok.tx, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Text(
+            stringResource(Res.string.qa_model), color = AppicaTok.foregroundIntense,
+            fontSize = 16.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f),
+        )
     }
+    SettingsSearchField(
+        query = query,
+        onQueryChange = { query = it },
+        placeholder = stringResource(Res.string.model_search_placeholder),
+        modifier = Modifier.padding(top = 12.dp),
+    )
     // Gateway model presets (issue #139): one-tap vendor ids for third-party gateway users. When the
     // daemon reports a gateway ANTHROPIC_BASE_URL (DaemonInfo) the section LEADS the picker — those
     // users pick vendor ids, not Claude aliases. On the official endpoint it sits behind a collapsed
@@ -531,16 +553,20 @@ internal fun ModelPicker(repo: PocketRepository, onBack: (() -> Unit)?, onDone: 
             modifier = Modifier.padding(top = 6.dp),
         )
     }
-    Column(Modifier.padding(top = if (gatewayUrl != null) 8.dp else 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        choices.forEach { c ->
+    Column(Modifier.padding(top = if (gatewayUrl != null) 8.dp else 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        visibleChoices.forEach { c ->
             val isSel = c.pick.equals(selected, ignoreCase = true)
             val isSwitching = switchingTo?.equals(c.pick, ignoreCase = true) == true
             val raised = isSwitching || (isSel && switchingTo == null)
             val dimmed = (switchingTo != null && !isSwitching) || c.unavailable
             Row(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                    .background(if (raised) Tok.raised else Color.Transparent)
-                    .then(if (raised) Modifier.border(1.dp, Tok.hair, RoundedCornerShape(12.dp)) else Modifier)
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(AppicaMetrics.radiusSm))
+                    .background(AppicaTok.background)
+                    .border(
+                        1.dp,
+                        if (raised) AppicaTok.primary else AppicaTok.border,
+                        RoundedCornerShape(AppicaMetrics.radiusSm),
+                    )
                     .clickable(enabled = switchingTo == null && !c.unavailable) { switchingTo = c.pick; repo.switchModel(c.pick) }
                     .alpha(if (dimmed) 0.45f else 1f)
                     .padding(horizontal = 14.dp, vertical = 13.dp),
@@ -548,24 +574,24 @@ internal fun ModelPicker(repo: PocketRepository, onBack: (() -> Unit)?, onDone: 
             ) {
                 Column(Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(c.name, color = Tok.tx, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                        Text(c.name, color = AppicaTok.foregroundIntense, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                         if (c.unavailable) {
                             Spacer(Modifier.width(8.dp))
                             Text(
                                 stringResource(Res.string.model_not_installed), color = Tok.muted, fontSize = 10.5.sp,
-                                modifier = Modifier.clip(RoundedCornerShape(999.dp)).border(1.dp, Tok.hair, RoundedCornerShape(999.dp)).padding(horizontal = 8.dp, vertical = 1.dp),
+                                modifier = Modifier.clip(RoundedCornerShape(999.dp)).border(1.dp, AppicaTok.hair, RoundedCornerShape(999.dp)).padding(horizontal = 8.dp, vertical = 1.dp),
                             )
                         }
                     }
                     Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(c.id, color = Tok.tx2, fontFamily = FontFamily.Monospace, fontSize = 11.5.sp, maxLines = 1)
+                        Text(c.id, color = AppicaTok.foreground, fontFamily = FontFamily.Monospace, fontSize = 11.5.sp, maxLines = 1)
                         if (c.ctx.isNotEmpty()) { Spacer(Modifier.width(8.dp)); CtxPill(c.ctx, c.big) }
                     }
                 }
                 Box(Modifier.width(22.dp), contentAlignment = Alignment.Center) {
                     when {
                         isSwitching -> CircularProgressIndicator(Modifier.size(17.dp), color = Tok.accent, strokeWidth = 2.dp)
-                        isSel -> Text("✓", color = Tok.accent, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        isSel -> AppicaRadio(selected = true, onClick = {})
                     }
                 }
             }
@@ -683,8 +709,8 @@ private fun GatewayPresetSection(
             val dimmed = switchingTo != null && !isSwitching
             Row(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                    .background(if (raised) Tok.raised else Color.Transparent)
-                    .then(if (raised) Modifier.border(1.dp, Tok.hair, RoundedCornerShape(12.dp)) else Modifier)
+                    .background(if (raised) AppicaTok.raised else Color.Transparent)
+                    .then(if (raised) Modifier.border(1.dp, AppicaTok.hair, RoundedCornerShape(12.dp)) else Modifier)
                     .clickable(enabled = switchingTo == null) { onPick(p.id) }
                     .alpha(if (dimmed) 0.45f else 1f)
                     .padding(horizontal = 12.dp, vertical = 11.dp),
@@ -727,7 +753,7 @@ private fun SectionLabel(text: String, modifier: Modifier = Modifier) {
 @Composable
 private fun GatewayHostPill(host: String) {
     Row(
-        Modifier.clip(RoundedCornerShape(999.dp)).background(Tok.surface).border(1.dp, Tok.hair, RoundedCornerShape(999.dp))
+        Modifier.clip(RoundedCornerShape(999.dp)).background(AppicaTok.surface).border(1.dp, AppicaTok.hair, RoundedCornerShape(999.dp))
             .padding(horizontal = 9.dp, vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -773,7 +799,7 @@ fun BackgroundJobsStrip(jobs: List<BackgroundJob>, onClick: () -> Unit) {
 fun BackgroundJobsSheet(jobs: List<BackgroundJob>, onStop: (BackgroundJob) -> Unit, onDismiss: () -> Unit) {
     PocketSheet(onDismiss) {
         Column(Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp, top = 4.dp)) {
-            Text(stringResource(Res.string.bg_title), color = Tok.tx, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(Res.string.bg_title), color = AppicaTok.foregroundIntense, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
             // running first, then most-recently-updated. Sorted straight in composition — [jobs] is one
             // SnapshotStateList instance mutated in place, so an instance-keyed remember would compute once
             // per sheet-open and freeze the rows (a stopped job kept showing RUNNING until reopen).
@@ -799,8 +825,8 @@ private fun JobRow(job: BackgroundJob, onStop: (BackgroundJob) -> Unit) {
     val running = job.status == JobStatus.RUNNING
     var confirmStop by remember(job.id) { mutableStateOf(false) }
     Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Tok.surface)
-            .border(1.dp, Tok.hair, RoundedCornerShape(10.dp))
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(AppicaMetrics.radiusSm)).background(AppicaTok.background)
+            .border(1.dp, AppicaTok.border, RoundedCornerShape(AppicaMetrics.radiusSm))
             // stop lives in a long-press (not an always-visible button, per issue #80) and only on a RUNNING
             // row — a settled job has nothing to stop. The confirm guards a costly real build.
             .then(if (running) Modifier.combinedClickable(onClick = {}, onLongClick = { confirmStop = true }) else Modifier)
@@ -833,7 +859,7 @@ private fun JobRow(job: BackgroundJob, onStop: (BackgroundJob) -> Unit) {
 private fun JobStopConfirm(job: BackgroundJob, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = Tok.raised,
+        containerColor = AppicaTok.raised,
         titleContentColor = Tok.tx,
         textContentColor = Tok.tx2,
         title = { Text(stringResource(Res.string.job_stop_title)) },

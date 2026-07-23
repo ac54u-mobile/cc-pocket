@@ -44,6 +44,8 @@ import dev.ccpocket.app.data.PocketRepository
 import dev.ccpocket.app.theme.Tok
 import dev.ccpocket.app.ui.BackNavHost
 import dev.ccpocket.app.ui.BackTextButton
+import dev.ccpocket.app.ui.AppicaMetrics
+import dev.ccpocket.app.ui.AppicaTok
 import kotlinx.coroutines.delay
 
 /**
@@ -56,16 +58,16 @@ fun AttentionInboxScreen(repo: PocketRepository, onBack: () -> Unit) {
     val entries = repo.fleetAttention().sortedBy { it.seconds }
     val finished = repo.fleetFinished()
     BackNavHost(onBack = onBack) {
-        Column(Modifier.fillMaxSize().background(Tok.base)) {
+        Column(Modifier.fillMaxSize().background(AppicaTok.base)) {
             Row(
-                Modifier.fillMaxWidth().background(Tok.surface).padding(start = 4.dp, end = 16.dp, top = 4.dp, bottom = 2.dp),
+                Modifier.fillMaxWidth().background(AppicaTok.background).padding(start = 4.dp, end = 16.dp, top = 4.dp, bottom = 2.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 BackTextButton(onBack)
                 Text("Needs you", color = Tok.tx, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
             }
-            FleetStripText(repo.fleetStrip(), Modifier.background(Tok.surface).fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 10.dp))
-            Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+            FleetStripText(repo.fleetStrip(), Modifier.background(AppicaTok.background).fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 10.dp))
+            Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair))
 
             if (entries.isEmpty()) {
                 AllClear(Modifier.weight(1f))
@@ -97,8 +99,8 @@ private fun ApprovalCard(e: AttentionEntry, onDeny: () -> Unit, onAllow: () -> U
     var seconds by remember(e.askId) { mutableStateOf(e.seconds) }
     LaunchedEffect(e.askId) { while (seconds > 0) { delay(1000); seconds -= 1 } }
     Column(
-        Modifier.fillMaxWidth().padding(bottom = 10.dp).clip(RoundedCornerShape(12.dp))
-            .background(Tok.surface).border(1.dp, Tok.hair, RoundedCornerShape(12.dp))
+        Modifier.fillMaxWidth().padding(bottom = 10.dp).clip(RoundedCornerShape(AppicaMetrics.radiusSm))
+            .background(AppicaTok.background).border(1.dp, AppicaTok.border, RoundedCornerShape(AppicaMetrics.radiusSm))
             .padding(horizontal = 13.dp, vertical = 12.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -114,7 +116,7 @@ private fun ApprovalCard(e: AttentionEntry, onDeny: () -> Unit, onAllow: () -> U
             e.preview, color = Tok.tx, fontFamily = FontFamily.Monospace, fontSize = 11.5.sp,
             maxLines = 1, overflow = TextOverflow.Ellipsis,
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp).clip(RoundedCornerShape(8.dp))
-                .background(Tok.base).border(1.dp, Tok.hair, RoundedCornerShape(8.dp))
+                .background(AppicaTok.base).border(1.dp, AppicaTok.hair, RoundedCornerShape(8.dp))
                 .padding(horizontal = 10.dp, vertical = 8.dp),
         )
         Row(Modifier.padding(top = 11.dp), horizontalArrangement = Arrangement.spacedBy(9.dp)) {
@@ -128,7 +130,7 @@ private fun ApprovalCard(e: AttentionEntry, onDeny: () -> Unit, onAllow: () -> U
                 Modifier.weight(1.25f).height(44.dp).clip(RoundedCornerShape(10.dp)).background(Tok.accent)
                     .clickable(onClick = onAllow),
                 contentAlignment = Alignment.Center,
-            ) { Text("Allow", color = Tok.base, fontSize = 14.sp, fontWeight = FontWeight.Bold) }
+            ) { Text("Allow", color = AppicaTok.base, fontSize = 14.sp, fontWeight = FontWeight.Bold) }
         }
     }
 }
@@ -148,7 +150,7 @@ private fun FinishedRow(f: FinishedEntry) {
             )
             Text(f.timeAgo, color = Tok.muted, fontFamily = FontFamily.Monospace, fontSize = 10.sp)
         }
-        Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+        Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair))
     }
 }
 

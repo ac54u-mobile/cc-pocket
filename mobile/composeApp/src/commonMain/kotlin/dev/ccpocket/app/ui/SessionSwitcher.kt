@@ -79,8 +79,8 @@ fun SessionStackChip(count: Int, attention: Boolean, onClick: () -> Unit) {
     val cd = stringResource(Res.string.switcher_open)
     Box {
         Row(
-            Modifier.height(30.dp).clip(RoundedCornerShape(999.dp)).background(Tok.raised)
-                .border(1.dp, Tok.hair, RoundedCornerShape(999.dp))
+            Modifier.height(30.dp).clip(RoundedCornerShape(999.dp)).background(AppicaTok.raised)
+                .border(1.dp, AppicaTok.hair, RoundedCornerShape(999.dp))
                 .clickable { onClick() }
                 .padding(start = 9.dp, end = 10.dp)
                 .semantics { contentDescription = cd },
@@ -143,7 +143,7 @@ fun SessionSwitcherSheet(
             Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(stringResource(Res.string.sessions_title), color = Tok.tx, fontSize = 19.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(Res.string.sessions_title), color = AppicaTok.foregroundIntense, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.width(8.dp))
             Text(
                 stringResource(Res.string.switcher_total, set.otherCount + if (set.current != null) 1 else 0),
@@ -167,7 +167,7 @@ fun SessionSwitcherSheet(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 22.dp),
             )
         }
-        Box(Modifier.fillMaxWidth().padding(top = 8.dp).height(1.dp).background(Tok.hair))
+        Box(Modifier.fillMaxWidth().padding(top = 8.dp).height(1.dp).background(AppicaTok.hair))
         // escape hatch back into the full navigation — the switcher covers the working set, not everything
         Row(
             Modifier.fillMaxWidth().clickable { onDismiss(); onAllProjects() }
@@ -198,7 +198,9 @@ private fun SwitcherLabel(text: String) = Text(
 private fun SwitcherRow(s: SessionSwitcherItem, onClick: (() -> Unit)?) {
     Row(
         Modifier.fillMaxWidth().padding(horizontal = 12.dp).heightIn(min = 56.dp)
-            .clip(RoundedCornerShape(11.dp))
+            .clip(RoundedCornerShape(AppicaMetrics.radiusSm))
+            .background(AppicaTok.background)
+            .border(1.dp, AppicaTok.border, RoundedCornerShape(AppicaMetrics.radiusSm))
             .let { if (onClick != null) it.clickable { onClick() } else it }
             .padding(horizontal = 8.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,

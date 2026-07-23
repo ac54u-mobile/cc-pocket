@@ -34,10 +34,10 @@ import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.Insights
 import androidx.compose.material.icons.rounded.PersonAdd
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
@@ -123,22 +123,40 @@ fun SettingsScreen(repo: PocketRepository, onBack: () -> Unit) {
     BackNavHost(onBack = { if (dest == SettingsDest.HUB) onBack() else dest = SettingsDest.HUB }) {
         when (dest) {
             SettingsDest.HUB -> SettingsHub(onBack = onBack, onOpen = { dest = it })
-            SettingsDest.AGENT -> SettingsPaneScaffold(stringResource(Res.string.settings_hub_agent), goHub) {
+            SettingsDest.AGENT -> SettingsPaneScaffold(
+                stringResource(Res.string.settings_hub_agent), stringResource(Res.string.settings_hub_agent_sub),
+                Icons.Outlined.Tune, Tok.accent, goHub,
+            ) {
                 AgentDefaultsPane(repo)
             }
-            SettingsDest.APPEARANCE -> SettingsPaneScaffold(stringResource(Res.string.settings_hub_appearance), goHub) {
+            SettingsDest.APPEARANCE -> SettingsPaneScaffold(
+                stringResource(Res.string.settings_hub_appearance), stringResource(Res.string.settings_hub_appearance_sub),
+                Icons.Outlined.DarkMode, Tok.info, goHub,
+            ) {
                 AppearancePane(repo)
             }
-            SettingsDest.NOTIFICATIONS -> SettingsPaneScaffold(stringResource(Res.string.settings_hub_notifications), goHub) {
+            SettingsDest.NOTIFICATIONS -> SettingsPaneScaffold(
+                stringResource(Res.string.settings_hub_notifications), stringResource(Res.string.settings_hub_notifications_sub),
+                Icons.Outlined.Notifications, Tok.warn, goHub,
+            ) {
                 NotificationsPane(repo)
             }
-            SettingsDest.SECURITY -> SettingsPaneScaffold(stringResource(Res.string.security_section), goHub) {
+            SettingsDest.SECURITY -> SettingsPaneScaffold(
+                stringResource(Res.string.security_section), stringResource(Res.string.settings_hub_security_sub),
+                Icons.Outlined.Lock, Tok.ok, goHub,
+            ) {
                 SecurityGroup(repo.appLock)
             }
-            SettingsDest.ADVANCED -> SettingsPaneScaffold(stringResource(Res.string.settings_hub_advanced), goHub) {
+            SettingsDest.ADVANCED -> SettingsPaneScaffold(
+                stringResource(Res.string.settings_hub_advanced), stringResource(Res.string.settings_hub_advanced_sub),
+                Icons.Outlined.Shield, Tok.muted, goHub,
+            ) {
                 AdvancedPane(repo)
             }
-            SettingsDest.ABOUT -> SettingsPaneScaffold(stringResource(Res.string.about_section), goHub) {
+            SettingsDest.ABOUT -> SettingsPaneScaffold(
+                stringResource(Res.string.about_section), stringResource(Res.string.settings_hub_about_sub),
+                Icons.Outlined.Info, Tok.tx2, goHub,
+            ) {
                 AboutPane(repo, onExit = { onBack(); repo.disconnect() })
             }
             else -> Unit
@@ -147,7 +165,14 @@ fun SettingsScreen(repo: PocketRepository, onBack: () -> Unit) {
 }
 
 @Composable
-private fun SettingsPaneScaffold(title: String, onBack: () -> Unit, content: @Composable () -> Unit) {
+private fun SettingsPaneScaffold(
+    title: String,
+    subtitle: String,
+    icon: ImageVector,
+    iconTint: Color,
+    onBack: () -> Unit,
+    content: @Composable () -> Unit,
+) {
     Column(Modifier.fillMaxSize().background(AppicaTok.base)) {
         SettingsTopBar(title, onBack)
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
@@ -157,14 +182,43 @@ private fun SettingsPaneScaffold(title: String, onBack: () -> Unit, content: @Co
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp)
-                    .padding(top = 4.dp, bottom = 32.dp),
-            ) { content() }
+                    .padding(top = 20.dp, bottom = 40.dp),
+            ) {
+                SettingsPageHeader(subtitle, icon, iconTint)
+                content()
+            }
+        }
+    }
+}
+
+@Composable
+private fun SettingsPageHeader(subtitle: String, icon: ImageVector, iconTint: Color) {
+    Row(
+        Modifier.fillMaxWidth().padding(bottom = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            Modifier.size(44.dp).clip(RoundedCornerShape(AppicaMetrics.radiusSm))
+                .background(iconTint.copy(alpha = 0.12f))
+                .border(1.dp, iconTint.copy(alpha = 0.18f), RoundedCornerShape(AppicaMetrics.radiusSm)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(icon, null, tint = iconTint, modifier = Modifier.size(21.dp))
+        }
+        Column(Modifier.weight(1f).padding(start = 14.dp)) {
+            Text(
+                subtitle,
+                color = AppicaTok.foreground,
+                fontSize = 13.sp,
+                lineHeight = 19.sp,
+            )
         }
     }
 }
 
 @Composable
 private fun SettingsHub(onBack: () -> Unit, onOpen: (SettingsDest) -> Unit) {
+    var query by remember { mutableStateOf("") }
     val entries = listOf(
         HubEntry(
             SettingsDest.USAGE, stringResource(Res.string.settings_usage),
@@ -213,7 +267,10 @@ private fun SettingsHub(onBack: () -> Unit, onOpen: (SettingsDest) -> Unit) {
     )
     @Composable
     fun SettingsGroup(label: String, destinations: List<SettingsDest>) {
-        val groupEntries = destinations.map { d -> entries.first { it.dest == d } }
+        val groupEntries = destinations.map { d -> entries.first { it.dest == d } }.filter {
+            query.isBlank() || it.title.contains(query, ignoreCase = true) || it.subtitle.contains(query, ignoreCase = true)
+        }
+        if (groupEntries.isEmpty()) return
         SettingsSectionLabel(label)
         SettingsCard {
             groupEntries.forEachIndexed { i, entry ->
@@ -238,8 +295,20 @@ private fun SettingsHub(onBack: () -> Unit, onOpen: (SettingsDest) -> Unit) {
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp)
-                    .padding(top = 4.dp, bottom = 32.dp),
+                    .padding(top = 18.dp, bottom = 40.dp),
             ) {
+                Text(
+                    stringResource(Res.string.settings_intro),
+                    color = AppicaTok.foreground,
+                    fontSize = 13.5.sp,
+                    lineHeight = 20.sp,
+                    modifier = Modifier.padding(bottom = 14.dp),
+                )
+                SettingsSearchField(
+                    query = query,
+                    onQueryChange = { query = it },
+                    placeholder = stringResource(Res.string.settings_search_placeholder),
+                )
                 SettingsGroup(
                     stringResource(Res.string.settings_hub_activity),
                     listOf(SettingsDest.USAGE, SettingsDest.SCHEDULES),
@@ -255,6 +324,23 @@ private fun SettingsHub(onBack: () -> Unit, onOpen: (SettingsDest) -> Unit) {
                         SettingsDest.SECURITY, SettingsDest.ADVANCED, SettingsDest.ABOUT,
                     ),
                 )
+                if (entries.none {
+                        query.isBlank() || it.title.contains(query, ignoreCase = true) || it.subtitle.contains(query, ignoreCase = true)
+                    }
+                ) {
+                    Column(
+                        Modifier.fillMaxWidth().padding(top = 56.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Icon(Icons.Rounded.Search, null, tint = AppicaTok.foregroundSubtle, modifier = Modifier.size(28.dp))
+                        Text(
+                            stringResource(Res.string.settings_search_empty),
+                            color = AppicaTok.foregroundMuted,
+                            fontSize = 13.sp,
+                            modifier = Modifier.padding(top = 10.dp),
+                        )
+                    }
+                }
             }
         }
     }
@@ -476,7 +562,7 @@ private fun SecurityGroup(lock: AppLockController) {
                 Text(stringResource(Res.string.app_lock_require, kindName), color = AppicaTok.foregroundIntense, fontSize = 14.sp)
                 Text(stringResource(Res.string.app_lock_require_sub, kindName), color = AppicaTok.foregroundMuted, fontSize = 11.5.sp, lineHeight = 15.sp)
             }
-            Switch(
+            AppicaSwitch(
                 checked = lock.enabled.value,
                 enabled = !lock.enabling.value && (lock.enabled.value || lock.canUseBiometrics()),
                 onCheckedChange = { on -> if (on) lock.requestEnable(enableReason) else lock.disable() },

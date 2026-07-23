@@ -49,6 +49,8 @@ import dev.ccpocket.app.pairing.encode
 import dev.ccpocket.app.resources.*
 import dev.ccpocket.app.theme.Tok
 import dev.ccpocket.app.ui.BackNavHost
+import dev.ccpocket.app.ui.AppicaTok
+import dev.ccpocket.app.ui.SettingsTopBar
 import dev.ccpocket.app.ui.showBackButton
 import dev.ccpocket.app.ui.tilde
 import dev.ccpocket.protocol.AccessTier
@@ -106,7 +108,7 @@ private fun ShareComposer(
     onBack: () -> Unit,
 ) {
     val creating = repo.sharesRefreshing.value
-    Column(Modifier.fillMaxSize().background(Tok.base)) {
+    Column(Modifier.fillMaxSize().background(AppicaTok.base)) {
         ShareTopBar(stringResource(Res.string.share_composer_title), onBack)
         Column(
             Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 18.dp).padding(top = 8.dp, bottom = 40.dp),
@@ -156,8 +158,8 @@ private fun ShareComposer(
 private fun TierRadioCard(tier: AccessTier, selected: Boolean, recommended: Boolean, warn: Boolean, onSelect: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp))
-            .background(if (selected) Tok.accent.copy(alpha = 0.08f) else Tok.surface)
-            .border(if (selected) 1.5.dp else 1.dp, if (selected) Tok.accent.copy(alpha = 0.6f) else Tok.hair, RoundedCornerShape(13.dp))
+            .background(if (selected) Tok.accent.copy(alpha = 0.08f) else AppicaTok.surface)
+            .border(if (selected) 1.5.dp else 1.dp, if (selected) Tok.accent.copy(alpha = 0.6f) else AppicaTok.hair, RoundedCornerShape(13.dp))
             .clickable(onClick = onSelect).padding(horizontal = 14.dp, vertical = 13.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -184,10 +186,10 @@ private fun TierRadioCard(tier: AccessTier, selected: Boolean, recommended: Bool
 @Composable
 private fun ExpiryPill(opt: ShareExpiryOption, selected: Boolean, modifier: Modifier, onClick: () -> Unit) {
     Text(
-        expiryOptionLabel(opt), color = if (selected) Tok.base else Tok.tx2, fontSize = 12.5.sp,
+        expiryOptionLabel(opt), color = if (selected) AppicaTok.base else Tok.tx2, fontSize = 12.5.sp,
         fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal, textAlign = TextAlign.Center,
         modifier = modifier.clip(RoundedCornerShape(20.dp))
-            .then(if (selected) Modifier.background(Tok.accent) else Modifier.border(1.dp, Tok.hair, RoundedCornerShape(20.dp)))
+            .then(if (selected) Modifier.background(Tok.accent) else Modifier.border(1.dp, AppicaTok.hair, RoundedCornerShape(20.dp)))
             .clickable(onClick = onClick).padding(vertical = 9.dp),
     )
 }
@@ -207,14 +209,14 @@ private fun InviteReady(repo: PocketRepository, invite: ShareInvite, folderPath:
     val ticketLeft = (ticketMs - now).coerceAtLeast(0)
     val ticketExpired = ticketLeft <= 0
 
-    Column(Modifier.fillMaxSize().background(Tok.base)) {
+    Column(Modifier.fillMaxSize().background(AppicaTok.base)) {
         ShareTopBar(stringResource(Res.string.share_invite_ready), onDone, closeGlyph = true)
         Column(
             Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 18.dp).padding(top = 12.dp, bottom = 40.dp),
         ) {
             // QR card — white plate so the code scans in either theme
             Column(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(Tok.surface).border(1.dp, Tok.hair, RoundedCornerShape(20.dp)).padding(22.dp),
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(AppicaTok.surface).border(1.dp, AppicaTok.hair, RoundedCornerShape(20.dp)).padding(22.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Box(Modifier.size(212.dp).clip(RoundedCornerShape(14.dp)).background(Color.White).padding(14.dp), contentAlignment = Alignment.Center) {
@@ -230,11 +232,11 @@ private fun InviteReady(repo: PocketRepository, invite: ShareInvite, folderPath:
                 Text(
                     shortCode(blob), color = Tok.tx, fontFamily = FontFamily.Monospace, fontSize = 13.sp,
                     maxLines = 1, overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f).clip(RoundedCornerShape(10.dp)).background(Tok.surface)
-                        .border(1.dp, Tok.hair, RoundedCornerShape(10.dp)).padding(horizontal = 12.dp, vertical = 11.dp),
+                    modifier = Modifier.weight(1f).clip(RoundedCornerShape(10.dp)).background(AppicaTok.surface)
+                        .border(1.dp, AppicaTok.hair, RoundedCornerShape(10.dp)).padding(horizontal = 12.dp, vertical = 11.dp),
                 )
                 Row(
-                    Modifier.clip(RoundedCornerShape(10.dp)).border(1.dp, Tok.hair, RoundedCornerShape(10.dp))
+                    Modifier.clip(RoundedCornerShape(10.dp)).border(1.dp, AppicaTok.hair, RoundedCornerShape(10.dp))
                         .clickable { clipboard.setText(AnnotatedString(blob)); copied = true }.padding(horizontal = 12.dp, vertical = 11.dp),
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
@@ -256,11 +258,11 @@ private fun InviteReady(repo: PocketRepository, invite: ShareInvite, folderPath:
 
             // recap strip: access / expires / folder
             Spacer(Modifier.height(20.dp))
-            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp)).background(Tok.surface).border(1.dp, Tok.hair, RoundedCornerShape(13.dp)).padding(horizontal = 15.dp)) {
+            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp)).background(AppicaTok.surface).border(1.dp, AppicaTok.hair, RoundedCornerShape(13.dp)).padding(horizontal = 15.dp)) {
                 RecapRow(stringResource(Res.string.share_recap_access), tierLabel(invite.tier))
-                Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+                Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair))
                 RecapRow(stringResource(Res.string.share_recap_expires), countdown(invite.expiresAt, now))
-                Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+                Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair))
                 RecapRow(stringResource(Res.string.share_recap_folder), folderPath, mono = true)
             }
 
@@ -269,7 +271,7 @@ private fun InviteReady(repo: PocketRepository, invite: ShareInvite, folderPath:
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 ShareOutlineButton(stringResource(Res.string.share_invite_share), Modifier.weight(1f)) { clipboard.setText(AnnotatedString(blob)); copied = true }
                 Row(
-                    Modifier.weight(1f).clip(RoundedCornerShape(13.dp)).border(1.dp, Tok.hair, RoundedCornerShape(13.dp))
+                    Modifier.weight(1f).clip(RoundedCornerShape(13.dp)).border(1.dp, AppicaTok.hair, RoundedCornerShape(13.dp))
                         .clickable { copied = false; onNewCode() }.padding(vertical = 13.dp),
                     horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -311,22 +313,5 @@ private fun shortCode(blob: String): String {
 
 @Composable
 internal fun ShareTopBar(title: String, onBack: () -> Unit, closeGlyph: Boolean = false) {
-    val showBtn = showBackButton()
-    Row(
-        Modifier.fillMaxWidth().background(Tok.base).border(0.dp, Color.Transparent).padding(horizontal = 8.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        if (showBtn) {
-            Text(
-                if (closeGlyph) "✕" else "‹", color = Tok.tx2, fontSize = if (closeGlyph) 17.sp else 22.sp,
-                modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onBack).padding(horizontal = 10.dp, vertical = 4.dp),
-            )
-        } else {
-            Spacer(Modifier.width(34.dp))
-        }
-        Spacer(Modifier.weight(1f))
-        Text(title, color = Tok.tx, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-        Spacer(Modifier.weight(1f))
-        Spacer(Modifier.width(34.dp))
-    }
+    SettingsTopBar(title = title, onBack = onBack)
 }

@@ -1,6 +1,7 @@
 package dev.ccpocket.app.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -61,7 +62,7 @@ fun ChangedFilesSheet(repo: PocketRepository, onOpen: (String) -> Unit, onDismis
     PocketSheet(onDismiss) {
         Column(Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp, top = 4.dp)) {
             Row(verticalAlignment = Alignment.Bottom) {
-                Text(stringResource(Res.string.files_title), color = Tok.tx, fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
+                Text(stringResource(Res.string.files_title), color = AppicaTok.foregroundIntense, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                 Box(Modifier.weight(1f))
                 if (repo.changedFiles.isNotEmpty()) FilesSummaryText(repo.changedFiles, fontSize = 12.sp)
             }
@@ -117,7 +118,8 @@ private fun ExportOtherFileRow(onOpen: (String) -> Unit) {
         return
     }
     Row(
-        Modifier.fillMaxWidth().padding(top = 10.dp).clip(RoundedCornerShape(10.dp)).background(Tok.surface)
+        Modifier.fillMaxWidth().padding(top = 10.dp).clip(RoundedCornerShape(AppicaMetrics.radiusSm)).background(AppicaTok.background)
+            .border(1.dp, AppicaTok.border, RoundedCornerShape(AppicaMetrics.radiusSm))
             .padding(start = 12.dp, end = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -154,7 +156,8 @@ private fun StaleDaemonBanner() {
 @Composable
 private fun ChangedFileRow(f: ChangedFile, onClick: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Tok.surface)
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(AppicaMetrics.radiusSm)).background(AppicaTok.background)
+            .border(1.dp, AppicaTok.border, RoundedCornerShape(AppicaMetrics.radiusSm))
             .clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(11.dp),
@@ -198,15 +201,18 @@ fun FileViewerScreen(repo: PocketRepository, onExit: (() -> Unit)? = null, onBac
     val wrap = rememberWrapState()
 
     BackNavHost(onBack = onBack) {
-        Column(Modifier.fillMaxSize().background(Tok.base)) {
-            Column(Modifier.fillMaxWidth().background(Tok.surface)) {
+        Column(Modifier.fillMaxSize().background(AppicaTok.base)) {
+            Column(
+                Modifier.fillMaxWidth().background(AppicaTok.background)
+                    .border(1.dp, AppicaTok.borderMuted),
+            ) {
                 Row(
                     Modifier.fillMaxWidth().padding(start = 6.dp, end = 12.dp, top = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     BackTextButton(onBack)
                     Column(Modifier.weight(1f)) {
-                        Text(fileNameOf(path), color = Tok.tx, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(fileNameOf(path), color = AppicaTok.foregroundIntense, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         TailPathText(parentDirOf(path), fontSize = 11.sp)
                     }
                     // share/save whatever the viewer holds (issue #67) — text files ride the sheet too

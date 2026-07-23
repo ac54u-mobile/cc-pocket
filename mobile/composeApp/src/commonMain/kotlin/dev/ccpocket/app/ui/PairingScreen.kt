@@ -77,7 +77,7 @@ fun PairingScreen(repo: PocketRepository) {
 
     BackNavHost(enabled = adding, onBack = { repo.cancelAddDevice() }) {
         Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp),
+            Modifier.fillMaxSize().background(AppicaTok.base).verticalScroll(rememberScrollState()).padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             if (adding && showBackButton()) {
@@ -86,7 +86,7 @@ fun PairingScreen(repo: PocketRepository) {
                 }
             }
             Spacer(Modifier.height(if (adding) 8.dp else 48.dp))
-            Text(stringResource(Res.string.pairing_title), color = Tok.tx, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(Res.string.pairing_title), color = AppicaTok.foregroundIntense, fontSize = 21.sp, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(7.dp))
             Text(
                 stringResource(Res.string.pairing_subtitle),
@@ -107,8 +107,8 @@ fun PairingScreen(repo: PocketRepository) {
                 Text(stringResource(Res.string.run_code_prefix) + " ", color = Tok.tx2, fontSize = 13.sp)
                 Text(
                     "cc-pocket-daemon pair", color = Tok.tx, fontFamily = FontFamily.Monospace, fontSize = 12.5.sp,
-                    modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(Tok.surface)
-                        .border(1.dp, Tok.hair, RoundedCornerShape(6.dp)).padding(horizontal = 7.dp, vertical = 2.dp),
+                    modifier = Modifier.clip(RoundedCornerShape(AppicaMetrics.radius2Xs)).background(AppicaTok.background)
+                        .border(1.dp, AppicaTok.border, RoundedCornerShape(AppicaMetrics.radius2Xs)).padding(horizontal = 7.dp, vertical = 2.dp),
                 )
                 Text(" " + stringResource(Res.string.run_code_suffix), color = Tok.tx2, fontSize = 13.sp)
             }
@@ -152,7 +152,7 @@ private fun Viewfinder(onScanned: (String) -> Unit) {
     Box(
         Modifier.size(226.dp).clip(RoundedCornerShape(16.dp))
             .background(Brush.radialGradient(listOf(Color(0xFF15171A), Color(0xFF0B0C0D))))
-            .border(1.dp, Tok.hair, RoundedCornerShape(16.dp))
+            .border(1.dp, AppicaTok.hair, RoundedCornerShape(16.dp))
             .clickable { if (!scanning) { handled = false; scanning = true } },
     ) {
         if (scanning) {
@@ -193,9 +193,9 @@ private fun Viewfinder(onScanned: (String) -> Unit) {
 @Composable
 private fun Divider(label: String) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Box(Modifier.weight(1f).height(1.dp).background(Tok.hair))
+        Box(Modifier.weight(1f).height(1.dp).background(AppicaTok.hair))
         Text(label, color = Tok.muted, fontSize = 12.5.sp)
-        Box(Modifier.weight(1f).height(1.dp).background(Tok.hair))
+        Box(Modifier.weight(1f).height(1.dp).background(AppicaTok.hair))
     }
 }
 
@@ -208,14 +208,14 @@ private fun CodeInput(code: String, onCode: (String) -> Unit) {
                 val ch = code.getOrNull(i)
                 val active = i == code.length.coerceAtMost(5)
                 Box(
-                    Modifier.weight(1f).height(58.dp).clip(RoundedCornerShape(12.dp)).background(Tok.surface)
-                        .border(if (active) 1.5.dp else 1.dp, if (active) Tok.accent else Tok.hair, RoundedCornerShape(12.dp)),
+                    Modifier.weight(1f).height(58.dp).clip(RoundedCornerShape(12.dp)).background(AppicaTok.surface)
+                        .border(if (active) 1.5.dp else 1.dp, if (active) Tok.accent else AppicaTok.hair, RoundedCornerShape(12.dp)),
                     contentAlignment = Alignment.Center,
                 ) {
                     when {
                         ch != null -> Text(ch.toString(), color = Tok.tx, fontFamily = FontFamily.Monospace, fontSize = 24.sp, fontWeight = FontWeight.Medium)
                         active -> Box(Modifier.width(2.dp).height(26.dp).background(Tok.accent))
-                        else -> Box(Modifier.width(8.dp).height(2.dp).background(Tok.hair))
+                        else -> Box(Modifier.width(8.dp).height(2.dp).background(AppicaTok.hair))
                     }
                 }
             }

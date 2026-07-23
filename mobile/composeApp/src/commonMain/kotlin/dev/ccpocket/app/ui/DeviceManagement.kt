@@ -56,11 +56,11 @@ fun DeviceList(repo: PocketRepository, onSwitch: (PairedDaemon) -> Unit, onAdd: 
     var removing by remember { mutableStateOf<PairedDaemon?>(null) }
     val activeId = repo.paired.value?.accountId
     Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Tok.surface)
-            .border(1.dp, Tok.hair, RoundedCornerShape(12.dp)),
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(AppicaTok.surface)
+            .border(1.dp, AppicaTok.hair, RoundedCornerShape(12.dp)),
     ) {
         repo.pairedList.forEachIndexed { i, d ->
-            if (i > 0) Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+            if (i > 0) Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair))
             DeviceRow(
                 d, active = d.accountId == activeId,
                 onTap = { onSwitch(d) },
@@ -68,7 +68,7 @@ fun DeviceList(repo: PocketRepository, onSwitch: (PairedDaemon) -> Unit, onAdd: 
                 onRemove = { removing = d },
             )
         }
-        Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+        Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair))
         Row(
             Modifier.fillMaxWidth().clickable(onClick = onAdd).padding(horizontal = 14.dp, vertical = 13.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -95,7 +95,7 @@ private fun DeviceRow(d: PairedDaemon, active: Boolean, onTap: () -> Unit, onRen
         Modifier.fillMaxWidth().clickable(onClick = onTap).padding(start = 14.dp, end = 6.dp, top = 10.dp, bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.size(8.dp).clip(CircleShape).background(if (active) Tok.ok else Tok.hair))
+        Box(Modifier.size(8.dp).clip(CircleShape).background(if (active) Tok.ok else AppicaTok.hair))
         Spacer(Modifier.width(10.dp))
         Column(Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -164,9 +164,9 @@ private fun DeviceDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = Tok.raised,
-        titleContentColor = Tok.tx,
-        textContentColor = Tok.tx2,
+        containerColor = AppicaTok.backgroundSubtle,
+        titleContentColor = AppicaTok.foregroundIntense,
+        textContentColor = AppicaTok.foreground,
         title = { Text(title) },
         text = { Column { body() } },
         confirmButton = { TextButton(onConfirm) { Text(confirmLabel, color = confirmColor) } },

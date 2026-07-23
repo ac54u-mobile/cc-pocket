@@ -110,7 +110,7 @@ fun QuestionCard(
         Modifier.fillMaxWidth()
             .then(if (bounded) Modifier.heightIn(max = maxHeight * 0.62f) else Modifier)
             .padding(horizontal = 12.dp, vertical = 6.dp)
-            .shadow(14.dp, shape).clip(shape).background(Tok.raised).border(1.dp, Tok.hair, shape),
+            .shadow(14.dp, shape).clip(shape).background(AppicaTok.backgroundSubtle).border(1.dp, AppicaTok.border, shape),
     ) {
         // the quiet arrival cue: a centered terracotta top-hairline that fades at both ends
         Box(
@@ -151,7 +151,7 @@ fun QuestionCard(
                 val ffShape = RoundedCornerShape(12.dp)
                 Box(
                     Modifier.padding(top = 12.dp).fillMaxWidth().heightIn(min = 92.dp).clip(ffShape)
-                        .background(Tok.base).border(1.dp, if (focused) Tok.accent else Tok.hair, ffShape)
+                        .background(AppicaTok.base).border(1.dp, if (focused) Tok.accent else AppicaTok.hair, ffShape)
                         .padding(horizontal = 13.dp, vertical = 12.dp),
                 ) {
                     BasicTextField(
@@ -207,8 +207,8 @@ fun QuestionCard(
                 val ready = if (freeform) freeformText.isNotBlank() else allAnswered
                 Box(
                     Modifier.heightIn(min = 44.dp).clip(RoundedCornerShape(12.dp))
-                        .background(if (ready) Tok.accent else Tok.surface)
-                        .let { if (ready) it else it.border(1.dp, Tok.hair, RoundedCornerShape(12.dp)) }
+                        .background(if (ready) Tok.accent else AppicaTok.surface)
+                        .let { if (ready) it else it.border(1.dp, AppicaTok.hair, RoundedCornerShape(12.dp)) }
                         .clickable(enabled = ready) {
                             if (freeform) onAnswer(null, freeformText.trim())
                             else onAnswer(questions.indices.mapNotNull { i -> answerOf(i)?.let { questions[i].question to it } }.toMap(), null)
@@ -218,7 +218,7 @@ fun QuestionCard(
                 ) {
                     Text(
                         stringResource(Res.string.question_answer),
-                        color = if (ready) Tok.base else Tok.muted, fontSize = 15.sp, fontWeight = FontWeight.Bold,
+                        color = if (ready) AppicaTok.base else Tok.muted, fontSize = 15.sp, fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(vertical = 11.dp),
                     )
                 }
@@ -247,7 +247,7 @@ internal fun QBadge(size: androidx.compose.ui.unit.Dp) {
 @Composable
 private fun ChipTab(label: String, active: Boolean, done: Boolean, onClick: () -> Unit) {
     val bg = if (active) A18 else if (done) A08 else androidx.compose.ui.graphics.Color.Transparent
-    val bd = if (active) A55 else if (done) A28 else Tok.hair
+    val bd = if (active) A55 else if (done) A28 else AppicaTok.hair
     val col = if (active || done) Tok.accent else Tok.tx2
     Row(
         Modifier.height(27.dp).clip(RoundedCornerShape(999.dp)).background(bg)
@@ -266,8 +266,8 @@ private fun OptionRow(label: String, description: String?, multi: Boolean, selec
     val shape = RoundedCornerShape(12.dp)
     Row(
         Modifier.fillMaxWidth().heightIn(min = 44.dp).clip(shape)
-            .background(if (selected) A08 else Tok.base)
-            .border(1.dp, if (selected) Tok.accent else Tok.hair, shape)
+            .background(if (selected) A08 else AppicaTok.base)
+            .border(1.dp, if (selected) Tok.accent else AppicaTok.hair, shape)
             .clickable(onClick = onToggle)
             .padding(horizontal = 12.dp, vertical = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(11.dp),
@@ -295,8 +295,8 @@ private fun OtherRow(
     val shape = RoundedCornerShape(12.dp)
     Column(
         Modifier.fillMaxWidth().clip(shape)
-            .background(if (selected) A08 else Tok.base)
-            .border(1.dp, if (selected) Tok.accent else Tok.hair, shape),
+            .background(if (selected) A08 else AppicaTok.base)
+            .border(1.dp, if (selected) Tok.accent else AppicaTok.hair, shape),
     ) {
         Row(
             Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(onClick = onToggle)
@@ -315,8 +315,8 @@ private fun OtherRow(
             val fShape = RoundedCornerShape(9.dp)
             Box(
                 Modifier.padding(start = 43.dp, end = 12.dp, bottom = 11.dp).fillMaxWidth()
-                    .heightIn(min = 38.dp).clip(fShape).background(Tok.surface)
-                    .border(1.dp, if (focused) Tok.accent else Tok.hair, fShape)
+                    .heightIn(min = 38.dp).clip(fShape).background(AppicaTok.surface)
+                    .border(1.dp, if (focused) Tok.accent else AppicaTok.hair, fShape)
                     .padding(horizontal = 11.dp, vertical = 9.dp),
                 contentAlignment = Alignment.CenterStart,
             ) {
@@ -339,11 +339,11 @@ private fun SelectControl(multi: Boolean, selected: Boolean) {
     Box(
         Modifier.size(20.dp).clip(shape)
             .background(if (selected && multi) Tok.accent else androidx.compose.ui.graphics.Color.Transparent)
-            .border(1.5.dp, if (selected) Tok.accent else Tok.hair, shape),
+            .border(1.5.dp, if (selected) Tok.accent else AppicaTok.hair, shape),
         contentAlignment = Alignment.Center,
     ) {
         when {
-            multi && selected -> Icon(Icons.Rounded.Check, null, tint = Tok.base, modifier = Modifier.size(13.dp))
+            multi && selected -> Icon(Icons.Rounded.Check, null, tint = AppicaTok.base, modifier = Modifier.size(13.dp))
             !multi && selected -> Box(Modifier.size(9.dp).clip(CircleShape).background(Tok.accent))
         }
     }
@@ -374,7 +374,7 @@ private fun ReplyLink(back: Boolean, onClick: () -> Unit) {
 fun QuestionsAnsweredRow(items: List<Pair<String, String>>) {
     var open by remember { mutableStateOf(false) }
     val shape = RoundedCornerShape(12.dp)
-    Column(Modifier.fillMaxWidth().clip(shape).background(Tok.surface).border(1.dp, Tok.hair, shape)) {
+    Column(Modifier.fillMaxWidth().clip(shape).background(AppicaTok.surface).border(1.dp, AppicaTok.hair, shape)) {
         Row(
             Modifier.fillMaxWidth().clickable { open = !open }.padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -395,7 +395,7 @@ fun QuestionsAnsweredRow(items: List<Pair<String, String>>) {
             )
         }
         if (open) {
-            Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+            Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair))
             Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp)) {
                 items.forEachIndexed { i, (q, a) ->
                     Column(Modifier.padding(vertical = 7.dp)) {
@@ -405,7 +405,7 @@ fun QuestionsAnsweredRow(items: List<Pair<String, String>>) {
                             Text(a, color = Tok.tx, fontSize = 13.5.sp)
                         }
                     }
-                    if (i < items.lastIndex) Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+                    if (i < items.lastIndex) Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair))
                 }
             }
         }
@@ -418,7 +418,7 @@ private fun TinyChip(text: String, muted: Boolean = false) {
         text, color = if (muted) Tok.muted else Tok.tx2, fontSize = 11.sp, fontWeight = FontWeight.Medium,
         maxLines = 1, overflow = TextOverflow.Ellipsis,
         modifier = Modifier.widthIn(max = 118.dp).clip(RoundedCornerShape(6.dp))
-            .background(Tok.base).border(1.dp, Tok.hair, RoundedCornerShape(6.dp))
+            .background(AppicaTok.base).border(1.dp, AppicaTok.hair, RoundedCornerShape(6.dp))
             .padding(horizontal = 7.dp, vertical = 2.dp),
     )
 }

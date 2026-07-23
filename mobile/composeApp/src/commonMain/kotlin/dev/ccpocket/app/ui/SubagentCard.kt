@@ -91,8 +91,8 @@ internal fun SubagentCard(m: ChatItem.Tool, dense: Boolean = false) {
     Column(
         Modifier.fillMaxWidth().clip(shape)
             // dense (desktop): the card lifts to a raised surface on hover; at rest the stream stays quiet
-            .background(if (dense && hovered) Tok.raised else Tok.surface)
-            .border(1.dp, Tok.hair, shape)
+            .background(if (dense && hovered) AppicaTok.backgroundMuted else AppicaTok.background)
+            .border(1.dp, AppicaTok.border, shape)
             .hoverable(hoverSrc),
     ) {
         Row(
@@ -138,7 +138,7 @@ internal fun SubagentCard(m: ChatItem.Tool, dense: Boolean = false) {
             }
         }
         if (expandable && expanded) {
-            Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+            Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair))
             if (m.ok == false) SubagentErrorBody(m.output!!) else SubagentReportBody(m, dense)
         }
     }
@@ -187,7 +187,7 @@ private fun SubagentSubline(m: ChatItem.Tool, running: Boolean, dense: Boolean) 
  *  thread) inside a capped scroll, and a footer restating the run summary beside a copy affordance. */
 @Composable
 private fun SubagentReportBody(m: ChatItem.Tool, dense: Boolean) {
-    Column(Modifier.fillMaxWidth().background(Tok.base.copy(alpha = 0.45f))) {
+    Column(Modifier.fillMaxWidth().background(AppicaTok.base.copy(alpha = 0.45f))) {
         Row(
             Modifier.padding(start = 14.dp, end = 14.dp, top = 9.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -206,7 +206,7 @@ private fun SubagentReportBody(m: ChatItem.Tool, dense: Boolean) {
         ) {
             SelectionContainer { MarkdownText(m.output!!, Tok.tx2) }
         }
-        Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+        Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair))
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 7.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -225,7 +225,7 @@ private fun SubagentReportBody(m: ChatItem.Tool, dense: Boolean) {
 /** Expanded failure detail: the captured error text as selectable monospace on the recessed ground. */
 @Composable
 private fun SubagentErrorBody(output: String) {
-    Box(Modifier.fillMaxWidth().background(Tok.base.copy(alpha = 0.45f)).padding(horizontal = 14.dp, vertical = 11.dp)) {
+    Box(Modifier.fillMaxWidth().background(AppicaTok.base.copy(alpha = 0.45f)).padding(horizontal = 14.dp, vertical = 11.dp)) {
         SelectionContainer {
             Text(output, color = Tok.tx2, fontFamily = FontFamily.Monospace, fontSize = 11.5.sp, lineHeight = 18.sp)
         }
@@ -261,7 +261,7 @@ private fun SubagentTile(running: Boolean, ok: Boolean?, dense: Boolean) {
         running -> Triple(Tok.accent.copy(alpha = 0.12f), Tok.accent.copy(alpha = 0.38f), Tok.accent)
         ok == true -> Triple(Tok.ok.copy(alpha = 0.14f), Tok.ok.copy(alpha = 0.36f), Tok.ok)
         ok == false -> Triple(Tok.danger.copy(alpha = 0.12f), Tok.danger.copy(alpha = 0.36f), Tok.danger)
-        else -> Triple(Tok.raised, Tok.hair, Tok.tx2)
+        else -> Triple(AppicaTok.raised, AppicaTok.hair, Tok.tx2)
     }
     Box(Modifier.size(size).clip(shape).background(bg).border(1.dp, bd, shape), contentAlignment = Alignment.Center) {
         when (ok) {

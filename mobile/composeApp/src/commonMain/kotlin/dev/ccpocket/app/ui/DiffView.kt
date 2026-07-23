@@ -196,7 +196,7 @@ fun DiffFileToggle(
         else -> null
     }
     Row(
-        Modifier.clip(RoundedCornerShape(9.dp)).background(Tok.raised).padding(3.dp),
+        Modifier.clip(RoundedCornerShape(9.dp)).background(AppicaTok.raised).padding(3.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(2.dp),
     ) {
@@ -208,7 +208,7 @@ fun DiffFileToggle(
                 color = if (on) Tok.tx else Tok.tx2,
                 fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center,
                 modifier = Modifier.clip(RoundedCornerShape(6.dp))
-                    .background(if (on) Tok.surface else Tok.raised)
+                    .background(if (on) AppicaTok.surface else AppicaTok.raised)
                     .clickable(enabled = enabled && !on) { onPick(isDiff) }
                     .alpha(if (enabled) 1f else 0.5f)
                     .padding(horizontal = 15.dp, vertical = 5.dp),
@@ -251,7 +251,7 @@ fun WrapToggle(on: Boolean, onToggle: () -> Unit) {
     val shape = RoundedCornerShape(9.dp)
     Box(
         Modifier.size(30.dp).clip(shape)
-            .background(if (on) Tok.accent.copy(alpha = 0.14f) else if (hovered) Tok.raised else Color.Transparent)
+            .background(if (on) Tok.accent.copy(alpha = 0.14f) else if (hovered) AppicaTok.raised else Color.Transparent)
             .then(if (on) Modifier.border(1.dp, Tok.accent.copy(alpha = 0.4f), shape) else Modifier)
             .hoverable(src).clickable(onClick = onToggle),
         contentAlignment = Alignment.Center,
@@ -375,7 +375,7 @@ private fun HunkHeader(hunk: DiffHunk, dense: Boolean, isCollapsed: Boolean, fir
     Column(Modifier.fillMaxWidth().clickable(onClick = onToggle)) {
         if (!firstHunk) HairlineRow()
         Row(
-            Modifier.fillMaxWidth().background(Tok.surface)
+            Modifier.fillMaxWidth().background(AppicaTok.surface)
                 .padding(start = 10.dp, end = 12.dp, top = if (dense) 4.dp else 5.dp, bottom = if (dense) 4.dp else 5.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(9.dp),
@@ -394,7 +394,7 @@ private fun HunkHeader(hunk: DiffHunk, dense: Boolean, isCollapsed: Boolean, fir
 }
 
 @Composable
-private fun HairlineRow() = Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+private fun HairlineRow() = Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair))
 
 @Composable
 private fun GapRow(lines: Int) {
@@ -543,7 +543,7 @@ fun DiffEmptyState(glyph: String, title: String, caption: String?) {
         verticalArrangement = Arrangement.Center,
     ) {
         Box(
-            Modifier.size(46.dp).clip(RoundedCornerShape(13.dp)).background(Tok.surface),
+            Modifier.size(46.dp).clip(RoundedCornerShape(13.dp)).background(AppicaTok.surface),
             contentAlignment = Alignment.Center,
         ) {
             Text(glyph, color = Tok.muted, fontFamily = FontFamily.Monospace, fontSize = 16.sp)
@@ -698,8 +698,8 @@ private fun DocTypeBadge(ext: String, dense: Boolean, muted: Boolean = false) {
     val shape = RoundedCornerShape(if (dense) 10.dp else 11.dp)
     Box(
         Modifier.size(if (dense) 44.dp else 52.dp).clip(shape)
-            .background(if (muted) Tok.raised else fam.bg)
-            .border(1.dp, if (muted) Tok.hair else fam.bd, shape),
+            .background(if (muted) AppicaTok.raised else fam.bg)
+            .border(1.dp, if (muted) AppicaTok.hair else fam.bd, shape),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -711,7 +711,7 @@ private fun DocTypeBadge(ext: String, dense: Boolean, muted: Boolean = false) {
         Canvas(Modifier.size(11.dp).align(Alignment.TopEnd)) {
             drawPath(
                 Path().apply { moveTo(0f, 0f); lineTo(size.width, 0f); lineTo(size.width, size.height); close() },
-                Tok.base, alpha = 0.55f,
+                AppicaTok.base, alpha = 0.55f,
             )
             drawRect(fg, alpha = 0.14f)
         }
@@ -725,7 +725,7 @@ private fun DocCardFrame(path: String, dense: Boolean, muted: Boolean = false, b
     val shape = RoundedCornerShape(if (dense) 11.dp else 13.dp)
     Box(Modifier.fillMaxSize().padding(horizontal = 24.dp), contentAlignment = Alignment.Center) {
         Row(
-            Modifier.widthIn(max = 352.dp).clip(shape).background(Tok.surface).border(1.dp, Tok.hair, shape)
+            Modifier.widthIn(max = 352.dp).clip(shape).background(AppicaTok.surface).border(1.dp, AppicaTok.hair, shape)
                 .padding(if (dense) 11.dp else 13.dp),
             horizontalArrangement = Arrangement.spacedBy(if (dense) 11.dp else 13.dp),
         ) {
@@ -811,7 +811,7 @@ private fun DocumentLoadingCard(path: String, dense: Boolean, progress: Pair<Lon
         val barShape = RoundedCornerShape(999.dp)
         Box(
             Modifier.padding(top = 12.dp).fillMaxWidth().height(5.dp)
-                .clip(barShape).background(Tok.raised),
+                .clip(barShape).background(AppicaTok.raised),
         ) {
             val fill = if (progress != null) {
                 val frac by animateFloatAsState((progress.first.toFloat() / progress.second).coerceIn(0f, 1f))
@@ -862,12 +862,12 @@ private fun ExportActionChip(
     val src = remember { MutableInteractionSource() }
     val hovered by src.collectIsHoveredAsState()
     val lift = hovered && enabled
-    val fg = if (primary) Tok.base else if (lift) Tok.tx else Tok.tx2
+    val fg = if (primary) AppicaTok.base else if (lift) Tok.tx else Tok.tx2
     Row(
         Modifier.height(if (dense) 30.dp else 34.dp).alpha(if (enabled) 1f else 0.4f).clip(shape)
             .then(
                 if (primary) Modifier.background(if (lift) Tok.accentPressed else Tok.accent)
-                else Modifier.border(1.dp, if (lift) Tok.muted else Tok.hair, shape),
+                else Modifier.border(1.dp, if (lift) Tok.muted else AppicaTok.hair, shape),
             )
             .hoverable(src, enabled = enabled)
             .then(if (enabled) Modifier.clickable(onClick = onClick) else Modifier)

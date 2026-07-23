@@ -102,17 +102,21 @@ fun PocketSheet(onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Un
     LaunchedEffect(Unit) { focus.clearFocus() }
     dev.ccpocket.app.SystemBackHandler(enabled = true) { onDismiss() } // Android back = scrim tap
     Box(Modifier.fillMaxSize()) {
-        Box(Modifier.fillMaxSize().background(Color(0x94000000)).pointerInput(Unit) { detectTapGestures { onDismiss() } })
+        AppicaOverlayScrim(Modifier.fillMaxSize().pointerInput(Unit) { detectTapGestures { onDismiss() } })
         Column(
             Modifier.align(Alignment.BottomCenter).fillMaxWidth()
-                .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
-                .background(Tok.raised)
+                .clip(RoundedCornerShape(topStart = AppicaMetrics.radius2Xl, topEnd = AppicaMetrics.radius2Xl))
+                .background(AppicaTok.backgroundSubtle)
+                .border(1.dp, AppicaTok.border, RoundedCornerShape(topStart = AppicaMetrics.radius2Xl, topEnd = AppicaMetrics.radius2Xl))
                 .pointerInput(Unit) { detectTapGestures { } } // swallow taps so they don't dismiss via the scrim
                 .windowInsetsPadding(WindowInsets.navigationBars)
                 .imePadding() // sheets render outside the app's ime-padded Box — never hide behind the keyboard
                 .padding(bottom = 10.dp),
         ) {
-            Box(Modifier.align(Alignment.CenterHorizontally).padding(vertical = 8.dp).size(width = 38.dp, height = 5.dp).clip(CircleShape).background(Tok.hair))
+            Box(
+                Modifier.align(Alignment.CenterHorizontally).padding(vertical = 9.dp)
+                    .size(width = 36.dp, height = 4.dp).clip(CircleShape).background(AppicaTok.borderStrong),
+            )
             content()
         }
     }
@@ -130,19 +134,19 @@ fun ModeSheet(
         if (agent == AgentKind.OPENCODE) {
             // mid-session too the mode is immutable truth, not a choice — see OpenCodeAutoApproveNotice
             Column(Modifier.padding(horizontal = 16.dp).padding(bottom = 12.dp, top = 4.dp)) {
-                Text(stringResource(Res.string.exec_mode_title), color = Tok.tx, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Text(stringResource(Res.string.exec_mode_title), color = AppicaTok.foregroundIntense, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                 OpenCodeAutoApproveNotice(Modifier.padding(top = 12.dp))
             }
         } else if (confirmBypass) {
             BypassConfirm(workdir, onCancel = { confirmBypass = false }, onConfirm = { confirmBypass = false; onSelect(PermissionMode.BYPASS_PERMISSIONS) })
         } else {
             Column(Modifier.padding(horizontal = 16.dp).padding(bottom = 12.dp, top = 4.dp)) {
-                Text(stringResource(Res.string.exec_mode_title), color = Tok.tx, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                Text(stringResource(Res.string.exec_mode_subtitle), color = Tok.tx2, fontSize = 13.5.sp, modifier = Modifier.padding(top = 4.dp))
+                Text(stringResource(Res.string.exec_mode_title), color = AppicaTok.foregroundIntense, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Text(stringResource(Res.string.exec_mode_subtitle), color = AppicaTok.foreground, fontSize = 13.sp, modifier = Modifier.padding(top = 4.dp))
                 if (switching) {
                     Row(
-                        Modifier.padding(top = 12.dp).fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Tok.surface)
-                            .border(1.dp, Tok.hair, RoundedCornerShape(10.dp)).padding(horizontal = 12.dp, vertical = 10.dp),
+                        Modifier.padding(top = 12.dp).fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(AppicaTok.surface)
+                            .border(1.dp, AppicaTok.hair, RoundedCornerShape(10.dp)).padding(horizontal = 12.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         CircularProgressIndicator(Modifier.size(15.dp), color = Tok.accent, strokeWidth = 2.dp)
@@ -189,7 +193,7 @@ private fun BypassConfirm(workdir: String?, onCancel: () -> Unit, onConfirm: () 
         if (workdir != null) TailPathText(workdir, fontSize = 12.sp, modifier = Modifier.padding(top = 10.dp))
         Row(Modifier.padding(top = 20.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             SheetButton(stringResource(Res.string.cancel), Modifier.weight(1f), outline = true, onClick = onCancel)
-            SheetButton(stringResource(Res.string.bypass_cta), Modifier.weight(1.4f), bg = Tok.warn, fg = Tok.base, onClick = onConfirm)
+            SheetButton(stringResource(Res.string.bypass_cta), Modifier.weight(1.4f), bg = Tok.warn, fg = AppicaTok.base, onClick = onConfirm)
         }
     }
 }
@@ -234,7 +238,7 @@ fun StartSessionModeSheet(
                     OpenCodeAutoApproveNotice()
                     SheetButton(
                         stringResource(Res.string.opencode_mode_start), Modifier.fillMaxWidth().padding(top = 10.dp),
-                        bg = Tok.warn, fg = Tok.base,
+                        bg = Tok.warn, fg = AppicaTok.base,
                     ) { onPick(PermissionMode.BYPASS_PERMISSIONS, AgentKind.OPENCODE) }
                 } else {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -305,7 +309,7 @@ fun SessionDefaultsChip(agent: AgentKind, mode: PermissionMode, modifier: Modifi
     }
     val shape = RoundedCornerShape(10.dp)
     Row(
-        modifier.clip(shape).background(Tok.base).border(1.dp, Tok.hair, shape)
+        modifier.clip(shape).background(AppicaTok.base).border(1.dp, AppicaTok.hair, shape)
             .clickable(enabled = enabled, onClick = onClick).padding(horizontal = 10.dp, vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
@@ -331,20 +335,20 @@ private fun AgentOption(agent: AgentKind, selected: Boolean, modifier: Modifier,
     val shape = RoundedCornerShape(13.dp)
     Column(
         modifier.clip(shape)
-            .background(if (selected) c.agentTintFill() else Tok.surface)
-            .border(1.5.dp, if (selected) c else Tok.hair, shape)
+            .background(if (selected) c.agentTintFill() else AppicaTok.surface)
+            .border(1.5.dp, if (selected) c else AppicaTok.hair, shape)
             .clickable(onClick = onClick).padding(13.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Box(
                 Modifier.size(30.dp).clip(RoundedCornerShape(8.dp))
-                    .background(if (selected) c.agentTintFill() else Tok.raised)
-                    .border(1.dp, if (selected) c.agentTintBorder() else Tok.hair, RoundedCornerShape(8.dp)),
+                    .background(if (selected) c.agentTintFill() else AppicaTok.raised)
+                    .border(1.dp, if (selected) c.agentTintBorder() else AppicaTok.hair, RoundedCornerShape(8.dp)),
                 contentAlignment = Alignment.Center,
             ) { AgentGlyph(agent, c, 17) }
             Text(agentName(agent), color = Tok.tx, fontSize = 15.5.sp, fontWeight = FontWeight.Bold, style = TightCenter, modifier = Modifier.weight(1f))
             if (selected) Box(Modifier.size(18.dp).clip(CircleShape).background(c), contentAlignment = Alignment.Center) {
-                Icon(Icons.Rounded.Check, null, tint = Tok.base, modifier = Modifier.size(13.dp))
+                Icon(Icons.Rounded.Check, null, tint = AppicaTok.base, modifier = Modifier.size(13.dp))
             }
         }
         Text(agentTagline(agent), color = Tok.tx2, fontFamily = FontFamily.Monospace, fontSize = 10.5.sp, modifier = Modifier.padding(top = 8.dp))
@@ -371,8 +375,8 @@ val CODEX_PRESETS = listOf(
 fun MonoChip(text: String, c: Color = Tok.tx2) {
     Text(
         text, color = c, fontFamily = FontFamily.Monospace, fontSize = 10.5.sp,
-        modifier = Modifier.background(Tok.surface, RoundedCornerShape(6.dp))
-            .border(1.dp, Tok.hair, RoundedCornerShape(6.dp)).padding(horizontal = 6.dp, vertical = 2.dp),
+        modifier = Modifier.background(AppicaTok.surface, RoundedCornerShape(6.dp))
+            .border(1.dp, AppicaTok.hair, RoundedCornerShape(6.dp)).padding(horizontal = 6.dp, vertical = 2.dp),
     )
 }
 
@@ -380,9 +384,9 @@ fun MonoChip(text: String, c: Color = Tok.tx2) {
 @Composable
 private fun PresetRow(p: CodexPreset, selected: Boolean, onClick: () -> Unit) {
     val shape = RoundedCornerShape(12.dp)
-    val outline = if (p.danger) Tok.danger else if (selected) Tok.codex else Tok.hair
+    val outline = if (p.danger) Tok.danger else if (selected) Tok.codex else AppicaTok.hair
     val fill = when {
-        !selected -> Tok.surface
+        !selected -> AppicaTok.surface
         p.danger -> Tok.danger.copy(alpha = 0.07f)
         else -> Tok.codex.copy(alpha = 0.12f)
     }
@@ -412,10 +416,10 @@ private fun PresetRow(p: CodexPreset, selected: Boolean, onClick: () -> Unit) {
 
 @Composable
 private fun ModeRow(m: ModeInfo, selected: Boolean, enabled: Boolean, onClick: () -> Unit) {
-    val shape = RoundedCornerShape(12.dp)
+    val shape = RoundedCornerShape(AppicaMetrics.radiusSm)
     Row(
-        Modifier.fillMaxWidth().clip(shape)
-            .then(if (selected) Modifier.background(m.color.copy(alpha = 0.10f)).border(1.dp, m.color.copy(alpha = 0.5f), shape) else Modifier)
+        Modifier.fillMaxWidth().clip(shape).background(AppicaTok.background)
+            .border(1.dp, if (selected) m.color.copy(alpha = 0.65f) else AppicaTok.border, shape)
             .clickable(enabled = enabled, onClick = onClick).padding(13.dp),
         verticalAlignment = Alignment.Top,
     ) {
@@ -439,7 +443,7 @@ private fun ModeRow(m: ModeInfo, selected: Boolean, enabled: Boolean, onClick: (
 private fun RulesReview(rules: List<String>, onClear: (String) -> Unit, onClearAll: () -> Unit) {
     if (rules.isEmpty()) return
     Column(Modifier.padding(top = 18.dp)) {
-        Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+        Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair))
         Row(Modifier.padding(top = 14.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(Res.string.rules_remembered_header), color = Tok.muted, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.6.sp, modifier = Modifier.weight(1f))
             Text(stringResource(Res.string.clear_all), color = Tok.danger, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable { onClearAll() }.padding(4.dp))
@@ -447,13 +451,13 @@ private fun RulesReview(rules: List<String>, onClear: (String) -> Unit, onClearA
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             rules.forEach { r ->
                 Row(
-                    Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Tok.surface).border(1.dp, Tok.hair, RoundedCornerShape(10.dp)).padding(horizontal = 11.dp, vertical = 9.dp),
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(AppicaTok.surface).border(1.dp, AppicaTok.hair, RoundedCornerShape(10.dp)).padding(horizontal = 11.dp, vertical = 9.dp),
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     Icon(Icons.Rounded.Check, null, tint = Tok.ok, modifier = Modifier.size(13.dp))
                     Text(r, color = Tok.tx, fontFamily = FontFamily.Monospace, fontSize = 12.sp, maxLines = 1, modifier = Modifier.weight(1f))
                     Box(
-                        Modifier.size(24.dp).clip(CircleShape).background(Tok.raised).border(1.dp, Tok.hair, CircleShape).clickable { onClear(r) },
+                        Modifier.size(24.dp).clip(CircleShape).background(AppicaTok.raised).border(1.dp, AppicaTok.hair, CircleShape).clickable { onClear(r) },
                         contentAlignment = Alignment.Center,
                     ) { Icon(Icons.Rounded.Close, null, tint = Tok.tx2, modifier = Modifier.size(11.dp)) }
                 }
@@ -519,7 +523,7 @@ private fun PermBody(ask: PermissionAsk, workdir: String?) {
             Text(stringResource(Res.string.needs_permission), color = Tok.tx2, fontSize = 13.sp)
         }
         Row(Modifier.padding(top = 10.dp), verticalAlignment = Alignment.Bottom) {
-            Text(ask.title.ifBlank { stringResource(Res.string.permission_fallback) }, color = Tok.tx, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text(ask.title.ifBlank { stringResource(Res.string.permission_fallback) }, color = AppicaTok.foregroundIntense, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
             Text(" · ", color = Tok.muted, fontSize = 18.sp)
             Text(ask.tool, color = Tok.tx, fontFamily = FontFamily.Monospace, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
         }
@@ -529,14 +533,14 @@ private fun PermBody(ask: PermissionAsk, workdir: String?) {
                 DiffView(diff, Modifier.padding(top = 12.dp))
             ask.tool == "ExitPlanMode" || ask.tool == "exit_plan_mode" -> // plan approval → render the full plan as scrollable markdown (issue #10)
                 Column(
-                    Modifier.padding(top = 12.dp).fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Tok.base)
-                        .border(1.dp, Tok.hair, RoundedCornerShape(12.dp))
+                    Modifier.padding(top = 12.dp).fillMaxWidth().clip(RoundedCornerShape(AppicaMetrics.radiusSm)).background(AppicaTok.background)
+                        .border(1.dp, AppicaTok.border, RoundedCornerShape(AppicaMetrics.radiusSm))
                         .heightIn(max = 340.dp).verticalScroll(rememberScrollState()).padding(14.dp),
                 ) {
                     MarkdownText(ask.inputPreview, Tok.tx)
                 }
             else ->
-                Box(Modifier.padding(top = 12.dp).fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Tok.base).border(1.dp, Tok.hair, RoundedCornerShape(12.dp)).padding(horizontal = 14.dp, vertical = 12.dp)) {
+                Box(Modifier.padding(top = 12.dp).fillMaxWidth().clip(RoundedCornerShape(AppicaMetrics.radiusSm)).background(AppicaTok.background).border(1.dp, AppicaTok.border, RoundedCornerShape(AppicaMetrics.radiusSm)).padding(horizontal = 14.dp, vertical = 12.dp)) {
                     Text(ask.inputPreview, color = Tok.tx, fontFamily = FontFamily.Monospace, fontSize = 13.sp, lineHeight = 20.sp, maxLines = 6)
                 }
         }
@@ -552,8 +556,8 @@ private fun DiffView(diff: String, modifier: Modifier = Modifier) {
     val all = remember(diff) { diff.lines() }
     val shown = remember(diff) { all.take(140) }
     Column(
-        modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Tok.base)
-            .border(1.dp, Tok.hair, RoundedCornerShape(12.dp))
+        modifier.fillMaxWidth().clip(RoundedCornerShape(AppicaMetrics.radiusSm)).background(AppicaTok.background)
+            .border(1.dp, AppicaTok.border, RoundedCornerShape(AppicaMetrics.radiusSm))
             .heightIn(max = 300.dp).verticalScroll(rememberScrollState()).padding(vertical = 8.dp),
     ) {
         shown.forEach { ln ->
@@ -582,7 +586,7 @@ private fun Decision(ask: PermissionAsk, onDeny: () -> Unit, onOnce: () -> Unit,
         // from the daemon's ToolMeta (issue #10), with a legacy tool-name fallback inside oneOff.
         Row(Modifier.padding(top = 16.dp).height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             DecisionButton(stringResource(Res.string.deny), Modifier.weight(1f).fillMaxHeight(), outline = Tok.danger, fg = Tok.danger, onClick = onDeny)
-            DecisionButton(stringResource(Res.string.allow_once), Modifier.weight(1f).fillMaxHeight(), bg = Tok.accent, fg = Tok.base, bold = true, onClick = onOnce)
+            DecisionButton(stringResource(Res.string.allow_once), Modifier.weight(1f).fillMaxHeight(), bg = Tok.accent, fg = AppicaTok.base, bold = true, onClick = onOnce)
         }
         return
     }
@@ -602,11 +606,11 @@ private fun Decision(ask: PermissionAsk, onDeny: () -> Unit, onOnce: () -> Unit,
         // IntrinsicSize.Min + fillMaxHeight: the rule subtitle makes "Always allow" taller — stretch all three to match
         Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             DecisionButton(stringResource(Res.string.deny), Modifier.weight(1f).fillMaxHeight(), outline = Tok.danger, fg = Tok.danger, onClick = onDeny)
-            DecisionButton(stringResource(Res.string.allow_once), Modifier.weight(1f).fillMaxHeight(), bg = if (danger) Tok.accent else Tok.surface, outline = if (danger) null else Tok.hair, fg = if (danger) Tok.base else Tok.tx, bold = danger, onClick = onOnce)
+            DecisionButton(stringResource(Res.string.allow_once), Modifier.weight(1f).fillMaxHeight(), bg = if (danger) Tok.accent else AppicaTok.surface, outline = if (danger) null else AppicaTok.hair, fg = if (danger) AppicaTok.base else Tok.tx, bold = danger, onClick = onOnce)
             DecisionButton(
                 stringResource(Res.string.always_allow), Modifier.weight(1.25f).fillMaxHeight(), sub = ask.rule ?: ask.tool,
                 bg = if (danger) Color.Transparent else Tok.accent, outline = if (danger) Tok.warn.copy(alpha = 0.6f) else null,
-                fg = if (danger) Tok.warn else Tok.base, warn = danger, bold = true, onClick = onAlways,
+                fg = if (danger) Tok.warn else AppicaTok.base, warn = danger, bold = true, onClick = onAlways,
             )
         }
     }
@@ -641,7 +645,7 @@ private fun CountdownRing(seconds: Int, total: Int) {
             val sw = 3.dp.toPx()
             val r = (size.minDimension - sw) / 2f
             val tl = Offset((size.width - 2 * r) / 2f, (size.height - 2 * r) / 2f)
-            drawCircle(Tok.hair, r, style = Stroke(sw))
+            drawCircle(AppicaTok.hair, r, style = Stroke(sw))
             drawArc(col, -90f, 360f * frac, useCenter = false, topLeft = tl, size = Size(2 * r, 2 * r), style = Stroke(sw, cap = StrokeCap.Round))
         }
         Text("${seconds / 60}:${(seconds % 60).toString().padStart(2, '0')}", color = col, fontFamily = FontFamily.Monospace, fontSize = 12.sp)
@@ -652,7 +656,7 @@ private fun CountdownRing(seconds: Int, total: Int) {
 @Composable
 fun AllowChip(rule: String) {
     Row(
-        Modifier.clip(RoundedCornerShape(999.dp)).background(Tok.surface).border(1.dp, Tok.hair, RoundedCornerShape(999.dp)).padding(start = 11.dp, end = 13.dp, top = 7.dp, bottom = 7.dp),
+        Modifier.clip(RoundedCornerShape(999.dp)).background(AppicaTok.surface).border(1.dp, AppicaTok.hair, RoundedCornerShape(999.dp)).padding(start = 11.dp, end = 13.dp, top = 7.dp, bottom = 7.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Box(Modifier.size(16.dp).clip(CircleShape).background(Tok.ok.copy(alpha = 0.16f)), contentAlignment = Alignment.Center) {
@@ -673,7 +677,7 @@ internal fun SheetButton(label: String, modifier: Modifier, bg: Color = Color.Tr
     val shape = RoundedCornerShape(12.dp)
     Box(
         modifier.height(52.dp).clip(shape).background(bg)
-            .then(if (outline) Modifier.border(1.dp, Tok.hair, shape) else Modifier)
+            .then(if (outline) Modifier.border(1.dp, AppicaTok.hair, shape) else Modifier)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { Text(label, color = fg, fontSize = 15.5.sp, fontWeight = FontWeight.Bold) }

@@ -192,7 +192,7 @@ fun App(scope: CoroutineScope) {
     // live system flip while the app is foregrounded and LIGHT/DARK force it.
     PocketTheme(mode = repo.themeMode.value, fontScale = repo.fontScale.value) {
       Box(Modifier.fillMaxSize()) {
-        Surface(Modifier.fillMaxSize(), color = Tok.base) {
+        Surface(Modifier.fillMaxSize(), color = AppicaTok.base) {
             Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBars).imePadding()) {
                 // pushes content down instead of overlaying the header; steady while retrying (no flicker)
                 // preview/recording mode hides the demo banner for a clean marketing capture
@@ -397,9 +397,14 @@ private fun ProjectsTopBar(
     machineTrailing: @Composable RowScope.() -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
 ) {
-    Row(Modifier.fillMaxWidth().background(Tok.surface).padding(start = 16.dp, end = 6.dp, top = 14.dp, bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        Modifier.fillMaxWidth().background(AppicaTok.background)
+            .border(width = 1.dp, color = AppicaTok.borderMuted)
+            .padding(start = 16.dp, end = 8.dp, top = 10.dp, bottom = 9.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Column(Modifier.weight(1f)) {
-            Text(title, color = Tok.tx, fontSize = 21.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.3).sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(title, color = AppicaTok.foregroundIntense, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 2.dp).then(machineLineModifier)) {
                 PulseDot(dotColor, size = 6.dp)
                 Spacer(Modifier.width(6.dp))
@@ -426,7 +431,7 @@ private fun DirectorySkeleton(repo: PocketRepository) {
         ProjectsTopBar(stringResource(Res.string.dir_projects), Tok.warn, repo.paired.value?.displayName())
         Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             repeat(5) {
-                Box(Modifier.fillMaxWidth().height(52.dp).clip(RoundedCornerShape(10.dp)).graphicsLayer { alpha = shimmer }.background(Tok.surface))
+                Box(Modifier.fillMaxWidth().height(52.dp).clip(RoundedCornerShape(10.dp)).graphicsLayer { alpha = shimmer }.background(AppicaTok.surface))
             }
         }
     }
@@ -538,7 +543,7 @@ private fun DirectoryScreen(repo: PocketRepository, onOpenFleet: () -> Unit = {}
     val listState = rememberLazyListState()
     LaunchedEffect(listState.isScrollInProgress) { if (listState.isScrollInProgress) focus.clearFocus() }
 
-    Box(Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize().background(AppicaTok.base)) {
     Column(Modifier.fillMaxSize()) {
         // ── top bar: "Projects" + connection sub-line · view toggle · settings ──
         ProjectsTopBar(
@@ -568,9 +573,11 @@ private fun DirectoryScreen(repo: PocketRepository, onOpenFleet: () -> Unit = {}
                 Icon(Icons.Outlined.Settings, stringResource(Res.string.settings_open), tint = Tok.tx2, modifier = Modifier.size(20.dp))
             }
         }
-        OutlinedTextField(
-            query, { query = it }, placeholder = { Text(stringResource(Res.string.filter_hint)) }, singleLine = true,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        SettingsSearchField(
+            query = query,
+            onQueryChange = { query = it },
+            placeholder = stringResource(Res.string.filter_hint),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
         )
         // discoverable entry to open ANY folder — the project list only shows folders that already have
         // history, and the top-bar "+" reads as "new", so this spells out how to reach a fresh folder
@@ -725,7 +732,7 @@ private fun NewPathSheet(
                 SheetButton(
                     stringResource(Res.string.new_path_start),
                     Modifier.weight(1f),
-                    bg = Tok.accent, fg = Tok.base,
+                    bg = Tok.accent, fg = AppicaTok.base,
                 ) { if (looksAbsolute) onStart(target) }
             }
         }
@@ -843,7 +850,8 @@ private fun ProjectCell(repo: PocketRepository, e: DirectoryEntry, showPath: Boo
 @Composable
 private fun SharedProjectCell(repo: PocketRepository, e: DirectoryEntry, onLongPress: (() -> Unit)?) {
     Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Tok.surface)
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(AppicaMetrics.radiusSm)).background(AppicaTok.background)
+            .border(1.dp, AppicaTok.border, RoundedCornerShape(AppicaMetrics.radiusSm))
             .combinedClickable(onClick = { repo.openProject(e) }, onLongClick = onLongPress).padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -869,10 +877,11 @@ private fun ProjectActionsSheet(repo: PocketRepository, e: DirectoryEntry, onSha
     val pinned = repo.isPinned(e.path)
     PocketSheet(onDismiss) {
         Column(Modifier.padding(horizontal = 16.dp).padding(bottom = 14.dp, top = 4.dp)) {
-            Text(e.name.ifBlank { e.path }, color = Tok.tx, fontSize = 18.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(e.name.ifBlank { e.path }, color = AppicaTok.foregroundIntense, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
             TailPathText(e.path, fontSize = 12.sp, modifier = Modifier.padding(top = 2.dp))
             Row(
-                Modifier.padding(top = 14.dp).fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Tok.surface)
+                Modifier.padding(top = 14.dp).fillMaxWidth().clip(RoundedCornerShape(AppicaMetrics.radiusSm)).background(AppicaTok.background)
+                    .border(1.dp, AppicaTok.border, RoundedCornerShape(AppicaMetrics.radiusSm))
                     .clickable { repo.togglePin(e.path); onDismiss() }.padding(horizontal = 14.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
@@ -885,7 +894,8 @@ private fun ProjectActionsSheet(repo: PocketRepository, e: DirectoryEntry, onSha
             // Share this folder… — owners only; a guest's shared row (sharedBy set) can't re-share the owner's machine.
             if (e.sharedBy == null) {
                 Row(
-                    Modifier.padding(top = 9.dp).fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Tok.surface)
+                    Modifier.padding(top = 9.dp).fillMaxWidth().clip(RoundedCornerShape(AppicaMetrics.radiusSm)).background(AppicaTok.background)
+                        .border(1.dp, AppicaTok.border, RoundedCornerShape(AppicaMetrics.radiusSm))
                         .clickable { onShare(); onDismiss() }.padding(horizontal = 14.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
@@ -916,7 +926,7 @@ internal fun HistoryBadge(onClick: (() -> Unit)? = null) {
 @Composable
 private fun ViewToggle(tree: Boolean, onToggle: () -> Unit) {
     Row(
-        Modifier.clip(RoundedCornerShape(9.dp)).background(Tok.surface).border(1.dp, Tok.hair, RoundedCornerShape(9.dp))
+        Modifier.clip(RoundedCornerShape(9.dp)).background(AppicaTok.surface).border(1.dp, AppicaTok.hair, RoundedCornerShape(9.dp))
             .clickable(onClick = onToggle).padding(2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -930,7 +940,7 @@ private fun ViewSeg(on: Boolean, icon: ImageVector) {
     Box(
         Modifier.size(width = 30.dp, height = 26.dp).clip(RoundedCornerShape(7.dp)).then(if (on) Modifier.background(Tok.accent) else Modifier),
         contentAlignment = Alignment.Center,
-    ) { Icon(icon, null, tint = if (on) Tok.base else Tok.tx2, modifier = Modifier.size(16.dp)) }
+    ) { Icon(icon, null, tint = if (on) AppicaTok.base else Tok.tx2, modifier = Modifier.size(16.dp)) }
 }
 
 /** Path breadcrumb shown when drilled into a subfolder: back ‹ + tappable mono segments (current bolded).
@@ -1020,7 +1030,9 @@ private fun LeafRow(e: DirectoryEntry, pinned: Boolean, onLongPress: (() -> Unit
 private fun DirCell(name: String, path: String?, indent: Boolean, pinned: Boolean = false, onLongPress: (() -> Unit)? = null, onClick: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().padding(start = if (indent) 16.dp else 0.dp)
-            .clip(RoundedCornerShape(10.dp)).background(Tok.surface).combinedClickable(onClick = onClick, onLongClick = onLongPress).padding(12.dp),
+            .clip(RoundedCornerShape(AppicaMetrics.radiusSm)).background(AppicaTok.background)
+            .border(1.dp, AppicaTok.border, RoundedCornerShape(AppicaMetrics.radiusSm))
+            .combinedClickable(onClick = onClick, onLongClick = onLongPress).padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
@@ -1037,7 +1049,8 @@ private fun DirCell(name: String, path: String?, indent: Boolean, pinned: Boolea
 @Composable
 private fun LiveProjectCell(e: DirectoryEntry, pinned: Boolean, onLongPress: (() -> Unit)?, onBrowse: (() -> Unit)? = null, onClick: () -> Unit) {
     Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Tok.surface)
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(AppicaMetrics.radiusSm)).background(AppicaTok.background)
+            .border(1.dp, AppicaTok.border, RoundedCornerShape(AppicaMetrics.radiusSm))
             .combinedClickable(onClick = onClick, onLongClick = onLongPress).padding(12.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1112,9 +1125,14 @@ internal fun SessionsScreen(repo: PocketRepository) { // internal: driven end-to
     var moveTarget by remember { mutableStateOf<SessionSummary?>(null) }
     val collapsed = remember(dir) { mutableStateMapOf<String, Boolean>() }
     BackNavHost(onBack = { repo.backToDirectories() }) {
-    Box(Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize().background(AppicaTok.background)) {
         Column(Modifier.fillMaxSize()) {
-            Row(Modifier.fillMaxWidth().background(Tok.surface).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                Modifier.fillMaxWidth().background(AppicaTok.background)
+                    .border(width = 1.dp, color = AppicaTok.borderMuted)
+                    .padding(horizontal = 12.dp, vertical = 9.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 BackTextButton({ repo.backToDirectories() })
                 Column(Modifier.weight(1f)) {
                     Text(stringResource(Res.string.sessions_title), color = Tok.tx, fontWeight = FontWeight.SemiBold)
@@ -1353,9 +1371,14 @@ internal fun ChatScreen( // internal: rendered offscreen by ShowcaseRender (mark
     LaunchedEffect(listState.isScrollInProgress) { if (listState.isScrollInProgress) focus.clearFocus() } // scrolling dismisses the keyboard
     val backToBrowse = { repo.saveDraft(repo.workdir.value, composer.text); repo.backToBrowse() }
     BackNavHost(onBack = backToBrowse) {
-    Box(Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize().background(AppicaTok.background)) {
         Column(Modifier.fillMaxSize()) {
-            Row(Modifier.fillMaxWidth().background(Tok.surface).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                Modifier.fillMaxWidth().background(AppicaTok.background)
+                    .border(width = 1.dp, color = AppicaTok.borderMuted)
+                    .padding(horizontal = 12.dp, vertical = 9.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 BackTextButton(backToBrowse)
                 Column(Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).clickable { showSessionInfo = true }.padding(vertical = 2.dp)) {
                     // session title leads (design); the generic "Chat" only before the first prompt names it
@@ -1408,8 +1431,9 @@ internal fun ChatScreen( // internal: rendered offscreen by ShowcaseRender (mark
                     // session showed nothing alive — the connection dot only says "linked", not "working",
                     // and the composer stays enabled (queueing), which read as "disconnected".
                     if (repo.streaming.value) Row(
-                        Modifier.padding(end = 6.dp).clip(RoundedCornerShape(10.dp)).background(Tok.raised)
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        Modifier.padding(end = 6.dp).clip(RoundedCornerShape(AppicaMetrics.radiusXs))
+                            .background(AppicaTok.backgroundMuted)
+                            .padding(horizontal = 7.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(5.dp),
                     ) {
@@ -1419,9 +1443,11 @@ internal fun ChatScreen( // internal: rendered offscreen by ShowcaseRender (mark
                     // mode switching moved into the ⋯ quick-actions sheet — the persistent badge was one
                     // more thing crowding the header for a setting touched a few times per session
                     Box(
-                        Modifier.size(32.dp).clip(CircleShape).clickable { showQuickActions = true },
+                        Modifier.size(36.dp).clip(RoundedCornerShape(AppicaMetrics.radiusXs))
+                            .border(1.dp, AppicaTok.border, RoundedCornerShape(AppicaMetrics.radiusXs))
+                            .clickable { showQuickActions = true },
                         contentAlignment = Alignment.Center,
-                    ) { Text("⋯", color = Tok.tx2, fontSize = 20.sp, fontWeight = FontWeight.Bold) }
+                    ) { Text("⋯", color = AppicaTok.foreground, fontSize = 19.sp, fontWeight = FontWeight.Bold) }
                 }
             }
             Box(Modifier.weight(1f)) {
@@ -1563,7 +1589,7 @@ internal fun ChatScreen( // internal: rendered offscreen by ShowcaseRender (mark
             if (questionAsk != null && cardOwnsInput) {
                 // composer yields while the card's field has the keyboard
             } else if (repo.observing.value) {
-                Row(Modifier.fillMaxWidth().background(Tok.surface).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxWidth().background(AppicaTok.surface).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(stringResource(Res.string.observing_notice), color = Tok.tx2, fontSize = 13.sp, modifier = Modifier.weight(1f))
                     Button({ repo.takeOver() }) { Text(stringResource(Res.string.continue_here)) }
                 }
@@ -1591,7 +1617,10 @@ internal fun ChatScreen( // internal: rendered offscreen by ShowcaseRender (mark
                 val atFileMatches = remember(atListing, atToken, atDir, atLeaf) {
                     if (atToken == null || atListing?.subPath != atDir) emptyList() else atMatches(atListing.entries, atLeaf)
                 }
-                Column(Modifier.fillMaxWidth().background(Tok.surface)) {
+                Column(
+                    Modifier.fillMaxWidth().background(AppicaTok.background)
+                        .border(width = 1.dp, color = AppicaTok.borderMuted),
+                ) {
                     LimitResetBanner(repo) // usage-limit hit → one-tap "auto-continue after reset" (issue #137)
                     BackgroundJobsStrip(repo.backgroundJobs) { showBgJobs = true } // ≥1 running bg task → tap to expand
                     val capturing = voiceState is VoiceState.Recording || voiceState is VoiceState.Transcribing
@@ -1726,7 +1755,7 @@ internal fun ChatScreen( // internal: rendered offscreen by ShowcaseRender (mark
                                     // design: file-attach.jsx) — landing must finish before the @-refs exist
                                     uploadsBusy -> {
                                         Box(
-                                            Modifier.size(44.dp).clip(CircleShape).background(Tok.base).border(1.dp, Tok.hair, CircleShape),
+                                            Modifier.size(44.dp).clip(CircleShape).background(AppicaTok.base).border(1.dp, AppicaTok.hair, CircleShape),
                                             contentAlignment = Alignment.Center,
                                         ) {
                                             SpinnerRing(30.dp, 2.dp)
@@ -1748,7 +1777,7 @@ internal fun ChatScreen( // internal: rendered offscreen by ShowcaseRender (mark
                                             // long-press → schedule this message for later (issue #137). Text-only:
                                             // images/files can't ride a schedule (nothing is uploaded at fire time).
                                             onLongClick = { if (composer.text.isNotBlank()) showScheduleSheet = true },
-                                        ) { Icon(SendArrowIcon, sendLabel, tint = Tok.base, modifier = Modifier.size(18.dp)) }
+                                        ) { Icon(SendArrowIcon, sendLabel, tint = AppicaTok.base, modifier = Modifier.size(18.dp)) }
                                     }
                                     // generating with an empty composer -> the slot is Stop (interrupts the turn, session stays)
                                     repo.streaming.value -> StopButton { repo.cancelTurn() }
@@ -1827,7 +1856,7 @@ internal fun ChatScreen( // internal: rendered offscreen by ShowcaseRender (mark
 /** The "/" autocomplete panel above the composer: tap a row to fill the input with the command. */
 @Composable
 private fun SlashCommandMenu(commands: List<SlashCommand>, onPick: (SlashCommand) -> Unit) {
-    LazyColumn(Modifier.fillMaxWidth().heightIn(max = 240.dp).background(Tok.raised).padding(vertical = 4.dp)) {
+    LazyColumn(Modifier.fillMaxWidth().heightIn(max = 240.dp).background(AppicaTok.raised).padding(vertical = 4.dp)) {
         items(commands) { cmd ->
             Column(Modifier.fillMaxWidth().clickable { onPick(cmd) }.padding(horizontal = 16.dp, vertical = 8.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1870,7 +1899,7 @@ private fun FileCompletionMenu(
     onView: ((dev.ccpocket.protocol.PathEntry) -> Unit)? = null,
     onPick: (dev.ccpocket.protocol.PathEntry) -> Unit,
 ) {
-    Column(Modifier.fillMaxWidth().background(Tok.raised)) {
+    Column(Modifier.fillMaxWidth().background(AppicaTok.raised)) {
         Text(
             "@ " + dir.ifEmpty { "." },
             color = Tok.muted, fontFamily = FontFamily.Monospace, fontSize = 11.sp,
@@ -1921,10 +1950,12 @@ private fun MessageItem(
     when (m) {
         // accent-rail user turn (design: User Turn Styles.html, direction B) — the terracotta
         // rail + warm tint mark "what I said" as a quote; no label, assistant flow untouched
-        is ChatItem.User -> Row(
-            Modifier.fillMaxWidth().height(IntrinsicSize.Min)
-                .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 10.dp, bottomEnd = 10.dp, bottomStart = 4.dp))
-                .background(Tok.accent.copy(alpha = 0.05f)),
+        is ChatItem.User -> Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+        Row(
+            Modifier.fillMaxWidth(0.92f).height(IntrinsicSize.Min)
+                .clip(RoundedCornerShape(AppicaMetrics.radiusSm))
+                .background(AppicaTok.backgroundSubtle)
+                .border(1.dp, AppicaTok.border, RoundedCornerShape(AppicaMetrics.radiusSm)),
         ) {
             Box(Modifier.fillMaxHeight().width(2.dp).clip(RoundedCornerShape(2.dp)).background(Tok.accent.copy(alpha = 0.6f)))
             Column(
@@ -1949,6 +1980,7 @@ private fun MessageItem(
                 }
             }
         }
+        }
         is ChatItem.Assistant -> Column {
             SelectionContainer { MarkdownText(m.text, Tok.tx) } // drag-select any span to copy
             if (m.text.isNotBlank()) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
@@ -1970,8 +2002,10 @@ private fun MessageItem(
             val opener = LocalPathOpener.current
             val openablePath = m.tool in TOOL_FILE_PATH_TOOLS && opener != null && looksLikePath(m.preview)
             Column(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(Tok.raised)
-                    .clickable { expanded = !expanded }.padding(8.dp),
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(AppicaMetrics.radiusSm))
+                    .background(AppicaTok.backgroundSubtle)
+                    .border(1.dp, AppicaTok.border, RoundedCornerShape(AppicaMetrics.radiusSm))
+                    .clickable { expanded = !expanded }.padding(10.dp),
             ) {
                 Text(if (isPlan) "⚙ Plan" else "⚙ ${m.tool}", color = Tok.accent, fontFamily = FontFamily.Monospace, fontSize = 12.sp)
                 if (m.preview.isNotBlank()) {
@@ -2114,7 +2148,7 @@ private fun ThinkingRow(m: ChatItem.Thinking) {
         }
         if (expanded && m.text.isNotBlank()) {
             Row(Modifier.height(IntrinsicSize.Min).padding(start = 5.dp, top = 2.dp)) {
-                Box(Modifier.width(1.dp).fillMaxHeight().background(Tok.hair))
+                Box(Modifier.width(1.dp).fillMaxHeight().background(AppicaTok.hair))
                 Text(
                     m.text, color = Tok.muted, fontSize = 12.5.sp, fontStyle = FontStyle.Italic, lineHeight = 18.sp,
                     modifier = Modifier.padding(start = 13.dp),
@@ -2143,7 +2177,7 @@ internal fun PulseDot(color: Color, size: Dp = 6.dp) {
 private fun JumpToLatestPill(modifier: Modifier, onClick: () -> Unit) {
     val shape = RoundedCornerShape(999.dp)
     Row(
-        modifier.shadow(6.dp, shape).clip(shape).background(Tok.raised).border(1.dp, Tok.hair, shape)
+        modifier.shadow(6.dp, shape).clip(shape).background(AppicaTok.raised).border(1.dp, AppicaTok.hair, shape)
             .clickable(onClick = onClick).padding(horizontal = 14.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),

@@ -111,25 +111,22 @@ fun UsageScreen(repo: PocketRepository, onBack: () -> Unit) {
     val connected = repo.phase.value == ConnPhase.Ready
 
     BackNavHost(onBack = onBack) {
-        Column(Modifier.fillMaxSize().background(Tok.base)) {
-            // header
-            Column(Modifier.fillMaxWidth().background(Tok.base)) {
-                Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 12.dp, top = 14.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    BackTextButton(onBack)
-                    Text(stringResource(Res.string.usage_title), color = Tok.tx, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.weight(1f))
-                    Row(Modifier.clip(RoundedCornerShape(999.dp)).background(Tok.surface).border(1.dp, Tok.hair, RoundedCornerShape(999.dp)).padding(2.dp)) {
+        Column(Modifier.fillMaxSize().background(AppicaTok.base)) {
+            SettingsTopBar(
+                title = stringResource(Res.string.usage_title),
+                onBack = onBack,
+                trailing = {
+                    Row(Modifier.clip(RoundedCornerShape(999.dp)).background(AppicaTok.surface).border(1.dp, AppicaTok.hair, RoundedCornerShape(999.dp)).padding(2.dp)) {
                         for ((label, d) in listOf("Today" to 1, "7d" to 7, "30d" to 30)) {
                             val on = d == days
                             Box(
-                                Modifier.clip(RoundedCornerShape(999.dp)).then(if (on) Modifier.background(Tok.accent) else Modifier)
+                                Modifier.clip(RoundedCornerShape(999.dp)).then(if (on) Modifier.background(AppicaTok.primary) else Modifier)
                                     .clickable { days = d }.padding(horizontal = 10.dp, vertical = 4.dp),
-                            ) { Text(label, color = if (on) Tok.base else Tok.tx2, fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold) }
+                            ) { Text(label, color = if (on) AppicaTok.primaryForeground else AppicaTok.foreground, fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold) }
                         }
                     }
-                }
-                Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
-            }
+                },
+            )
 
             when {
                 u != null && (u.codexRateLimits.isNotEmpty() || u.tokensToday > 0 || u.models.isNotEmpty() || u.days.any { it.tokens > 0 }) -> Populated(u)
@@ -143,7 +140,7 @@ fun UsageScreen(repo: PocketRepository, onBack: () -> Unit) {
 
 @Composable
 private fun Populated(u: Usage) {
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 20.dp)) {
         if (u.codexRateLimits.isNotEmpty()) {
             CodexLimitsCard(u.codexRateLimits)
             Spacer(Modifier.height(10.dp))
@@ -218,8 +215,8 @@ private fun Populated(u: Usage) {
 @Composable
 private fun CodexLimitsCard(limits: List<CodexRateLimit>) {
     Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Tok.surface)
-            .border(1.dp, Tok.hair, RoundedCornerShape(14.dp)).padding(16.dp),
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(AppicaMetrics.radius)).background(AppicaTok.background)
+            .border(1.dp, AppicaTok.border, RoundedCornerShape(AppicaMetrics.radius)).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         Text(stringResource(Res.string.usage_codex_limit), color = Tok.tx, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
@@ -245,7 +242,7 @@ private fun CodexLimitsCard(limits: List<CodexRateLimit>) {
                         fontWeight = FontWeight.SemiBold,
                     )
                 }
-                Box(Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(99.dp)).background(Tok.raised)) {
+                Box(Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(99.dp)).background(AppicaTok.raised)) {
                     Box(
                         Modifier.fillMaxWidth((percent / 100.0).toFloat()).fillMaxHeight()
                             .clip(RoundedCornerShape(99.dp))
@@ -273,7 +270,8 @@ private fun CodexLimitsCard(limits: List<CodexRateLimit>) {
 @Composable
 private fun HeroCard(tokens: Long, scope: String, period: String, deltaPct: Int?, zeroToday: Boolean, span: Int) {
     Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Tok.surface).border(1.dp, Tok.hair, RoundedCornerShape(14.dp))
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(AppicaMetrics.radius)).background(AppicaTok.background)
+            .border(1.dp, AppicaTok.border, RoundedCornerShape(AppicaMetrics.radius))
             .padding(horizontal = 16.dp, vertical = 15.dp),
         verticalArrangement = Arrangement.spacedBy(5.dp),
     ) {
@@ -305,7 +303,7 @@ private fun HeroCard(tokens: Long, scope: String, period: String, deltaPct: Int?
 @Composable
 private fun StatCard(modifier: Modifier, label: String, value: String?, arcPct: Int? = null) {
     Column(
-        modifier.clip(RoundedCornerShape(14.dp)).background(Tok.surface).border(1.dp, Tok.hair, RoundedCornerShape(14.dp))
+        modifier.clip(RoundedCornerShape(14.dp)).background(AppicaTok.surface).border(1.dp, AppicaTok.hair, RoundedCornerShape(14.dp))
             .padding(horizontal = 15.dp, vertical = 13.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
@@ -355,7 +353,7 @@ private fun Arc(pct: Int) {
         val stroke = 3.5.dp.toPx()
         val inset = stroke / 2
         val sz = Size(size.width - stroke, size.height - stroke)
-        drawArc(Tok.raised, 0f, 360f, false, Offset(inset, inset), sz, style = Stroke(stroke))
+        drawArc(AppicaTok.raised, 0f, 360f, false, Offset(inset, inset), sz, style = Stroke(stroke))
         drawArc(Tok.accent, 0f, 360f * (pct.coerceIn(0, 100) / 100f), false, Offset(inset, inset), sz, style = Stroke(stroke, cap = StrokeCap.Round))
     }
 }
@@ -387,7 +385,7 @@ private fun Bars(days: List<UsageDay>, selected: Int? = null, onSelect: (Int?) -
             }
         }
     }
-    Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+    Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair))
 }
 
 /** Today's 24 hourly buckets. Same 120dp band as [Bars]; the peak hour is full accent, the rest faded; a 3%
@@ -416,7 +414,7 @@ private fun HourlyBars(hours: List<UsageDay>, selected: Int? = null, onSelect: (
             }
         }
     }
-    Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+    Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair))
 }
 
 /** 30d calendar heatmap (GitHub-contribution style): 7 columns Mon→Sun, oldest week on top, today on the
@@ -444,13 +442,13 @@ private fun Heatmap(days: List<UsageDay>, selected: Int? = null, onSelect: (Int?
                     val idx = r * 7 + c - lead
                     val d = days.getOrNull(idx)
                     val bg = when {
-                        d == null -> Tok.raised.copy(alpha = 0.4f) // out-of-window filler
-                        d.tokens == 0L -> Tok.raised
+                        d == null -> AppicaTok.raised.copy(alpha = 0.4f) // out-of-window filler
+                        d.tokens == 0L -> AppicaTok.raised
                         else -> Tok.accent.copy(alpha = alphas[quartile(d.tokens, max) - 1])
                     }
                     val ring = when {
                         idx == selected -> Modifier.border(1.5.dp, Tok.tx2, RoundedCornerShape(3.dp))
-                        idx == todayIdx -> Modifier.border(1.dp, Tok.hair, RoundedCornerShape(3.dp))
+                        idx == todayIdx -> Modifier.border(1.dp, AppicaTok.hair, RoundedCornerShape(3.dp))
                         else -> Modifier
                     }
                     Box(
@@ -465,7 +463,7 @@ private fun Heatmap(days: List<UsageDay>, selected: Int? = null, onSelect: (Int?
             Text(stringResource(Res.string.usage_less), color = Tok.muted, fontSize = 10.sp)
             Spacer(Modifier.width(5.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                Box(Modifier.size(9.dp).clip(RoundedCornerShape(2.dp)).background(Tok.raised))
+                Box(Modifier.size(9.dp).clip(RoundedCornerShape(2.dp)).background(AppicaTok.raised))
                 for (a in alphas) Box(Modifier.size(9.dp).clip(RoundedCornerShape(2.dp)).background(Tok.accent.copy(alpha = a)))
             }
             Spacer(Modifier.width(5.dp))
@@ -547,7 +545,7 @@ private fun ModelRow(m: UsageModel, max: Long) {
             Text(formatTokens(m.tokens), color = Tok.tx2, fontFamily = FontFamily.Monospace, fontSize = 12.sp)
         }
         Spacer(Modifier.height(7.dp))
-        Box(Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(999.dp)).background(Tok.raised)) {
+        Box(Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(999.dp)).background(AppicaTok.raised)) {
             Box(Modifier.fillMaxWidth((m.tokens.toFloat() / max).coerceIn(0f, 1f)).height(4.dp).clip(RoundedCornerShape(999.dp)).background(color))
         }
     }
@@ -584,7 +582,7 @@ private fun Empty(span: Int) {
 private fun Offline() {
     Column(Modifier.fillMaxSize().padding(16.dp)) {
         Row(
-            Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Tok.surface).border(1.dp, Tok.hair, RoundedCornerShape(10.dp)).padding(horizontal = 12.dp, vertical = 10.dp),
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(AppicaTok.surface).border(1.dp, AppicaTok.hair, RoundedCornerShape(10.dp)).padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) { Text(stringResource(Res.string.usage_offline), color = Tok.tx2, fontSize = 12.5.sp) }
     }

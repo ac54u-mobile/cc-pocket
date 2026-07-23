@@ -56,8 +56,8 @@ import org.jetbrains.compose.resources.stringResource
 
 /** Density + motion tokens for Settings surfaces (phone Hub + detail panes). */
 object SettingsMetrics {
-    val rowMin = 52.dp
-    val rowPadH = 14.dp
+    val rowMin = 64.dp
+    val rowPadH = 16.dp
     val rowPadV = 12.dp
     val rowPadVCompact = 10.dp
     val sectionTop = 20.dp
@@ -132,15 +132,15 @@ fun SettingsTopBar(title: String, onBack: () -> Unit, trailing: (@Composable () 
         Modifier
             .fillMaxWidth()
             .background(Tok.surface)
-            .padding(horizontal = 6.dp, vertical = 6.dp),
+            .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (showBtn) {
             Box(
                 Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(Tok.raised)
+                    .size(38.dp)
+                    .clip(RoundedCornerShape(AppicaMetrics.radiusXs))
+                    .border(1.dp, Tok.border, RoundedCornerShape(AppicaMetrics.radiusXs))
                     .semantics { contentDescription = backLabel }
                     .clickable {
                         haptics.tick()
@@ -161,9 +161,9 @@ fun SettingsTopBar(title: String, onBack: () -> Unit, trailing: (@Composable () 
         Text(
             title,
             color = Tok.tx,
-            fontSize = 18.sp,
+            fontSize = 15.sp,
             fontWeight = FontWeight.SemiBold,
-            letterSpacing = (-0.1).sp,
+            letterSpacing = 0.sp,
             modifier = Modifier.weight(1f).padding(start = 5.dp),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -211,21 +211,21 @@ fun SettingsNavRow(
         if (icon != null) {
             Box(
                 Modifier
-                    .size(32.dp)
-                    .clip(RoundedCornerShape(9.dp))
+                    .size(38.dp)
+                    .clip(RoundedCornerShape(AppicaMetrics.radiusXs))
                     .background(iconTint.copy(alpha = 0.12f))
-                    .border(1.dp, iconTint.copy(alpha = 0.10f), RoundedCornerShape(9.dp)),
+                    .border(1.dp, iconTint.copy(alpha = 0.10f), RoundedCornerShape(AppicaMetrics.radiusXs)),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(icon, null, tint = iconTint, modifier = Modifier.size(17.dp))
+                Icon(icon, null, tint = iconTint, modifier = Modifier.size(19.dp))
             }
-            Spacer(Modifier.width(11.dp))
+            Spacer(Modifier.width(13.dp))
         }
         Column(Modifier.weight(1f).padding(end = 10.dp)) {
             Text(
                 title,
                 color = if (danger) Tok.danger else Tok.tx,
-                fontSize = 14.5.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -234,9 +234,9 @@ fun SettingsNavRow(
                 Text(
                     subtitle,
                     color = Tok.muted,
-                    fontSize = 11.5.sp,
-                    lineHeight = 15.sp,
-                    modifier = Modifier.padding(top = 2.dp),
+                    fontSize = 12.sp,
+                    lineHeight = 17.sp,
+                    modifier = Modifier.padding(top = 3.dp),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -246,12 +246,7 @@ fun SettingsNavRow(
             Text(trailing, color = Tok.tx2, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Spacer(Modifier.width(6.dp))
         }
-        Box(
-            Modifier.size(24.dp).clip(RoundedCornerShape(8.dp)).background(Tok.raised),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(Icons.Rounded.ChevronRight, null, tint = Tok.tx2, modifier = Modifier.size(15.dp))
-        }
+        Icon(Icons.Rounded.ChevronRight, null, tint = Tok.foregroundSubtle, modifier = Modifier.size(18.dp))
     }
 }
 

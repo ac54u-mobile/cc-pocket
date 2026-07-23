@@ -157,7 +157,7 @@ internal fun PhaseBar(statuses: List<WorkflowPhaseStatus>, modifier: Modifier = 
                 )
                 WorkflowPhaseStatus.PENDING -> Box(
                     Modifier.weight(1f).height(3.dp), contentAlignment = Alignment.Center,
-                ) { Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair)) }
+                ) { Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair)) }
             }
         }
     }
@@ -209,7 +209,7 @@ internal fun WorkflowCard(run: WorkflowRun, dense: Boolean = false, onOpen: () -
     val shape = RoundedCornerShape(if (dense) 11.dp else 14.dp)
 
     Column(
-        Modifier.fillMaxWidth().clip(shape).background(Tok.surface).border(1.dp, Tok.hair, shape)
+        Modifier.fillMaxWidth().clip(shape).background(AppicaTok.background).border(1.dp, AppicaTok.border, shape)
             .clickable(onClick = onOpen)
             .padding(
                 start = if (dense) 11.dp else 13.dp, end = if (dense) 11.dp else 13.dp,

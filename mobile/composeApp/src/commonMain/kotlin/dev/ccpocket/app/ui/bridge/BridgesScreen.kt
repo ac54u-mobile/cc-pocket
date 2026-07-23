@@ -42,6 +42,7 @@ import dev.ccpocket.app.data.PocketRepository
 import dev.ccpocket.app.resources.*
 import dev.ccpocket.app.theme.Tok
 import dev.ccpocket.app.ui.BackNavHost
+import dev.ccpocket.app.ui.AppicaTok
 import dev.ccpocket.app.ui.PocketSheet
 import dev.ccpocket.app.ui.share.ShareOutlineButton
 import dev.ccpocket.app.ui.share.ShareTopBar
@@ -67,7 +68,7 @@ fun BridgesScreen(repo: PocketRepository, onBack: () -> Unit) {
     var editTarget by remember { mutableStateOf<BridgeInfo?>(null) }
 
     BackNavHost(onBack = onBack) {
-        Column(Modifier.fillMaxSize().background(Tok.base)) {
+        Column(Modifier.fillMaxSize().background(AppicaTok.base)) {
             ShareTopBar(stringResource(Res.string.bridges_title), onBack)
             // the repo surfaces daemon-side refusals AND the merge-loss guard verbatim — on the phone this is
             // the only place they can appear, so it sits above the cards, impossible to scroll past unread
@@ -135,8 +136,8 @@ private fun BridgeCard(b: BridgeInfo, repo: PocketRepository, onRevoke: () -> Un
     var expanded by remember { mutableStateOf(false) }
     val runner = b.runner
     Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Tok.surface)
-            .border(1.dp, Tok.hair, RoundedCornerShape(16.dp))
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(AppicaTok.surface)
+            .border(1.dp, AppicaTok.hair, RoundedCornerShape(16.dp))
             .clickable { expanded = !expanded }.padding(15.dp),
     ) {
         // ── name + revoke ──
@@ -155,7 +156,7 @@ private fun BridgeCard(b: BridgeInfo, repo: PocketRepository, onRevoke: () -> Un
             }
         }
         Spacer(Modifier.height(12.dp))
-        Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+        Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair))
         Spacer(Modifier.height(12.dp))
 
         // ── status line + managed-runner controls ──
@@ -204,7 +205,7 @@ private fun BridgeCard(b: BridgeInfo, repo: PocketRepository, onRevoke: () -> Un
                 if (runner.logTail.isNotEmpty()) {
                     Spacer(Modifier.height(12.dp))
                     DetailLabel(stringResource(Res.string.bridge_adapter_log))
-                    Box(Modifier.fillMaxWidth().heightIn(max = 180.dp).clip(RoundedCornerShape(8.dp)).background(Tok.base).padding(9.dp)) {
+                    Box(Modifier.fillMaxWidth().heightIn(max = 180.dp).clip(RoundedCornerShape(8.dp)).background(AppicaTok.base).padding(9.dp)) {
                         Column(Modifier.verticalScroll(rememberScrollState())) {
                             // horizontal scroll: one long adapter line must not wrap into an unreadable block
                             Row(Modifier.horizontalScroll(rememberScrollState())) {
@@ -247,7 +248,7 @@ private fun RevokeButton(onClick: () -> Unit) {
 @Composable
 private fun EmptyBridges() {
     Column(Modifier.fillMaxSize().padding(horizontal = 40.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-        Box(Modifier.size(72.dp).clip(RoundedCornerShape(20.dp)).background(Tok.surface).border(1.dp, Tok.hair, RoundedCornerShape(20.dp)), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(72.dp).clip(RoundedCornerShape(20.dp)).background(AppicaTok.surface).border(1.dp, AppicaTok.hair, RoundedCornerShape(20.dp)), contentAlignment = Alignment.Center) {
             Icon(Icons.Outlined.SmartToy, null, tint = Tok.muted, modifier = Modifier.size(32.dp))
         }
         Spacer(Modifier.height(22.dp))
@@ -304,7 +305,7 @@ private fun EditBridgeSheet(
                     stringResource(Res.string.bridge_edit_save),
                     color = if (dirty) Tok.tx else Tok.muted, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center,
                     modifier = Modifier.weight(1.3f).clip(RoundedCornerShape(14.dp))
-                        .background(if (dirty) Tok.accent else Tok.surface)
+                        .background(if (dirty) Tok.accent else AppicaTok.surface)
                         .clickable(enabled = dirty) { onSave(appId, appSecret, adminId) }
                         .padding(vertical = 15.dp),
                 )
@@ -316,8 +317,8 @@ private fun EditBridgeSheet(
 @Composable
 private fun EditField(value: String, onChange: (String) -> Unit, placeholder: String, secret: Boolean = false) {
     Box(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Tok.surface)
-            .border(1.dp, Tok.hair, RoundedCornerShape(12.dp)).padding(horizontal = 13.dp, vertical = 12.dp),
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(AppicaTok.surface)
+            .border(1.dp, AppicaTok.hair, RoundedCornerShape(12.dp)).padding(horizontal = 13.dp, vertical = 12.dp),
     ) {
         if (value.isEmpty()) Text(placeholder, color = Tok.muted, fontSize = 12.5.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
         androidx.compose.foundation.text.BasicTextField(

@@ -1,6 +1,7 @@
 package dev.ccpocket.app.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -170,7 +171,7 @@ internal fun DirectoryPickerSheet(
         Column(Modifier.padding(horizontal = 18.dp, vertical = 4.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    stringResource(Res.string.dir_picker_title), color = Tok.tx, fontSize = 18.sp,
+                    stringResource(Res.string.dir_picker_title), color = AppicaTok.foregroundIntense, fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f),
                 )
                 // escape hatch to the manual sheet: off-home paths (other drives, /opt) stay reachable
@@ -238,7 +239,7 @@ internal fun DirectoryPickerSheet(
                 SheetButton(
                     stringResource(Res.string.dir_picker_use_here),
                     Modifier.weight(1f),
-                    bg = Tok.accent, fg = Tok.base,
+                    bg = Tok.accent, fg = AppicaTok.base,
                 ) { onStart(browseWorkdirOf(subPath)) }
             }
         }
@@ -255,7 +256,8 @@ private fun PickerLabel(text: String) = Text(
 @Composable
 private fun BrowseDirRow(name: String, isProject: Boolean, onClick: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).clickable(onClick = onClick)
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(AppicaMetrics.radiusSm)).background(AppicaTok.background)
+            .border(1.dp, AppicaTok.border, RoundedCornerShape(AppicaMetrics.radiusSm)).clickable(onClick = onClick)
             .padding(horizontal = 4.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -274,8 +276,8 @@ private fun BrowseDirRow(name: String, isProject: Boolean, onClick: () -> Unit) 
 @Composable
 private fun SkeletonRow() {
     Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(18.dp).clip(RoundedCornerShape(5.dp)).background(Tok.surface))
+        Box(Modifier.size(18.dp).clip(RoundedCornerShape(5.dp)).background(AppicaTok.surface))
         Spacer(Modifier.width(10.dp))
-        Box(Modifier.height(13.dp).fillMaxWidth(0.45f).clip(RoundedCornerShape(5.dp)).background(Tok.surface))
+        Box(Modifier.height(13.dp).fillMaxWidth(0.45f).clip(RoundedCornerShape(5.dp)).background(AppicaTok.surface))
     }
 }

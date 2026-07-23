@@ -51,7 +51,7 @@ fun LoadEarlierRow(fading: Boolean, fontFamily: FontFamily? = null) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         CircularProgressIndicator(
-            Modifier.size(14.dp), color = Tok.accent, trackColor = Tok.hair, strokeWidth = 2.dp,
+            Modifier.size(14.dp), color = Tok.accent, trackColor = AppicaTok.hair, strokeWidth = 2.dp,
         )
         Text(
             stringResource(Res.string.history_loading_earlier),
@@ -88,13 +88,13 @@ fun EarlierMessagesSeam(gen: Int, monoFamily: FontFamily = FontFamily.Monospace)
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Box(Modifier.weight(1f).height(1.dp).background(Tok.hair))
+            Box(Modifier.weight(1f).height(1.dp).background(AppicaTok.hair))
             Text(
                 stringResource(Res.string.history_earlier_seam),
                 color = Tok.muted, fontFamily = monoFamily, fontSize = 10.5.sp,
                 letterSpacing = 0.6.sp, maxLines = 1,
             )
-            Box(Modifier.weight(1f).height(1.dp).background(Tok.hair))
+            Box(Modifier.weight(1f).height(1.dp).background(AppicaTok.hair))
         }
     }
 }

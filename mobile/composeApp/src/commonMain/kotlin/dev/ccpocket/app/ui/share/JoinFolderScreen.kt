@@ -44,6 +44,7 @@ import dev.ccpocket.app.pairing.decodeShareInvite
 import dev.ccpocket.app.resources.*
 import dev.ccpocket.app.theme.Tok
 import dev.ccpocket.app.ui.BackNavHost
+import dev.ccpocket.app.ui.AppicaTok
 import dev.ccpocket.protocol.ShareInvite
 import org.jetbrains.compose.resources.stringResource
 import qrscanner.CameraLens
@@ -85,7 +86,7 @@ private fun RedeemScreen(onBack: () -> Unit, onInvite: (ShareInvite) -> Unit) {
         if (inv != null) onInvite(inv) else error = true
     }
 
-    Column(Modifier.fillMaxSize().background(Tok.base)) {
+    Column(Modifier.fillMaxSize().background(AppicaTok.base)) {
         ShareTopBar(stringResource(Res.string.join_title), onBack, closeGlyph = true)
         Column(
             Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 22.dp).padding(top = 12.dp, bottom = 40.dp),
@@ -100,15 +101,15 @@ private fun RedeemScreen(onBack: () -> Unit, onInvite: (ShareInvite) -> Unit) {
 
             Spacer(Modifier.height(24.dp))
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Box(Modifier.weight(1f).height(1.dp).background(Tok.hair))
+                Box(Modifier.weight(1f).height(1.dp).background(AppicaTok.hair))
                 Text(stringResource(Res.string.join_or_paste), color = Tok.muted, fontSize = 11.sp)
-                Box(Modifier.weight(1f).height(1.dp).background(Tok.hair))
+                Box(Modifier.weight(1f).height(1.dp).background(AppicaTok.hair))
             }
 
             Spacer(Modifier.height(16.dp))
             Box(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Tok.surface)
-                    .border(1.dp, if (error) Tok.danger else Tok.hair, RoundedCornerShape(12.dp)).padding(horizontal = 14.dp, vertical = 14.dp),
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(AppicaTok.surface)
+                    .border(1.dp, if (error) Tok.danger else AppicaTok.hair, RoundedCornerShape(12.dp)).padding(horizontal = 14.dp, vertical = 14.dp),
             ) {
                 if (pasted.isEmpty()) Text(stringResource(Res.string.join_paste_placeholder), color = Tok.muted, fontSize = 13.sp)
                 BasicTextField(
@@ -138,7 +139,7 @@ private fun ScanBox(onScanned: (String) -> Unit) {
     Box(
         Modifier.size(246.dp).clip(RoundedCornerShape(22.dp))
             .background(Brush.radialGradient(listOf(Color(0xFF15171A), Color(0xFF0A0B0C))))
-            .border(1.dp, Tok.hair, RoundedCornerShape(22.dp)),
+            .border(1.dp, AppicaTok.hair, RoundedCornerShape(22.dp)),
     ) {
         QrScanner(
             modifier = Modifier.fillMaxSize(),
@@ -166,7 +167,7 @@ private fun ScanBox(onScanned: (String) -> Unit) {
 
 @Composable
 private fun AcceptPreview(invite: ShareInvite, onJoin: () -> Unit, onDecline: () -> Unit) {
-    Column(Modifier.fillMaxSize().background(Tok.base)) {
+    Column(Modifier.fillMaxSize().background(AppicaTok.base)) {
         ShareTopBar(stringResource(Res.string.join_review_title), onDecline)
         Column(
             Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(top = 20.dp, bottom = 30.dp),
@@ -183,7 +184,7 @@ private fun AcceptPreview(invite: ShareInvite, onJoin: () -> Unit, onDecline: ()
                     val left = expiryLeft(invite.expiresAt, epochMillis())
                     Text(
                         expiryLeftText(left), color = Tok.tx2, fontSize = 11.5.sp,
-                        modifier = Modifier.clip(RoundedCornerShape(20.dp)).background(Tok.surface).border(1.dp, Tok.hair, RoundedCornerShape(20.dp)).padding(horizontal = 11.dp, vertical = 5.dp),
+                        modifier = Modifier.clip(RoundedCornerShape(20.dp)).background(AppicaTok.surface).border(1.dp, AppicaTok.hair, RoundedCornerShape(20.dp)).padding(horizontal = 11.dp, vertical = 5.dp),
                     )
                 }
             }

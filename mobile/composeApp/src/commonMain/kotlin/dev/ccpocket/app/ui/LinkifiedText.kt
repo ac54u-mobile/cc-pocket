@@ -79,7 +79,7 @@ private fun ActSheet(item: LinkEntity, copyL: String, openL: String, hintL: Stri
             if (item.kind == EntityKind.COPY && isRel(item.display))
                 Text(hintL, color = Tok.muted, fontSize = 12.sp, modifier = Modifier.padding(top = 6.dp))
         }
-        Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+        Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair))
         Row(
             Modifier.fillMaxWidth().clickable { onTake() }.padding(horizontal = 20.dp, vertical = 15.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp),
@@ -103,8 +103,8 @@ private fun Bubble(value: String, done: Boolean, doneLabel: String, onAct: () ->
     val hov by src.collectIsHoveredAsState()
     LaunchedEffect(hov) { onHover(hov) }
     Row(
-        Modifier.hoverable(src).widthIn(max = 470.dp).background(Tok.raised, RoundedCornerShape(8.dp))
-            .border(1.dp, Tok.hair, RoundedCornerShape(8.dp)).padding(start = 11.dp, top = 6.dp, end = 7.dp, bottom = 6.dp),
+        Modifier.hoverable(src).widthIn(max = 470.dp).background(AppicaTok.raised, RoundedCornerShape(8.dp))
+            .border(1.dp, AppicaTok.hair, RoundedCornerShape(8.dp)).padding(start = 11.dp, top = 6.dp, end = 7.dp, bottom = 6.dp),
         verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(value, color = Tok.tx, fontFamily = FontFamily.Monospace, fontSize = 13.sp, modifier = Modifier.weight(1f, fill = false))
@@ -125,8 +125,8 @@ private fun Pill(label: String) {
     val gap = with(LocalDensity.current) { 64.dp.roundToPx() }
     Popup(popupPositionProvider = BottomPP(gap), properties = PopupProperties(focusable = false)) {
         Row(
-            Modifier.height(40.dp).background(Tok.raised, RoundedCornerShape(999.dp))
-                .border(1.dp, Tok.hair, RoundedCornerShape(999.dp)).padding(horizontal = 16.dp),
+            Modifier.height(40.dp).background(AppicaTok.raised, RoundedCornerShape(999.dp))
+                .border(1.dp, AppicaTok.hair, RoundedCornerShape(999.dp)).padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Icon(Icons.Rounded.Check, null, tint = Tok.ok, modifier = Modifier.size(16.dp))

@@ -230,7 +230,7 @@ fun ScheduleSendSheet(
             }
             // the staged message as a quote (left hairline rule), so what's being scheduled is unambiguous
             Row(Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 16.dp).height(IntrinsicSize.Min)) {
-                Box(Modifier.width(2.dp).fillMaxHeight().background(Tok.hair))
+                Box(Modifier.width(2.dp).fillMaxHeight().background(AppicaTok.hair))
                 Text(
                     text, color = Tok.tx2, fontSize = 13.5.sp, lineHeight = 20.sp,
                     maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 12.dp),
@@ -243,7 +243,7 @@ fun ScheduleSendSheet(
                     Box(
                         Modifier.weight(1f).height(44.dp).clip(RoundedCornerShape(11.dp))
                             .background(if (sel) Tok.accent.copy(alpha = 0.16f) else Color.Transparent)
-                            .border(1.dp, if (sel) Tok.accent else Tok.hair, RoundedCornerShape(11.dp))
+                            .border(1.dp, if (sel) Tok.accent else AppicaTok.hair, RoundedCornerShape(11.dp))
                             .clickable { picked = delta; customOpen = false },
                         contentAlignment = Alignment.Center,
                     ) {
@@ -256,7 +256,7 @@ fun ScheduleSendSheet(
             }
             // "Custom time…" row — expands into the inline day/hour/minute wheel (design A2)
             Column(Modifier.fillMaxWidth()) {
-                Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+                Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair))
                 Row(
                     Modifier.fillMaxWidth().heightIn(min = 52.dp).clickable { customOpen = !customOpen },
                     verticalAlignment = Alignment.CenterVertically,
@@ -300,7 +300,7 @@ fun ScheduleSendSheet(
 @Composable
 private fun ScheduleRepeatRow(daily: Boolean, resolvedHm: String, onToggle: (Boolean) -> Unit) {
     Column(Modifier.fillMaxWidth()) {
-        Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+        Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair))
         Row(
             Modifier.fillMaxWidth().heightIn(min = 56.dp).clickable { onToggle(!daily) },
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -319,7 +319,7 @@ private fun ScheduleRepeatRow(daily: Boolean, resolvedHm: String, onToggle: (Boo
             }
             ScheduleToggle(daily)
         }
-        Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+        Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair))
     }
 }
 
@@ -380,11 +380,11 @@ private fun CustomTimeWheel(wheel: CustomTimeState, startOfToday: Long) {
     }
     Box(
         Modifier.fillMaxWidth().padding(top = 4.dp, bottom = 2.dp).clip(RoundedCornerShape(12.dp))
-            .background(Tok.base).border(1.dp, Tok.hair, RoundedCornerShape(12.dp)).padding(horizontal = 8.dp),
+            .background(AppicaTok.base).border(1.dp, AppicaTok.hair, RoundedCornerShape(12.dp)).padding(horizontal = 8.dp),
     ) {
         Box(
             Modifier.align(Alignment.Center).fillMaxWidth().height(34.dp)
-                .clip(RoundedCornerShape(9.dp)).background(Tok.raised).border(1.dp, Tok.hair, RoundedCornerShape(9.dp)),
+                .clip(RoundedCornerShape(9.dp)).background(AppicaTok.raised).border(1.dp, AppicaTok.hair, RoundedCornerShape(9.dp)),
         )
         Row(Modifier.fillMaxWidth()) {
             WheelColumn(days, wheel.day, Modifier.weight(1.5f)) { wheel.dayIndex }
@@ -425,8 +425,8 @@ private fun WheelColumn(values: List<String>, state: LazyListState, modifier: Mo
 private fun ScheduleToggle(on: Boolean) {
     Box(
         Modifier.size(width = 46.dp, height = 28.dp).clip(CircleShape)
-            .background(if (on) Tok.accent else Tok.raised)
-            .border(1.dp, if (on) Tok.accent else Tok.hair, CircleShape),
+            .background(if (on) Tok.accent else AppicaTok.raised)
+            .border(1.dp, if (on) Tok.accent else AppicaTok.hair, CircleShape),
     ) {
         Box(
             Modifier.padding(start = if (on) 20.dp else 2.5.dp, top = 2.5.dp)
@@ -448,11 +448,11 @@ private fun ScheduleSheetFooter(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
     ) {
-        if (daily) Icon(RepeatGlyph, null, tint = Tok.base, modifier = Modifier.size(15.dp))
+        if (daily) Icon(RepeatGlyph, null, tint = AppicaTok.base, modifier = Modifier.size(15.dp))
         Text(
             if (daily) stringResource(Res.string.schedule_confirm_daily, resolvedHm)
             else stringResource(Res.string.schedule_confirm, if (customOpen) "$dayLabel, $resolvedHm" else resolvedHm),
-            color = Tok.base, fontSize = 16.sp, fontWeight = FontWeight.SemiBold,
+            color = AppicaTok.base, fontSize = 16.sp, fontWeight = FontWeight.SemiBold,
         )
     }
     Box(Modifier.fillMaxWidth().padding(top = 6.dp, bottom = 2.dp), contentAlignment = Alignment.Center) {
@@ -478,8 +478,8 @@ fun LimitResetBanner(repo: PocketRepository) {
     Row(
         Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 10.dp, bottom = 2.dp)
             .heightIn(min = 52.dp).clip(RoundedCornerShape(12.dp))
-            .background(if (confirmed != null) Tok.surface else Tok.warn.copy(alpha = 0.13f))
-            .border(1.dp, if (confirmed != null) Tok.hair else Tok.warn.copy(alpha = 0.33f), RoundedCornerShape(12.dp))
+            .background(if (confirmed != null) AppicaTok.surface else Tok.warn.copy(alpha = 0.13f))
+            .border(1.dp, if (confirmed != null) AppicaTok.hair else Tok.warn.copy(alpha = 0.33f), RoundedCornerShape(12.dp))
             .padding(start = 14.dp, end = 8.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(11.dp),
     ) {
@@ -502,7 +502,7 @@ private fun RowScope.LimitOfferContent(repo: PocketRepository, offer: PocketRepo
             .clickable { repo.scheduleAutoContinue() }.padding(horizontal = 13.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(stringResource(Res.string.limit_autocontinue), color = Tok.base, fontSize = 13.5.sp, fontWeight = FontWeight.SemiBold)
+        Text(stringResource(Res.string.limit_autocontinue), color = AppicaTok.base, fontSize = 13.5.sp, fontWeight = FontWeight.SemiBold)
     }
 }
 
@@ -527,25 +527,8 @@ fun ScheduleScreen(repo: PocketRepository, onBack: () -> Unit) {
     var now by remember { mutableStateOf(epochMillis()) }
     LaunchedEffect(Unit) { while (true) { delay(30_000); now = epochMillis() } }
     BackNavHost(onBack = onBack) {
-        Column(Modifier.fillMaxSize().background(Tok.base)) {
-            // nav (design TasksNav): accent back chevron + "Settings", centered title, hairline bottom rule
-            Box(Modifier.fillMaxWidth().height(48.dp)) {
-                if (showBackButton()) {
-                    Row(
-                        Modifier.align(Alignment.CenterStart).clip(RoundedCornerShape(8.dp)).clickable(onClick = onBack)
-                            .padding(start = 6.dp, end = 10.dp, top = 6.dp, bottom = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp),
-                    ) {
-                        Icon(ChevronLeftGlyph, null, tint = Tok.accent, modifier = Modifier.size(20.dp))
-                        Text(stringResource(Res.string.settings_title), color = Tok.accent, fontSize = 15.sp)
-                    }
-                }
-                Text(
-                    stringResource(Res.string.schedule_tasks_title), color = Tok.tx,
-                    fontSize = 16.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.align(Alignment.Center),
-                )
-            }
-            Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+        Column(Modifier.fillMaxSize().background(AppicaTok.base)) {
+            SettingsTopBar(stringResource(Res.string.schedule_tasks_title), onBack)
             repo.scheduleError.value?.let {
                 Text(it, color = Tok.danger, fontSize = 12.5.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
             }
@@ -601,8 +584,8 @@ private fun ScheduleEmptyState() {
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
     ) {
         Box(
-            Modifier.size(52.dp).clip(RoundedCornerShape(14.dp)).background(Tok.surface)
-                .border(1.dp, Tok.hair, RoundedCornerShape(14.dp)),
+            Modifier.size(52.dp).clip(RoundedCornerShape(14.dp)).background(AppicaTok.surface)
+                .border(1.dp, AppicaTok.hair, RoundedCornerShape(14.dp)),
             contentAlignment = Alignment.Center,
         ) { Icon(ClockGlyph, null, tint = Tok.muted, modifier = Modifier.size(24.dp)) }
         Text(
@@ -622,7 +605,7 @@ private fun ScheduleEmptyState() {
 private fun ScheduleRow(s: ScheduleInfo, now: Long, onCancel: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().height(IntrinsicSize.Min).clip(RoundedCornerShape(14.dp))
-            .background(Tok.surface).border(1.dp, Tok.hair, RoundedCornerShape(14.dp))
+            .background(AppicaTok.surface).border(1.dp, AppicaTok.hair, RoundedCornerShape(14.dp))
             .padding(horizontal = 15.dp, vertical = 14.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {

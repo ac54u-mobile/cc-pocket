@@ -1,5 +1,7 @@
 package dev.ccpocket.app.ui.share
 
+import dev.ccpocket.app.ui.AppicaTok
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -44,12 +46,12 @@ import org.jetbrains.compose.resources.stringResource
  *  has expired" — the precise distinction the daemon's ShareEnded notice carries (#115 follow-up). */
 @Composable
 fun GuestEndedCard(ownerLabel: String?, ending: GuestEnding = GuestEnding.REVOKED, onRemove: () -> Unit, onAskNew: () -> Unit) {
-    Column(Modifier.fillMaxSize().background(Tok.base).padding(horizontal = 32.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+    Column(Modifier.fillMaxSize().background(AppicaTok.base).padding(horizontal = 32.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
         Column(
-            Modifier.fillMaxWidth().widthIn(max = 340.dp).clip(RoundedCornerShape(20.dp)).background(Tok.surface).border(1.dp, Tok.hair, RoundedCornerShape(20.dp)).padding(horizontal = 24.dp, vertical = 30.dp),
+            Modifier.fillMaxWidth().widthIn(max = 340.dp).clip(RoundedCornerShape(20.dp)).background(AppicaTok.surface).border(1.dp, AppicaTok.hair, RoundedCornerShape(20.dp)).padding(horizontal = 24.dp, vertical = 30.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Box(Modifier.size(64.dp).clip(RoundedCornerShape(18.dp)).background(Tok.base).border(1.dp, Tok.hair, RoundedCornerShape(18.dp)), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(64.dp).clip(RoundedCornerShape(18.dp)).background(AppicaTok.base).border(1.dp, AppicaTok.hair, RoundedCornerShape(18.dp)), contentAlignment = Alignment.Center) {
                 Text("🚫", fontSize = 26.sp)
             }
             Spacer(Modifier.height(18.dp))
@@ -92,7 +94,7 @@ fun ShareRevokedBanner(modifier: Modifier = Modifier) {
 @Composable
 fun EndedSharedRow(name: String, revoked: Boolean, onClick: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).border(1.dp, Tok.hair, RoundedCornerShape(14.dp)).clickable(onClick = onClick).padding(15.dp),
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).border(1.dp, AppicaTok.hair, RoundedCornerShape(14.dp)).clickable(onClick = onClick).padding(15.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Box(Modifier.size(9.dp).clip(RoundedCornerShape(50)).background(Tok.muted))
@@ -103,8 +105,8 @@ fun EndedSharedRow(name: String, revoked: Boolean, onClick: () -> Unit) {
                     stringResource(if (revoked) Res.string.share_access_ended else Res.string.share_expired_label),
                     color = if (revoked) Tok.danger.copy(alpha = 0.85f) else Tok.muted, fontSize = 10.sp, fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.clip(RoundedCornerShape(6.dp))
-                        .background(if (revoked) Tok.danger.copy(alpha = 0.08f) else Tok.surface)
-                        .border(1.dp, if (revoked) Tok.danger.copy(alpha = 0.25f) else Tok.hair, RoundedCornerShape(6.dp))
+                        .background(if (revoked) Tok.danger.copy(alpha = 0.08f) else AppicaTok.surface)
+                        .border(1.dp, if (revoked) Tok.danger.copy(alpha = 0.25f) else AppicaTok.hair, RoundedCornerShape(6.dp))
                         .padding(horizontal = 7.dp, vertical = 2.dp),
                 )
             }

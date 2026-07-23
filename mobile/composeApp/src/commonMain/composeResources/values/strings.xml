@@ -208,6 +208,7 @@
     <string name="settings_title">Settings</string>
     <string name="settings_search_placeholder">Search settings</string>
     <string name="settings_search_empty">No matching settings</string>
+    <string name="settings_intro">Personalize agents, workspace, privacy, and appearance.</string>
     <string name="settings_back">Back</string>
     <string name="settings_consequence_new_session">Applies to new sessions only — the current chat is unchanged.</string>
     <string name="settings_consequence_effort">Applies to new sessions. Change a live session from ⋯ → Effort.</string>
@@ -491,6 +492,7 @@
     <string name="session_actions_open">Session actions</string>
     <string name="quick_actions_title">Quick actions</string>
     <string name="qa_model">Switch model</string>
+    <string name="model_search_placeholder">Search models</string>
     <string name="qa_context_gauge">Context usage — open session info</string>
     <string name="qa_clear">Clear conversation</string>
     <string name="qa_clear_hint">Tap again to confirm</string>

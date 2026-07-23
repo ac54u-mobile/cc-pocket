@@ -266,9 +266,9 @@ fun CopyChip(text: String, modifier: Modifier = Modifier) {
 private fun CodeBlock(code: String, lang: String?, closed: Boolean = true) {
     val shape = RoundedCornerShape(10.dp)
     val scale = LocalFontScale.current
-    Column(Modifier.fillMaxWidth().clip(shape).background(Tok.base).border(1.dp, Tok.hair, shape)) {
+    Column(Modifier.fillMaxWidth().clip(shape).background(AppicaTok.base).border(1.dp, AppicaTok.hair, shape)) {
         Row(
-            Modifier.fillMaxWidth().background(Tok.surface).padding(start = 10.dp, end = 4.dp, top = 2.dp, bottom = 2.dp),
+            Modifier.fillMaxWidth().background(AppicaTok.surface).padding(start = 10.dp, end = 4.dp, top = 2.dp, bottom = 2.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(lang ?: "code", color = Tok.muted, fontFamily = FontFamily.Monospace, fontSize = 10.5.sp * scale, modifier = Modifier.weight(1f))
@@ -322,10 +322,10 @@ private fun MdLine(raw: String, color: Color) {
 private fun TableBlock(table: MdBlock.Table, color: Color) {
     val shape = RoundedCornerShape(10.dp)
     val cols = maxOf(table.header.size, table.rows.maxOfOrNull { it.size } ?: 0).coerceAtLeast(1)
-    Column(Modifier.fillMaxWidth().clip(shape).border(1.dp, Tok.hair, shape)) {
+    Column(Modifier.fillMaxWidth().clip(shape).border(1.dp, AppicaTok.hair, shape)) {
         TableRow(table.header, cols, color, header = true)
         table.rows.forEachIndexed { idx, row ->
-            Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+            Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair))
             TableRow(row, cols, color, header = false, zebra = idx % 2 == 1)
         }
     }
@@ -333,10 +333,10 @@ private fun TableBlock(table: MdBlock.Table, color: Color) {
 
 @Composable
 private fun TableRow(cells: List<String>, cols: Int, color: Color, header: Boolean, zebra: Boolean = false) {
-    val bg = when { header -> Tok.surface; zebra -> Tok.base; else -> Color.Transparent }
+    val bg = when { header -> AppicaTok.surface; zebra -> AppicaTok.base; else -> Color.Transparent }
     Row(Modifier.fillMaxWidth().background(bg).height(IntrinsicSize.Min)) {
         for (c in 0 until cols) {
-            if (c > 0) Box(Modifier.width(1.dp).fillMaxHeight().background(Tok.hair))
+            if (c > 0) Box(Modifier.width(1.dp).fillMaxHeight().background(AppicaTok.hair))
             Text(
                 pathLinked(inline(cells.getOrElse(c) { "" }.trim())),
                 color = color,

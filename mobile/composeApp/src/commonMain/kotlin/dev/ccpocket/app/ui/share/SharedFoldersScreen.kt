@@ -44,6 +44,7 @@ import dev.ccpocket.app.epochMillis
 import dev.ccpocket.app.resources.*
 import dev.ccpocket.app.theme.Tok
 import dev.ccpocket.app.ui.BackNavHost
+import dev.ccpocket.app.ui.AppicaTok
 import dev.ccpocket.app.ui.PocketSheet
 import dev.ccpocket.app.ui.tilde
 import dev.ccpocket.protocol.ShareInfo
@@ -62,7 +63,7 @@ fun SharedFoldersScreen(repo: PocketRepository, onBack: () -> Unit, onShareAgain
     var revokeTarget by remember { mutableStateOf<ShareInfo?>(null) }
 
     BackNavHost(onBack = onBack) {
-        Column(Modifier.fillMaxSize().background(Tok.base)) {
+        Column(Modifier.fillMaxSize().background(AppicaTok.base)) {
             ShareTopBar(stringResource(Res.string.shared_folders_title), onBack)
             if (repo.shares.isEmpty() && repo.sharesLoaded.value) {
                 EmptyShares()
@@ -102,7 +103,7 @@ fun SharedFoldersScreen(repo: PocketRepository, onBack: () -> Unit, onShareAgain
 @Composable
 private fun ActiveShareCard(s: ShareInfo, now: Long, onRevoke: () -> Unit) {
     val status = shareStatus(s, now)
-    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Tok.surface).border(1.dp, Tok.hair, RoundedCornerShape(16.dp)).padding(15.dp)) {
+    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(AppicaTok.surface).border(1.dp, AppicaTok.hair, RoundedCornerShape(16.dp)).padding(15.dp)) {
         Row(verticalAlignment = Alignment.Top) {
             Column(Modifier.weight(1f)) {
                 Text(tilde(s.path), color = Tok.tx, fontFamily = FontFamily.Monospace, fontSize = 14.5.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -121,7 +122,7 @@ private fun ActiveShareCard(s: ShareInfo, now: Long, onRevoke: () -> Unit) {
             )
         }
         Spacer(Modifier.height(13.dp))
-        Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+        Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair))
         Spacer(Modifier.height(13.dp))
         StatusLine(status, s)
     }
@@ -148,11 +149,11 @@ private fun StatusLine(status: ShareStatus, s: ShareInfo) {
 
 @Composable
 private fun HistoryShareCard(s: ShareInfo, onShareAgain: () -> Unit) {
-    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Tok.base).border(1.dp, Tok.hair, RoundedCornerShape(16.dp)).padding(15.dp)) {
+    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(AppicaTok.base).border(1.dp, AppicaTok.hair, RoundedCornerShape(16.dp)).padding(15.dp)) {
         Row(verticalAlignment = Alignment.Top) {
             Text(tilde(s.path), color = Tok.tx2, fontFamily = FontFamily.Monospace, fontSize = 14.5.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             Row(
-                Modifier.clip(RoundedCornerShape(20.dp)).border(1.dp, Tok.hair, RoundedCornerShape(20.dp)).clickable(onClick = onShareAgain).padding(horizontal = 12.dp, vertical = 6.dp),
+                Modifier.clip(RoundedCornerShape(20.dp)).border(1.dp, AppicaTok.hair, RoundedCornerShape(20.dp)).clickable(onClick = onShareAgain).padding(horizontal = 12.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 Icon(Icons.Rounded.Refresh, null, tint = Tok.tx2, modifier = Modifier.size(13.dp))
@@ -177,7 +178,7 @@ private fun HistoryShareCard(s: ShareInfo, onShareAgain: () -> Unit) {
 private fun GuestChip(label: String?, dim: Boolean = false) {
     val name = label ?: stringResource(Res.string.share_guest_someone)
     Row(
-        Modifier.clip(RoundedCornerShape(20.dp)).background(if (dim) Color.Transparent else Tok.base).border(1.dp, Tok.hair, RoundedCornerShape(20.dp)).padding(start = 4.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
+        Modifier.clip(RoundedCornerShape(20.dp)).background(if (dim) Color.Transparent else AppicaTok.base).border(1.dp, AppicaTok.hair, RoundedCornerShape(20.dp)).padding(start = 4.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp),
     ) {
         GuestAvatar(name, color = if (dim) Tok.muted else Tok.accent)
@@ -198,7 +199,7 @@ private fun RevokeButton(onClick: () -> Unit) {
 @Composable
 private fun EmptyShares() {
     Column(Modifier.fillMaxSize().padding(horizontal = 40.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-        Box(Modifier.size(72.dp).clip(RoundedCornerShape(20.dp)).background(Tok.surface).border(1.dp, Tok.hair, RoundedCornerShape(20.dp)), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(72.dp).clip(RoundedCornerShape(20.dp)).background(AppicaTok.surface).border(1.dp, AppicaTok.hair, RoundedCornerShape(20.dp)), contentAlignment = Alignment.Center) {
             Icon(Icons.Outlined.FolderOff, null, tint = Tok.muted, modifier = Modifier.size(32.dp))
         }
         Spacer(Modifier.height(22.dp))

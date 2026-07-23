@@ -346,8 +346,8 @@ fun PendingFileChip(f: PendingFile, onCancel: () -> Unit, onRetry: () -> Unit) {
     Box(Modifier.padding(top = 5.dp, end = 4.dp)) {
         Row(
             Modifier.width(117.dp).clip(shape)
-                .background(if (failed) Tok.danger.copy(alpha = 0.08f) else Tok.raised)
-                .border(1.dp, if (failed) Tok.danger.copy(alpha = 0.4f) else Tok.hair, shape)
+                .background(if (failed) Tok.danger.copy(alpha = 0.08f) else AppicaTok.raised)
+                .border(1.dp, if (failed) Tok.danger.copy(alpha = 0.4f) else AppicaTok.hair, shape)
                 .clickable(enabled = failed) { onRetry() }
                 .padding(horizontal = 9.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -380,7 +380,7 @@ fun PendingFileChip(f: PendingFile, onCancel: () -> Unit, onRetry: () -> Unit) {
         // cancel / dismiss badge, floated over the top-right corner
         Box(
             Modifier.align(Alignment.TopEnd).offset(x = 7.dp, y = (-5).dp).size(22.dp)
-                .clip(CircleShape).background(Tok.raised).border(1.dp, Tok.hair, CircleShape)
+                .clip(CircleShape).background(AppicaTok.raised).border(1.dp, AppicaTok.hair, CircleShape)
                 .clickable { onCancel() },
             contentAlignment = Alignment.Center,
         ) { XGlyphSmall(Tok.tx2) }
@@ -440,7 +440,7 @@ fun AttachSheet(onPhoto: () -> Unit, onFile: () -> Unit, onVideo: () -> Unit) {
     val shape = RoundedCornerShape(18.dp)
     Column(
         Modifier.fillMaxWidth().padding(horizontal = 12.dp).padding(bottom = 10.dp)
-            .clip(shape).background(Tok.surface).border(1.dp, Tok.hair, shape)
+            .clip(shape).background(AppicaTok.background).border(1.dp, AppicaTok.border, shape)
             .padding(start = 12.dp, end = 12.dp, top = 14.dp, bottom = 13.dp),
     ) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(9.dp)) {
@@ -466,7 +466,7 @@ fun AttachSheet(onPhoto: () -> Unit, onFile: () -> Unit, onVideo: () -> Unit) {
 private fun AttachOption(glyph: ImageVector, label: String, modifier: Modifier, onClick: () -> Unit) {
     val shape = RoundedCornerShape(14.dp)
     Column(
-        modifier.height(80.dp).clip(shape).background(Tok.raised).border(1.dp, Tok.hair, shape).clickable { onClick() },
+        modifier.height(80.dp).clip(shape).background(AppicaTok.backgroundMuted).border(1.dp, AppicaTok.border, shape).clickable { onClick() },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -495,14 +495,14 @@ fun PathRefText(path: String, fontSize: androidx.compose.ui.unit.TextUnit = 11.s
 @Composable
 fun SentFileChip(file: SentFile) {
     val shape = RoundedCornerShape(12.dp)
-    Column(Modifier.widthIn(max = 280.dp).clip(shape).background(Tok.surface).border(1.dp, Tok.hair, shape)) {
+    Column(Modifier.widthIn(max = 280.dp).clip(shape).background(AppicaTok.background).border(1.dp, AppicaTok.border, shape)) {
         Row(
             Modifier.padding(start = 13.dp, end = 13.dp, top = 12.dp, bottom = 11.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Box(
-                Modifier.size(38.dp).clip(RoundedCornerShape(9.dp)).background(Tok.base).border(1.dp, Tok.hair, RoundedCornerShape(9.dp)),
+                Modifier.size(38.dp).clip(RoundedCornerShape(9.dp)).background(AppicaTok.base).border(1.dp, AppicaTok.hair, RoundedCornerShape(9.dp)),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(glyphFor(fileGlyphKind(file.name)), null, tint = Tok.tx2, modifier = Modifier.size(20.dp))
@@ -521,7 +521,7 @@ fun SentFileChip(file: SentFile) {
                 }
             }
         }
-        Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+        Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair))
         Row(
             Modifier.fillMaxWidth().background(Tok.tx.copy(alpha = 0.02f)).padding(horizontal = 13.dp, vertical = 7.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -577,7 +577,7 @@ fun VideoPoster(
 fun SentVideoCard(file: SentFile, onOpen: () -> Unit) {
     Column(Modifier.widthIn(max = 280.dp)) {
         VideoPoster(
-            Modifier.clip(RoundedCornerShape(12.dp)).border(1.dp, Tok.hair, RoundedCornerShape(12.dp)).clickable { onOpen() },
+            Modifier.clip(RoundedCornerShape(12.dp)).border(1.dp, AppicaTok.hair, RoundedCornerShape(12.dp)).clickable { onOpen() },
             durationSecs = file.durationSecs,
         )
         Row(

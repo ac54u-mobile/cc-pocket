@@ -3,6 +3,7 @@
 package dev.ccpocket.app.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -80,7 +81,8 @@ internal fun sessionSections(sessions: List<SessionSummary>, groups: List<Sessio
 @Composable
 internal fun SessionRow(repo: PocketRepository, dir: String, s: SessionSummary, onLongPress: (() -> Unit)?) {
     Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Tok.surface)
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(AppicaMetrics.radiusSm)).background(AppicaTok.background)
+            .border(1.dp, AppicaTok.border, RoundedCornerShape(AppicaMetrics.radiusSm))
             .combinedClickable(
                 onClick = { repo.openSession(dir, s.sessionId, title = s.title, agent = s.agent ?: AgentKind.CLAUDE) },
                 onLongClick = onLongPress,
@@ -157,7 +159,7 @@ private fun GroupNameDialog(title: String, initial: String, onConfirm: (String) 
     var name by remember { mutableStateOf(initial) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = Tok.raised,
+        containerColor = AppicaTok.raised,
         titleContentColor = Tok.tx,
         textContentColor = Tok.tx2,
         title = { Text(title) },
@@ -193,7 +195,7 @@ internal fun RenameGroupDialog(group: SessionGroup, onConfirm: (String) -> Unit,
 internal fun DeleteGroupConfirm(group: SessionGroup, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = Tok.raised,
+        containerColor = AppicaTok.raised,
         titleContentColor = Tok.tx,
         textContentColor = Tok.tx2,
         title = { Text(group.name) },
@@ -208,7 +210,7 @@ internal fun DeleteGroupConfirm(group: SessionGroup, onConfirm: () -> Unit, onDi
 internal fun GroupActionsSheet(group: SessionGroup, onRename: () -> Unit, onDelete: () -> Unit, onDismiss: () -> Unit) {
     PocketSheet(onDismiss) {
         Column(Modifier.padding(horizontal = 16.dp).padding(bottom = 14.dp, top = 4.dp)) {
-            Text(group.name, color = Tok.tx, fontSize = 18.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(group.name, color = AppicaTok.foregroundIntense, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
             SheetActionRow(stringResource(Res.string.group_rename), Tok.tx) { onRename(); onDismiss() }
             SheetActionRow(stringResource(Res.string.group_delete), Tok.danger) { onDelete(); onDismiss() }
         }
@@ -225,12 +227,13 @@ internal fun MoveSessionSheet(
 ) {
     PocketSheet(onDismiss) {
         Column(Modifier.padding(horizontal = 16.dp).padding(bottom = 14.dp, top = 4.dp)) {
-            Text(stringResource(Res.string.group_move_to), color = Tok.tx, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(Res.string.group_move_to), color = AppicaTok.foregroundIntense, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
             Text(session.title, color = Tok.muted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 2.dp))
             groups.sortedBy { it.order }.forEach { g ->
                 val current = session.group == g.id
                 Row(
-                    Modifier.padding(top = 8.dp).fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Tok.surface)
+                    Modifier.padding(top = 8.dp).fillMaxWidth().clip(RoundedCornerShape(AppicaMetrics.radiusSm)).background(AppicaTok.background)
+                        .border(1.dp, if (current) AppicaTok.primary else AppicaTok.border, RoundedCornerShape(AppicaMetrics.radiusSm))
                         .clickable(enabled = !current) { onAssign(g.id); onDismiss() }
                         .padding(horizontal = 14.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -251,7 +254,8 @@ internal fun MoveSessionSheet(
 @Composable
 private fun SheetActionRow(label: String, color: Color, onClick: () -> Unit) {
     Row(
-        Modifier.padding(top = 9.dp).fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Tok.surface)
+        Modifier.padding(top = 9.dp).fillMaxWidth().clip(RoundedCornerShape(AppicaMetrics.radiusSm)).background(AppicaTok.background)
+            .border(1.dp, AppicaTok.border, RoundedCornerShape(AppicaMetrics.radiusSm))
             .clickable(onClick = onClick).padding(horizontal = 14.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

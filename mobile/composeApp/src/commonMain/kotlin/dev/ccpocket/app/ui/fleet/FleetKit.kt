@@ -17,6 +17,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import dev.ccpocket.app.ui.PulseDot
+import dev.ccpocket.app.ui.AppicaTok
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -83,7 +84,7 @@ fun AttentionBadge(n: Int, modifier: Modifier = Modifier) {
         modifier.widthIn(min = 18.dp).clip(RoundedCornerShape(999.dp)).background(Tok.accent).padding(horizontal = 5.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text("$n", color = Tok.base, fontFamily = FontFamily.Monospace, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+        Text("$n", color = AppicaTok.base, fontFamily = FontFamily.Monospace, fontSize = 11.sp, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -103,7 +104,7 @@ fun MiniCountdownRing(seconds: Int, total: Int, size: Dp = 34.dp) {
             val sw = 2.4.dp.toPx()
             val r = (this.size.minDimension - sw) / 2f
             val tl = Offset((this.size.width - 2 * r) / 2f, (this.size.height - 2 * r) / 2f)
-            drawCircle(Tok.hair, r, style = Stroke(sw))
+            drawCircle(AppicaTok.hair, r, style = Stroke(sw))
             drawArc(col, -90f, 360f * frac, useCenter = false, topLeft = tl, size = Size(2 * r, 2 * r), style = Stroke(sw, cap = StrokeCap.Round))
         }
         Text(

@@ -73,21 +73,22 @@ fun ComposerField(
     modifier: Modifier = Modifier,
     focusRequester: FocusRequester? = null,
 ) {
-    val shape = RoundedCornerShape(14.dp)
+    val shape = RoundedCornerShape(AppicaMetrics.radius)
     Box(
-        modifier.heightIn(min = 44.dp).clip(shape).background(Tok.base).border(1.dp, Tok.hair, shape)
+        modifier.heightIn(min = 46.dp).clip(shape).background(AppicaTok.background)
+            .border(1.dp, AppicaTok.borderStrong, shape)
             .padding(horizontal = 14.dp),
         contentAlignment = Alignment.CenterStart,
     ) {
         BasicTextField(
             state.field, state::onValueChange,
-            textStyle = TextStyle(color = Tok.tx, fontSize = 15.sp, lineHeight = 21.sp),
-            cursorBrush = SolidColor(Tok.accent),
+            textStyle = TextStyle(color = AppicaTok.foregroundIntense, fontSize = 15.sp, lineHeight = 21.sp),
+            cursorBrush = SolidColor(AppicaTok.primary),
             maxLines = 4,
             modifier = Modifier.fillMaxWidth().padding(vertical = 11.dp)
                 .let { m -> focusRequester?.let { m.focusRequester(it) } ?: m },
         )
-        if (state.text.isEmpty()) Text(placeholder, color = Tok.muted, fontSize = 15.sp, maxLines = 1)
+        if (state.text.isEmpty()) Text(placeholder, color = AppicaTok.foregroundMuted, fontSize = 15.sp, maxLines = 1)
     }
 }
 
@@ -102,9 +103,9 @@ fun RoundActionButton(
     content: @Composable () -> Unit,
 ) {
     Box(
-        Modifier.size(44.dp).clip(CircleShape)
-            .background(if (filled) Tok.accent else Tok.base)
-            .let { if (filled) it else it.border(1.dp, Tok.hair, CircleShape) }
+        Modifier.size(44.dp).clip(RoundedCornerShape(AppicaMetrics.radiusSm))
+            .background(if (filled) AppicaTok.primary else AppicaTok.background)
+            .let { if (filled) it else it.border(1.dp, AppicaTok.borderStrong, RoundedCornerShape(AppicaMetrics.radiusSm)) }
             .let {
                 if (onLongClick != null) {
                     it.combinedClickable(enabled = enabled, onClick = onClick, onLongClick = onLongClick)
@@ -140,8 +141,8 @@ fun RecordingBar(
         }
         val pillShape = RoundedCornerShape(12.dp)
         Row(
-            Modifier.weight(1f).heightIn(min = 44.dp).clip(pillShape).background(Tok.raised)
-                .border(1.dp, Tok.hair, pillShape).padding(horizontal = 12.dp),
+            Modifier.weight(1f).heightIn(min = 44.dp).clip(pillShape).background(AppicaTok.raised)
+                .border(1.dp, AppicaTok.hair, pillShape).padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp),
         ) {
@@ -158,7 +159,7 @@ fun RecordingBar(
         }
         val doneLabel = stringResource(Res.string.done)
         RoundActionButton(onClick = onDone, filled = true, contentDescription = doneLabel) {
-            Icon(CheckIcon, doneLabel, tint = Tok.base, modifier = Modifier.size(20.dp))
+            Icon(CheckIcon, doneLabel, tint = AppicaTok.base, modifier = Modifier.size(20.dp))
         }
     }
 }
@@ -189,7 +190,7 @@ fun LiveTranscriptField(final: String, partial: String) {
     )
     Row(
         Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 10.dp).heightIn(min = 44.dp)
-            .clip(shape).background(Tok.base).border(1.dp, Tok.hair, shape).padding(horizontal = 14.dp, vertical = 11.dp),
+            .clip(shape).background(AppicaTok.base).border(1.dp, AppicaTok.hair, shape).padding(horizontal = 14.dp, vertical = 11.dp),
         verticalAlignment = Alignment.Bottom,
     ) {
         Text(
@@ -247,7 +248,7 @@ fun MicPermissionSheet(onOpenSettings: () -> Unit, onDismiss: () -> Unit) {
                 Modifier.fillMaxWidth().height(50.dp).clip(RoundedCornerShape(12.dp)).background(Tok.accent)
                     .clickable(onClick = onOpenSettings),
                 contentAlignment = Alignment.Center,
-            ) { Text(stringResource(Res.string.open_settings), color = Tok.base, fontSize = 16.sp, fontWeight = FontWeight.Bold) }
+            ) { Text(stringResource(Res.string.open_settings), color = AppicaTok.base, fontSize = 16.sp, fontWeight = FontWeight.Bold) }
             Box(
                 Modifier.fillMaxWidth().height(44.dp).padding(top = 6.dp).clip(RoundedCornerShape(12.dp))
                     .clickable(onClick = onDismiss),

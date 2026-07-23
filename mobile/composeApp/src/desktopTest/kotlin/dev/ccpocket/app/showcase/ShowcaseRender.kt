@@ -30,6 +30,7 @@ import dev.ccpocket.app.ui.ModelPicker
 import dev.ccpocket.app.ui.PermissionSheet
 import dev.ccpocket.app.ui.QuestionCard
 import dev.ccpocket.app.ui.SessionsScreen
+import dev.ccpocket.app.ui.SettingsScreen
 import dev.ccpocket.app.ui.StartSessionModeSheet
 import dev.ccpocket.app.ui.SubagentCard
 import dev.ccpocket.app.ui.UsageScreen
@@ -153,6 +154,9 @@ class ShowcaseRender {
         val bfRest = "\n\n文档分三部分：\n\n1. 前置条件与版本要求\n2. 破坏性变更清单（3 处，含改法示例）\n3. 回滚步骤\n\n已写入 docs/migration.md，共 148 行。"
 
         return listOf(
+
+        // Appica settings hub — a deterministic frame for visual regression review.
+        Show("settings", 1000, beats = emptyList()) { repo -> SettingsScreen(repo, onBack = {}) },
 
         // ① 会话列表 + live 会话（「手机接管」的画面底）
         Show("sessions", 5200, beats = listOf(

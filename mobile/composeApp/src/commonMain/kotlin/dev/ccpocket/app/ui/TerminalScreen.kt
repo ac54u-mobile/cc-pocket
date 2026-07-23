@@ -1,6 +1,7 @@
 package dev.ccpocket.app.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -62,14 +63,16 @@ fun TerminalScreen(repo: PocketRepository, onBack: () -> Unit) {
         if (entries.isNotEmpty()) runCatching { listState.animateScrollToItem(entries.size - 1) }
     }
     BackNavHost(onBack = onBack) {
-        Column(Modifier.fillMaxSize().background(Tok.base).imePadding()) {
+        Column(Modifier.fillMaxSize().background(AppicaTok.base).imePadding()) {
             Row(
-                Modifier.fillMaxWidth().background(Tok.surface).padding(start = 6.dp, end = 12.dp, top = 10.dp, bottom = 10.dp),
+                Modifier.fillMaxWidth().background(AppicaTok.background)
+                    .border(1.dp, AppicaTok.borderMuted)
+                    .padding(start = 6.dp, end = 12.dp, top = 9.dp, bottom = 9.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 BackTextButton(onBack)
                 Column(Modifier.weight(1f)) {
-                    Text(stringResource(Res.string.terminal_title), color = Tok.tx, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(Res.string.terminal_title), color = AppicaTok.foregroundIntense, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
                     TailPathText(repo.workdir.value ?: "", fontSize = 11.sp)
                 }
                 if (entries.isNotEmpty()) {
@@ -95,7 +98,8 @@ fun TerminalScreen(repo: PocketRepository, onBack: () -> Unit) {
                 }
             }
             Row(
-                Modifier.fillMaxWidth().background(Tok.surface).padding(10.dp),
+                Modifier.fillMaxWidth().background(AppicaTok.background)
+                    .border(1.dp, AppicaTok.borderMuted).padding(10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 val busy = repo.terminalBusy.value
@@ -109,13 +113,13 @@ fun TerminalScreen(repo: PocketRepository, onBack: () -> Unit) {
                 Spacer(Modifier.width(8.dp))
                 val canRun = input.isNotBlank() && !busy
                 Box(
-                    Modifier.height(54.dp).widthIn(min = 64.dp).clip(RoundedCornerShape(12.dp))
-                        .background(if (canRun) Tok.accent else Tok.raised).alpha(if (canRun) 1f else 0.6f)
+                    Modifier.height(54.dp).widthIn(min = 64.dp).clip(RoundedCornerShape(AppicaMetrics.radiusSm))
+                        .background(if (canRun) AppicaTok.primary else AppicaTok.backgroundMuted).alpha(if (canRun) 1f else 0.6f)
                         .clickable(enabled = canRun) { repo.runShell(input); input = "" },
                     contentAlignment = Alignment.Center,
                 ) {
                     if (busy) CircularProgressIndicator(Modifier.size(18.dp), color = Tok.tx2, strokeWidth = 2.dp)
-                    else Text(stringResource(Res.string.terminal_run), color = Tok.base, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    else Text(stringResource(Res.string.terminal_run), color = AppicaTok.primaryForeground, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                 }
             }
         }

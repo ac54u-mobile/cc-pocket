@@ -69,10 +69,12 @@ internal fun WorkflowRunScreen(repo: PocketRepository, onBack: () -> Unit) {
     val scroll = rememberScrollState()
     // Android back / edge swipe closes the sheet first, then the run view — never the whole chat
     BackNavHost(onBack = { if (sheetAgent != null) sheetAgent = null else onBack() }) {
-        Column(Modifier.fillMaxSize().background(Tok.base)) {
+        Column(Modifier.fillMaxSize().background(AppicaTok.base)) {
             // ── header: back · tile · name + runId · status pill ──
             Row(
-                Modifier.fillMaxWidth().padding(start = 4.dp, end = 12.dp, top = 6.dp, bottom = 10.dp),
+                Modifier.fillMaxWidth().background(AppicaTok.background)
+                    .border(1.dp, AppicaTok.borderMuted)
+                    .padding(start = 4.dp, end = 12.dp, top = 6.dp, bottom = 9.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(9.dp),
             ) {
@@ -94,7 +96,7 @@ internal fun WorkflowRunScreen(repo: PocketRepository, onBack: () -> Unit) {
                 }
                 WorkflowStatusPill(run)
             }
-            Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+            Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair))
 
             Box(Modifier.weight(1f)) {
                 Column(Modifier.fillMaxSize().verticalScroll(scroll).padding(horizontal = 16.dp)) {
@@ -112,7 +114,7 @@ internal fun WorkflowRunScreen(repo: PocketRepository, onBack: () -> Unit) {
                             groups.forEach { g ->
                                 PhaseSection(g, defaultOpen = g.status == WorkflowPhaseStatus.ACTIVE, onOpenAgent = { sheetAgent = it })
                             }
-                            Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+                            Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair))
                         }
                         WfTab.Journal -> {
                             val rows = WorkflowUi.journalRows(run)
@@ -122,7 +124,7 @@ internal fun WorkflowRunScreen(repo: PocketRepository, onBack: () -> Unit) {
                                 modifier = Modifier.padding(bottom = 4.dp),
                             )
                             rows.forEach { a -> JournalRow(a) { sheetAgent = a } }
-                            Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+                            Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair))
                         }
                     }
                     Box(Modifier.height(if (terminal) 40.dp else 120.dp)) // tail spacer
@@ -132,7 +134,7 @@ internal fun WorkflowRunScreen(repo: PocketRepository, onBack: () -> Unit) {
                     Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 40.dp)) {
                         val shape = RoundedCornerShape(999.dp)
                         Row(
-                            Modifier.clip(shape).background(Tok.raised).border(1.dp, Tok.hair, shape)
+                            Modifier.clip(shape).background(AppicaTok.raised).border(1.dp, AppicaTok.hair, shape)
                                 .clickable { /* scroll home = where the active phase expands */ }
                                 .padding(start = 13.dp, end = 15.dp, top = 8.dp, bottom = 8.dp),
                             verticalAlignment = Alignment.CenterVertically,
@@ -159,7 +161,7 @@ private enum class WfTab { Phases, Journal }
 private fun WfSegmented(value: WfTab, onChange: (WfTab) -> Unit) {
     val shape = RoundedCornerShape(10.dp)
     Row(
-        Modifier.fillMaxWidth().clip(shape).background(Tok.base).border(1.dp, Tok.hair, shape).padding(3.dp),
+        Modifier.fillMaxWidth().clip(shape).background(AppicaTok.base).border(1.dp, AppicaTok.hair, shape).padding(3.dp),
         horizontalArrangement = Arrangement.spacedBy(3.dp),
     ) {
         WfTab.entries.forEach { t ->
@@ -167,8 +169,8 @@ private fun WfSegmented(value: WfTab, onChange: (WfTab) -> Unit) {
             val innerShape = RoundedCornerShape(7.dp)
             Box(
                 Modifier.weight(1f).clip(innerShape)
-                    .background(if (selected) Tok.raised else Tok.base.copy(alpha = 0f))
-                    .then(if (selected) Modifier.border(1.dp, Tok.hair, innerShape) else Modifier)
+                    .background(if (selected) AppicaTok.raised else AppicaTok.base.copy(alpha = 0f))
+                    .then(if (selected) Modifier.border(1.dp, AppicaTok.hair, innerShape) else Modifier)
                     .clickable { onChange(t) }.padding(vertical = 7.dp),
                 contentAlignment = Alignment.Center,
             ) {
@@ -284,7 +286,7 @@ internal fun PhaseSection(
     val done = g.status == WorkflowPhaseStatus.DONE
 
     Column(Modifier.fillMaxWidth()) {
-        Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+        Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair))
         // header
         Row(
             Modifier.fillMaxWidth().heightIn(min = if (dense) 38.dp else 46.dp)
@@ -360,7 +362,7 @@ internal fun PhaseSection(
 @Composable
 internal fun JournalRow(a: WorkflowAgentSnap, onOpen: () -> Unit) {
     Column(Modifier.fillMaxWidth()) {
-        Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+        Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair))
         Row(
             Modifier.fillMaxWidth().heightIn(min = 52.dp).clickable(onClick = onOpen).padding(horizontal = 2.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -394,7 +396,7 @@ internal fun JournalRow(a: WorkflowAgentSnap, onOpen: () -> Unit) {
 internal fun FinalReturnCard(text: String) {
     var open by remember { mutableStateOf(false) }
     val shape = RoundedCornerShape(12.dp)
-    Column(Modifier.fillMaxWidth().clip(shape).background(Tok.base).border(1.dp, Tok.hair, shape)) {
+    Column(Modifier.fillMaxWidth().clip(shape).background(AppicaTok.base).border(1.dp, AppicaTok.hair, shape)) {
         Text(
             "FINAL RETURN", color = Tok.muted, fontFamily = FontFamily.Monospace, fontSize = 9.5.sp, letterSpacing = 1.3.sp,
             modifier = Modifier.padding(start = 14.dp, top = 10.dp),
@@ -408,7 +410,7 @@ internal fun FinalReturnCard(text: String) {
                 )
             }
         }
-        Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+        Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair))
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -473,7 +475,7 @@ private fun WorkflowAgentSheet(repo: PocketRepository, run: WorkflowRun, a: Work
                 )
             }
         }
-        Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+        Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair))
 
         Column(
             Modifier.fillMaxWidth().weight(1f, fill = false).verticalScroll(rememberScrollState())
@@ -496,9 +498,9 @@ private fun PromptBlock(text: String) {
             modifier = Modifier.padding(bottom = 8.dp),
         )
         val shape = RoundedCornerShape(12.dp)
-        Column(Modifier.fillMaxWidth().clip(shape).background(Tok.raised).border(1.dp, Tok.hair, shape).padding(horizontal = 13.dp, vertical = 11.dp)) {
+        Column(Modifier.fillMaxWidth().clip(shape).background(AppicaTok.raised).border(1.dp, AppicaTok.hair, shape).padding(horizontal = 13.dp, vertical = 11.dp)) {
             Row(Modifier.height(IntrinsicSize.Min)) {
-                Box(Modifier.width(2.5.dp).fillMaxHeight().clip(RoundedCornerShape(2.dp)).background(Tok.hair))
+                Box(Modifier.width(2.5.dp).fillMaxHeight().clip(RoundedCornerShape(2.dp)).background(AppicaTok.hair))
                 SelectionContainer(Modifier.padding(start = 11.dp)) {
                     Text(
                         text, color = Tok.tx2, fontSize = 14.sp, lineHeight = 21.sp,
@@ -529,8 +531,8 @@ private fun ReturnZone(failed: Boolean, a: WorkflowAgentSnap, result: String?) {
         val shape = RoundedCornerShape(12.dp)
         val body = if (failed) (a.error ?: result ?: "failed") else result
         Column(
-            Modifier.fillMaxWidth().clip(shape).background(Tok.base)
-                .border(1.dp, if (failed) Tok.danger.copy(alpha = 0.4f) else Tok.hair, shape),
+            Modifier.fillMaxWidth().clip(shape).background(AppicaTok.base)
+                .border(1.dp, if (failed) Tok.danger.copy(alpha = 0.4f) else AppicaTok.hair, shape),
         ) {
             Box(
                 Modifier.heightIn(max = 280.dp).verticalScroll(rememberScrollState())
@@ -545,7 +547,7 @@ private fun ReturnZone(failed: Boolean, a: WorkflowAgentSnap, result: String?) {
                 }
             }
             if (body != null) {
-                Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair))
+                Box(Modifier.fillMaxWidth().height(1.dp).background(AppicaTok.hair))
                 Row(
                     Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 7.dp),
                     verticalAlignment = Alignment.CenterVertically,
