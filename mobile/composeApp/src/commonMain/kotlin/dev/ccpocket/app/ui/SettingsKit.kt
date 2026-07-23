@@ -27,7 +27,6 @@ import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -52,21 +51,21 @@ import androidx.compose.ui.unit.sp
 import dev.ccpocket.app.feedback.rememberAppHaptics
 import dev.ccpocket.app.resources.Res
 import dev.ccpocket.app.resources.settings_back
-import dev.ccpocket.app.theme.Tok
+import dev.ccpocket.app.ui.AppicaTok as Tok
 import org.jetbrains.compose.resources.stringResource
 
 /** Density + motion tokens for Settings surfaces (phone Hub + detail panes). */
 object SettingsMetrics {
-    val rowMin = 54.dp
+    val rowMin = 52.dp
     val rowPadH = 14.dp
-    val rowPadV = 13.dp
-    val rowPadVCompact = 11.dp
-    val sectionTop = 18.dp
-    val sectionBottom = 7.dp
-    val cardRadius = 14.dp
+    val rowPadV = 12.dp
+    val rowPadVCompact = 10.dp
+    val sectionTop = 20.dp
+    val sectionBottom = 8.dp
+    val cardRadius = AppicaMetrics.radius
     val indicatorW = 3.dp
     val indicatorH = 22.dp
-    val animMs = 220
+    val animMs = AppicaMetrics.motionFastMs
 }
 
 /** Uppercase section heading used across Settings hub + detail panes. */
@@ -74,7 +73,7 @@ object SettingsMetrics {
 fun SettingsSectionLabel(text: String, modifier: Modifier = Modifier) {
     Text(
         text,
-        color = Tok.muted,
+        color = Tok.foregroundMuted,
         fontSize = 11.sp,
         fontWeight = FontWeight.SemiBold,
         letterSpacing = 0.35.sp,
@@ -89,19 +88,12 @@ fun SettingsSectionLabel(text: String, modifier: Modifier = Modifier) {
 /** Grouped card: surface + hair border + shared radius. */
 @Composable
 fun SettingsCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
-    Column(
-        modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(SettingsMetrics.cardRadius))
-            .background(Tok.surface)
-            .border(1.dp, Tok.hair.copy(alpha = 0.72f), RoundedCornerShape(SettingsMetrics.cardRadius)),
-        content = content,
-    )
+    AppicaSurface(modifier.fillMaxWidth(), content = content)
 }
 
 @Composable
 fun SettingsDivider() {
-    Box(Modifier.fillMaxWidth().height(1.dp).background(Tok.hair.copy(alpha = 0.7f)))
+    AppicaDivider()
 }
 
 /** Leading accent bar — fades/scales in when [selected]. Replaces full-row accent fill. */
@@ -126,7 +118,7 @@ fun SettingsSelectionIndicator(selected: Boolean, modifier: Modifier = Modifier)
                 scaleY = scale
             }
             .clip(RoundedCornerShape(2.dp))
-            .background(Tok.accent),
+            .background(Tok.primary),
     )
 }
 
@@ -293,11 +285,7 @@ fun SettingsToggleRow(
             Text(label, color = Tok.tx, fontSize = 14.sp, fontWeight = FontWeight.Medium)
             if (sub != null) Text(sub, color = Tok.muted, fontSize = 11.5.sp, lineHeight = 15.sp, modifier = Modifier.padding(top = 2.dp))
         }
-        Switch(
-            checked = checked,
-            onCheckedChange = null,
-            enabled = enabled,
-        )
+        AppicaSwitch(checked = checked, onCheckedChange = onChange, enabled = enabled)
     }
 }
 

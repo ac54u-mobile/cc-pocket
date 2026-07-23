@@ -148,7 +148,7 @@ fun SettingsScreen(repo: PocketRepository, onBack: () -> Unit) {
 
 @Composable
 private fun SettingsPaneScaffold(title: String, onBack: () -> Unit, content: @Composable () -> Unit) {
-    Column(Modifier.fillMaxSize().background(Tok.base)) {
+    Column(Modifier.fillMaxSize().background(AppicaTok.base)) {
         SettingsTopBar(title, onBack)
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
             Column(
@@ -229,7 +229,7 @@ private fun SettingsHub(onBack: () -> Unit, onOpen: (SettingsDest) -> Unit) {
         }
     }
 
-    Column(Modifier.fillMaxSize().background(Tok.base)) {
+    Column(Modifier.fillMaxSize().background(AppicaTok.base)) {
         SettingsTopBar(stringResource(Res.string.settings_title), onBack)
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
             Column(
@@ -342,20 +342,20 @@ private fun AppearancePane(repo: PocketRepository) {
     SettingsCard {
         Column(Modifier.padding(14.dp)) {
             Row(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp)).background(Tok.raised).padding(4.dp),
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(AppicaMetrics.radiusSm)).background(AppicaTok.backgroundMuted).padding(4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 FONT_SCALE_STEPS.forEachIndexed { i, s ->
                     val sel = repo.fontScale.value in (s - 0.04f)..(s + 0.04f)
                     Box(
                         Modifier.weight(1f).clip(RoundedCornerShape(10.dp))
-                            .then(if (sel) Modifier.background(Tok.accent) else Modifier)
+                            .then(if (sel) Modifier.background(AppicaTok.primary) else Modifier)
                             .clickable { repo.setFontScale(s) }.padding(vertical = 8.dp),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
                             "A",
-                            color = if (sel) Tok.base else Tok.tx2,
+                            color = if (sel) AppicaTok.primaryForeground else AppicaTok.foreground,
                             fontSize = (11f + i * 2.5f).sp,
                             fontWeight = if (sel) FontWeight.SemiBold else FontWeight.Normal,
                         )
@@ -363,10 +363,10 @@ private fun AppearancePane(repo: PocketRepository) {
                 }
             }
             Box(
-                Modifier.fillMaxWidth().padding(top = 14.dp).clip(RoundedCornerShape(13.dp)).background(Tok.raised)
+                Modifier.fillMaxWidth().padding(top = 14.dp).clip(RoundedCornerShape(AppicaMetrics.radiusSm)).background(AppicaTok.backgroundMuted)
                     .padding(14.dp),
             ) {
-                Text(stringResource(Res.string.text_size_sample), color = Tok.tx, fontSize = 14.sp * repo.fontScale.value)
+                Text(stringResource(Res.string.text_size_sample), color = AppicaTok.foregroundIntense, fontSize = 14.sp * repo.fontScale.value)
             }
         }
     }
@@ -473,8 +473,8 @@ private fun SecurityGroup(lock: AppLockController) {
             FaceIdGlyph(color = Tok.accent, size = 22.dp)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                Text(stringResource(Res.string.app_lock_require, kindName), color = Tok.tx, fontSize = 14.sp)
-                Text(stringResource(Res.string.app_lock_require_sub, kindName), color = Tok.muted, fontSize = 11.5.sp, lineHeight = 15.sp)
+                Text(stringResource(Res.string.app_lock_require, kindName), color = AppicaTok.foregroundIntense, fontSize = 14.sp)
+                Text(stringResource(Res.string.app_lock_require_sub, kindName), color = AppicaTok.foregroundMuted, fontSize = 11.5.sp, lineHeight = 15.sp)
             }
             Switch(
                 checked = lock.enabled.value,
@@ -490,10 +490,10 @@ private fun SecurityGroup(lock: AppLockController) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Spacer(Modifier.width(34.dp))
-                Text(stringResource(Res.string.app_lock_autolock), color = Tok.tx, fontSize = 14.sp, modifier = Modifier.weight(1f))
-                Text(autoLockText(lock.autoLock.value), color = Tok.tx2, fontSize = 13.sp)
+                Text(stringResource(Res.string.app_lock_autolock), color = AppicaTok.foregroundIntense, fontSize = 14.sp, modifier = Modifier.weight(1f))
+                Text(autoLockText(lock.autoLock.value), color = AppicaTok.foreground, fontSize = 13.sp)
                 Spacer(Modifier.width(6.dp))
-                Icon(Icons.Rounded.ChevronRight, null, tint = Tok.muted, modifier = Modifier.size(18.dp))
+                Icon(Icons.Rounded.ChevronRight, null, tint = AppicaTok.foregroundMuted, modifier = Modifier.size(18.dp))
             }
         }
     }
@@ -501,7 +501,7 @@ private fun SecurityGroup(lock: AppLockController) {
         Row(Modifier.fillMaxWidth().padding(top = 8.dp, start = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             FaceIdGlyph(color = Tok.muted, size = 14.dp)
             Spacer(Modifier.width(7.dp))
-            Text(stringResource(Res.string.app_lock_verifying, kindName), color = Tok.muted, fontSize = 11.5.sp)
+            Text(stringResource(Res.string.app_lock_verifying, kindName), color = AppicaTok.foregroundMuted, fontSize = 11.5.sp)
         }
     }
     if (showAutoLock) AutoLockSheet(lock) { showAutoLock = false }
@@ -512,7 +512,7 @@ private fun AutoLockSheet(lock: AppLockController, onDismiss: () -> Unit) {
     PocketSheet(onDismiss) {
         Column(Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
             Text(
-                stringResource(Res.string.app_lock_autolock), color = Tok.muted, fontSize = 12.sp,
+                stringResource(Res.string.app_lock_autolock), color = AppicaTok.foregroundMuted, fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold, letterSpacing = 0.6.sp,
                 modifier = Modifier.padding(start = 18.dp, top = 4.dp, bottom = 6.dp),
             )
@@ -524,17 +524,17 @@ private fun AutoLockSheet(lock: AppLockController, onDismiss: () -> Unit) {
                 ) {
                     Text(
                         autoLockText(d),
-                        color = if (sel) Tok.tx else Tok.tx2,
+                        color = if (sel) AppicaTok.foregroundIntense else AppicaTok.foreground,
                         fontSize = 15.sp,
                         fontWeight = if (sel) FontWeight.SemiBold else FontWeight.Normal,
                         modifier = Modifier.weight(1f),
                     )
-                    if (sel) Text("✓", color = Tok.accent, fontSize = 14.sp)
+                    if (sel) Text("✓", color = AppicaTok.primary, fontSize = 14.sp)
                 }
             }
             Text(
                 stringResource(Res.string.app_lock_autolock_hint),
-                color = Tok.muted, fontSize = 11.5.sp, lineHeight = 16.sp,
+                color = AppicaTok.foregroundMuted, fontSize = 11.5.sp, lineHeight = 16.sp,
                 modifier = Modifier.padding(start = 18.dp, end = 18.dp, top = 6.dp),
             )
         }
@@ -556,12 +556,12 @@ private fun ContextWindowCustomRow(repo: PocketRepository, onEdit: () -> Unit = 
     var draft by remember { mutableStateOf(if (isCustom) current.toString() else "") }
     Row(
         Modifier.padding(top = 8.dp).fillMaxWidth().clip(RoundedCornerShape(10.dp))
-            .background(if (isCustom) Tok.raised else Tok.surface)
-            .border(1.dp, if (isCustom) Tok.accent else Tok.hair, RoundedCornerShape(10.dp))
+            .background(if (isCustom) AppicaTok.backgroundMuted else AppicaTok.background)
+            .border(1.dp, if (isCustom) AppicaTok.primary else AppicaTok.border, RoundedCornerShape(10.dp))
             .padding(horizontal = 12.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(stringResource(Res.string.context_window_custom), color = Tok.tx2, fontSize = 13.sp, modifier = Modifier.weight(1f))
+        Text(stringResource(Res.string.context_window_custom), color = AppicaTok.foreground, fontSize = 13.sp, modifier = Modifier.weight(1f))
         OutlinedTextField(
             draft,
             { new ->
@@ -569,10 +569,10 @@ private fun ContextWindowCustomRow(repo: PocketRepository, onEdit: () -> Unit = 
                 onEdit()
                 repo.setContextWindowOverride(draft.toLongOrNull()?.takeIf { it > 0 })
             },
-            placeholder = { Text(stringResource(Res.string.context_window_tokens), color = Tok.muted, fontSize = 12.sp) },
+            placeholder = { Text(stringResource(Res.string.context_window_tokens), color = AppicaTok.foregroundMuted, fontSize = 12.sp) },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            textStyle = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 13.sp, color = Tok.tx),
+            textStyle = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 13.sp, color = AppicaTok.foregroundIntense),
             modifier = Modifier.width(130.dp),
         )
     }
@@ -611,12 +611,12 @@ internal fun PerModelWindows(repo: PocketRepository) {
     val entries = repo.contextWindowOverrides.entries.sortedBy { it.key }.map { it.key to it.value }
     if (entries.isEmpty()) {
         Column(
-            Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).dashedBorder(Tok.hair, 14.dp)
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(AppicaMetrics.radius)).dashedBorder(AppicaTok.border, 14.dp)
                 .padding(horizontal = 14.dp, vertical = 16.dp),
         ) {
-            Text(stringResource(Res.string.per_model_empty_title), color = Tok.tx2, fontSize = 13.5.sp, fontWeight = FontWeight.Medium)
+            Text(stringResource(Res.string.per_model_empty_title), color = AppicaTok.foreground, fontSize = 13.5.sp, fontWeight = FontWeight.Medium)
             Text(
-                stringResource(Res.string.per_model_empty_body), color = Tok.muted, fontSize = 12.5.sp,
+                stringResource(Res.string.per_model_empty_body), color = AppicaTok.foregroundMuted, fontSize = 12.5.sp,
                 lineHeight = 18.sp, modifier = Modifier.padding(top = 5.dp),
             )
         }
@@ -640,7 +640,7 @@ private fun PerModelRow(id: String, tokens: Long, live: Boolean, onDelete: () ->
     ) {
         Column(Modifier.weight(1f)) {
             Text(
-                id, color = Tok.tx, fontFamily = FontFamily.Monospace, fontSize = 13.sp,
+                id, color = AppicaTok.foregroundIntense, fontFamily = FontFamily.Monospace, fontSize = 13.sp,
                 maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
             if (live) Text(
@@ -649,7 +649,7 @@ private fun PerModelRow(id: String, tokens: Long, live: Boolean, onDelete: () ->
             )
         }
         Text(
-            groupDigits(tokens), color = Tok.tx2, fontFamily = FontFamily.Monospace,
+            groupDigits(tokens), color = AppicaTok.foreground, fontFamily = FontFamily.Monospace,
             fontSize = 13.sp, modifier = Modifier.padding(horizontal = 10.dp),
         )
         val deleteLabel = stringResource(Res.string.per_model_delete)
@@ -659,7 +659,7 @@ private fun PerModelRow(id: String, tokens: Long, live: Boolean, onDelete: () ->
                 .clickable(onClick = onDelete),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(Icons.Rounded.DeleteOutline, null, tint = Tok.muted, modifier = Modifier.size(18.dp))
+            Icon(Icons.Rounded.DeleteOutline, null, tint = AppicaTok.foregroundMuted, modifier = Modifier.size(18.dp))
         }
     }
 }
@@ -671,7 +671,7 @@ fun AboutRow(label: String, value: String) {
         Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, color = Tok.tx2, fontSize = 13.5.sp, modifier = Modifier.weight(1f))
-        Text(value, color = Tok.tx, fontFamily = FontFamily.Monospace, fontSize = 12.5.sp, maxLines = 1)
+        Text(label, color = AppicaTok.foreground, fontSize = 13.5.sp, modifier = Modifier.weight(1f))
+        Text(value, color = AppicaTok.foregroundIntense, fontFamily = FontFamily.Monospace, fontSize = 12.5.sp, maxLines = 1)
     }
 }
