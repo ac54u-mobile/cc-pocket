@@ -23,7 +23,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -31,6 +30,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import dev.ccpocket.app.feedback.rememberAppHaptics
+import dev.ccpocket.app.theme.Tok
 import kotlin.math.min
 
 /**
@@ -83,7 +83,8 @@ internal fun IslandPullToRefreshBox(
         // physical connection without making long project lists visibly jump.
         Box(
             Modifier.fillMaxSize().graphicsLayer {
-                translationY = min(fraction, 1f) * 18.dp.toPx()
+                val reveal = if (isRefreshing) 1f else min(fraction, 1f)
+                translationY = reveal * 44.dp.toPx()
             },
             content = content,
         )
@@ -104,9 +105,37 @@ private fun IslandLiquidIndicator(
     )
     val shown = if (refreshing) 1f else fraction.coerceIn(0f, 1.35f)
 
-    Canvas(modifier.width(178.dp).height(92.dp).clipToBounds()) {
+    Canvas(
+        modifier.width(120.dp).height(64.dp).graphicsLayer {
+            alpha = islandIndicatorAlpha(shown, refreshing)
+        },
+    ) {
         val g = islandLiquidGeometry(shown, size.width, size.height)
-        val ink = Color.Black
+        val ink = Tok.accent
+
+        if (refreshing) {
+            val pillWidth = size.width * 0.37f
+            val pillHeight = size.height * 0.42f
+            val pillLeft = (size.width - pillWidth) / 2f
+            val pillTop = size.height * 0.12f
+            drawRoundRect(
+                color = ink,
+                topLeft = androidx.compose.ui.geometry.Offset(pillLeft, pillTop),
+                size = androidx.compose.ui.geometry.Size(pillWidth, pillHeight),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(pillHeight / 2f),
+            )
+            val ringRadius = pillHeight * 0.24f
+            drawArc(
+                color = Color.White,
+                startAngle = rotation - 90f,
+                sweepAngle = 255f,
+                useCenter = false,
+                topLeft = androidx.compose.ui.geometry.Offset(size.width / 2f - ringRadius, pillTop + pillHeight / 2f - ringRadius),
+                size = androidx.compose.ui.geometry.Size(ringRadius * 2, ringRadius * 2),
+                style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round),
+            )
+            return@Canvas
+        }
 
         if (g.neckVisible) {
             val neck = Path().apply {
@@ -131,27 +160,15 @@ private fun IslandLiquidIndicator(
             val ringRadius = g.dropRadius * 0.46f
             val ringTopLeft = androidx.compose.ui.geometry.Offset(g.centerX - ringRadius, g.dropY - ringRadius)
             val ringSize = androidx.compose.ui.geometry.Size(ringRadius * 2, ringRadius * 2)
-            if (refreshing) {
-                drawArc(
-                    color = Color.White,
-                    startAngle = rotation - 90f,
-                    sweepAngle = 255f,
-                    useCenter = false,
-                    topLeft = ringTopLeft,
-                    size = ringSize,
-                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round),
-                )
-            } else {
-                drawArc(
-                    color = Color.White,
-                    startAngle = -90f,
-                    sweepAngle = 359.5f * fraction.coerceIn(0f, 1f),
-                    useCenter = false,
-                    topLeft = ringTopLeft,
-                    size = ringSize,
-                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round),
-                )
-            }
+            drawArc(
+                color = Color.White,
+                startAngle = -90f,
+                sweepAngle = 359.5f * fraction.coerceIn(0f, 1f),
+                useCenter = false,
+                topLeft = ringTopLeft,
+                size = ringSize,
+                style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round),
+            )
         }
     }
 }
@@ -179,14 +196,14 @@ internal fun islandLiquidGeometry(fraction: Float, width: Float, height: Float):
     val p = fraction.coerceIn(0f, 1.35f)
     val eased = 1f - (1f - min(p, 1f)) * (1f - min(p, 1f))
     val cx = width / 2f
-    val islandWidth = min(width * 0.56f, 100f)
-    val islandHeight = min(height * 0.27f, 24f)
-    val islandTop = -islandHeight * 0.47f
+    val islandWidth = width * 0.46f
+    val islandHeight = height * 0.22f
+    val islandTop = height * 0.06f
     val sourceY = islandTop + islandHeight
-    val dropRadius = 3.5f + 15.5f * eased
-    val dropY = sourceY + eased * (height * 0.58f)
+    val dropRadius = height * (0.035f + 0.105f * eased)
+    val dropY = sourceY + dropRadius + eased * (height * 0.34f)
     val neckT = (p / 0.88f).coerceIn(0f, 1f)
-    val sourceHalf = 17f * (1f - neckT * 0.52f)
+    val sourceHalf = islandWidth * 0.17f * (1f - neckT * 0.52f)
     val dropHalf = dropRadius * (0.22f + neckT * 0.42f)
     val controlY = sourceY + (dropY - dropRadius - sourceY) * 0.54f
     return IslandLiquidGeometry(
@@ -206,4 +223,10 @@ internal fun islandLiquidGeometry(fraction: Float, width: Float, height: Float):
         dropTop = dropY - dropRadius * 0.82f,
         neckVisible = p in 0.035f..0.88f,
     )
+}
+
+internal fun islandIndicatorAlpha(fraction: Float, refreshing: Boolean): Float = when {
+    refreshing -> 1f
+    fraction <= 0.02f -> 0f
+    else -> ((fraction - 0.02f) / 0.18f).coerceIn(0f, 1f)
 }
