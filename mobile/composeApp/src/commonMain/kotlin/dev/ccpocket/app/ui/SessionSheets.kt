@@ -512,11 +512,15 @@ internal fun ModelPicker(repo: PocketRepository, onBack: (() -> Unit)?, onDone: 
             fontSize = 16.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f),
         )
     }
-    SettingsSearchField(
+    AppicaAutocomplete(
         query = query,
         onQueryChange = { query = it },
+        options = choices,
+        label = { "${it.name} ${it.id}" },
+        onSelect = { choice -> query = choice.name },
         placeholder = stringResource(Res.string.model_search_placeholder),
         modifier = Modifier.padding(top = 12.dp),
+        expanded = false,
     )
     // Gateway model presets (issue #139): one-tap vendor ids for third-party gateway users. When the
     // daemon reports a gateway ANTHROPIC_BASE_URL (DaemonInfo) the section LEADS the picker — those
@@ -533,6 +537,12 @@ internal fun ModelPicker(repo: PocketRepository, onBack: (() -> Unit)?, onDone: 
             agentModels?.error?.let { Text(it, color = Tok.danger, fontSize = 12.sp, lineHeight = 16.sp) }
             if (choices.isEmpty() && agentModels?.error == null) {
                 Text(stringResource(Res.string.opencode_models_loading), color = Tok.muted, fontSize = 12.5.sp)
+                repeat(3) { index ->
+                    AppicaSkeleton(
+                        Modifier.padding(top = 8.dp).fillMaxWidth(if (index == 2) .72f else 1f).height(54.dp),
+                        radius = AppicaMetrics.radiusSm,
+                    )
+                }
             }
         }
     }
@@ -857,15 +867,12 @@ private fun JobRow(job: BackgroundJob, onStop: (BackgroundJob) -> Unit) {
 /** Confirm stopping a running task — costly to lose a real build, so guard it (issue #80). */
 @Composable
 private fun JobStopConfirm(job: BackgroundJob, onConfirm: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = AppicaTok.raised,
-        titleContentColor = Tok.tx,
-        textContentColor = Tok.tx2,
-        title = { Text(stringResource(Res.string.job_stop_title)) },
-        text = { Text(stringResource(Res.string.job_stop_confirm, job.label), color = Tok.tx2, fontSize = 14.sp, lineHeight = 21.sp) },
-        confirmButton = { TextButton(onConfirm) { Text(stringResource(Res.string.job_stop_action), color = Tok.danger) } },
-        dismissButton = { TextButton(onDismiss) { Text(stringResource(Res.string.cancel), color = Tok.muted) } },
+    AppicaAlertDialog(
+        title = stringResource(Res.string.job_stop_title),
+        body = stringResource(Res.string.job_stop_confirm, job.label),
+        confirmLabel = stringResource(Res.string.job_stop_action),
+        dismissLabel = stringResource(Res.string.cancel),
+        onConfirm = onConfirm, onDismiss = onDismiss, destructive = true,
     )
 }
 

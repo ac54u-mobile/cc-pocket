@@ -165,7 +165,7 @@ private fun Populated(u: Usage) {
         // Window has history but nothing today yet — say so calmly instead of a scary ↓ delta.
         val zeroToday = n >= 2 && today == 0L
 
-        HeroCard(windowTokens, scope, periodCaption(u), deltaPct, zeroToday, span = n)
+        HeroCard(windowTokens, scope, periodCaption(u), deltaPct, zeroToday, span = n, trend = u.days.map { it.tokens.toFloat() })
 
         // The three metrics the daemon only knows for TODAY. Kept, but each carries "· today" so its baseline
         // is unmistakable even while the hero above reads a wider window. A missing sub-metric shows a labeled
@@ -268,7 +268,7 @@ private fun CodexLimitsCard(limits: List<CodexRateLimit>) {
  * old good/bad color inversion.
  */
 @Composable
-private fun HeroCard(tokens: Long, scope: String, period: String, deltaPct: Int?, zeroToday: Boolean, span: Int) {
+private fun HeroCard(tokens: Long, scope: String, period: String, deltaPct: Int?, zeroToday: Boolean, span: Int, trend: List<Float>) {
     Column(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(AppicaMetrics.radius)).background(AppicaTok.background)
             .border(1.dp, AppicaTok.border, RoundedCornerShape(AppicaMetrics.radius))
@@ -280,6 +280,7 @@ private fun HeroCard(tokens: Long, scope: String, period: String, deltaPct: Int?
             Text("· $scope", color = Tok.muted, fontFamily = FontFamily.Monospace, fontSize = 11.5.sp)
         }
         Text(formatTokens(tokens), color = Tok.tx, fontFamily = FontFamily.Monospace, fontSize = 36.sp, fontWeight = FontWeight.SemiBold)
+        if (trend.size >= 2) AppicaSparkline(trend, Modifier.padding(vertical = 3.dp), color = Tok.accent)
         Text(period, color = Tok.muted, fontFamily = FontFamily.Monospace, fontSize = 11.5.sp)
         when {
             zeroToday -> Text(stringResource(Res.string.usage_empty), color = Tok.muted, fontSize = 11.5.sp, modifier = Modifier.padding(top = 1.dp))

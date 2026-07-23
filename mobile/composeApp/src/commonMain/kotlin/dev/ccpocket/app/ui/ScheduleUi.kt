@@ -491,12 +491,13 @@ fun LimitResetBanner(repo: PocketRepository) {
 @Composable
 private fun RowScope.LimitOfferContent(repo: PocketRepository, offer: PocketRepository.LimitOffer) {
     Icon(HourglassGlyph, null, tint = Tok.warn, modifier = Modifier.size(17.dp))
-    val title = buildAnnotatedString {
-        withStyle(SpanStyle(color = Tok.tx, fontWeight = FontWeight.SemiBold)) { append(stringResource(Res.string.limit_banner)) }
-        append(" ")
-        withStyle(SpanStyle(color = Tok.tx2)) { append(stringResource(Res.string.limit_resets, hhmm(offer.resetAtMs))) }
+    var now by remember(offer.resetAtMs) { mutableStateOf(epochMillis()) }
+    LaunchedEffect(offer.resetAtMs) { while (true) { delay(1000); now = epochMillis() } }
+    Column(Modifier.weight(1f)) {
+        Text(stringResource(Res.string.limit_banner), color = Tok.tx, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+        Text(stringResource(Res.string.limit_resets, hhmm(offer.resetAtMs)), color = Tok.tx2, fontSize = 11.5.sp)
     }
-    Text(title, fontSize = 13.5.sp, lineHeight = 18.sp, modifier = Modifier.weight(1f))
+    AppicaCountdown(((offer.resetAtMs - now).coerceAtLeast(0) / 1000).toInt())
     Row(
         Modifier.height(34.dp).clip(RoundedCornerShape(9.dp)).background(Tok.accent)
             .clickable { repo.scheduleAutoContinue() }.padding(horizontal = 13.dp),

@@ -116,6 +116,7 @@ object AppicaTok {
     val backgroundSubtle get() = palette.backgroundSubtle
     val backgroundMuted get() = palette.backgroundMuted
     val backgroundStrong get() = palette.backgroundStrong
+    val backgroundInverse get() = palette.backgroundInverse
     val border get() = palette.border
     val borderMuted get() = palette.borderMuted
     val borderStrong get() = palette.borderStrong

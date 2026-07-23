@@ -162,14 +162,15 @@ private fun DeviceDialog(
     title: String, confirmLabel: String, confirmColor: Color,
     onConfirm: () -> Unit, onDismiss: () -> Unit, body: @Composable () -> Unit,
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = AppicaTok.backgroundSubtle,
-        titleContentColor = AppicaTok.foregroundIntense,
-        textContentColor = AppicaTok.foreground,
-        title = { Text(title) },
-        text = { Column { body() } },
-        confirmButton = { TextButton(onConfirm) { Text(confirmLabel, color = confirmColor) } },
-        dismissButton = { TextButton(onDismiss) { Text(stringResource(Res.string.cancel), color = Tok.muted) } },
-    )
+    AppicaDialog(
+        title = title, onDismiss = onDismiss,
+        actions = {
+            AppicaButton(stringResource(Res.string.cancel), onDismiss, variant = AppicaButtonVariant.GHOST)
+            Spacer(Modifier.width(8.dp))
+            AppicaButton(
+                confirmLabel, onConfirm,
+                variant = if (confirmColor == Tok.danger) AppicaButtonVariant.DANGER else AppicaButtonVariant.PRIMARY,
+            )
+        },
+    ) { body() }
 }

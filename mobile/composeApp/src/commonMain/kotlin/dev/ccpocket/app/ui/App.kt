@@ -1284,6 +1284,7 @@ internal fun ChatScreen( // internal: rendered offscreen by ShowcaseRender (mark
     var showTerminal by remember { mutableStateOf(false) }
     var showChangedFiles by remember { mutableStateOf(false) }
     var showScheduleSheet by remember { mutableStateOf(false) } // send long-press → schedule send (issue #137)
+    val toastState = rememberAppicaToastState()
     if (showTerminal) { TerminalScreen(repo) { showTerminal = false }; return } // full-screen, replaces chat (issue #3)
     if (repo.viewedFilePath.value != null) { // changed-file viewer (issue #36); back → the still-open files list, ✕ → chat (issue #53)
         FileViewerScreen(repo, onExit = if (showChangedFiles) ({ repo.closeFileViewer(); showChangedFiles = false }) else null) { repo.closeFileViewer() }
@@ -1380,6 +1381,11 @@ internal fun ChatScreen( // internal: rendered offscreen by ShowcaseRender (mark
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 BackTextButton(backToBrowse)
+                AppicaAvatar(
+                    name = repo.sessionAgent.value?.name?.lowercase() ?: "assistant",
+                    presence = if (repo.phase.value == ConnPhase.Ready) AppicaPresence.ONLINE else AppicaPresence.AWAY,
+                    size = 34.dp, modifier = Modifier.padding(end = 9.dp),
+                )
                 Column(Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).clickable { showSessionInfo = true }.padding(vertical = 2.dp)) {
                     // session title leads (design); the generic "Chat" only before the first prompt names it
                     Text(
@@ -1430,16 +1436,10 @@ internal fun ChatScreen( // internal: rendered offscreen by ShowcaseRender (mark
                     // execution state gets its own persistent header chip (issue #52): re-entering a mid-turn
                     // session showed nothing alive — the connection dot only says "linked", not "working",
                     // and the composer stays enabled (queueing), which read as "disconnected".
-                    if (repo.streaming.value) Row(
-                        Modifier.padding(end = 6.dp).clip(RoundedCornerShape(AppicaMetrics.radiusXs))
-                            .background(AppicaTok.backgroundMuted)
-                            .padding(horizontal = 7.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(5.dp),
-                    ) {
-                        PulseDot(Tok.accent)
-                        Text(stringResource(Res.string.chat_running), color = Tok.accent, fontSize = 11.sp)
-                    }
+                    if (repo.streaming.value) AppicaBadge(
+                        stringResource(Res.string.chat_running),
+                        modifier = Modifier.padding(end = 6.dp), status = AppicaStatus.WARNING,
+                    )
                     // mode switching moved into the ⋯ quick-actions sheet — the persistent badge was one
                     // more thing crowding the header for a setting touched a few times per session
                     Box(
@@ -1649,7 +1649,8 @@ internal fun ChatScreen( // internal: rendered offscreen by ShowcaseRender (mark
                     PendingFilesStrip(repo.pendingFiles, onCancel = repo::removePendingFile, onRetry = repo::retryPendingFile)
                     AttachTray(repo.pendingImages, repo::removePendingImage)
                     repo.voiceNotice.value?.let { n ->
-                        Text(stringResource(n), color = Tok.tx2, fontSize = 12.sp, modifier = Modifier.padding(start = 16.dp, top = 8.dp))
+                        val notice = stringResource(n)
+                        LaunchedEffect(n) { toastState.show(notice) }
                     }
                     if (capturing) {
                         if (repo.liveDictation.value && voiceState is VoiceState.Recording) {
@@ -1668,7 +1669,13 @@ internal fun ChatScreen( // internal: rendered offscreen by ShowcaseRender (mark
                         // Two-layer composer (issue #157 follow-up, design: mobile-composer.jsx): the field
                         // owns the full width on top; attach + model chip + the action slot live on an
                         // accessory row below — the chip no longer squeezes what you type on narrow phones.
-                        Column(Modifier.fillMaxWidth().padding(top = 10.dp, bottom = 8.dp)) {
+                        Column(
+                            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp)
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(AppicaTok.background)
+                                .border(1.dp, AppicaTok.borderStrong, RoundedCornerShape(20.dp))
+                                .padding(horizontal = 6.dp, vertical = 4.dp),
+                        ) {
                             // all that survives of the old full-width amber strip: one slim line, and only
                             // once turns are actually about to drop (design: context-occupancy.jsx)
                             val ctxUsed = repo.contextUsed.value
@@ -1689,14 +1696,14 @@ internal fun ChatScreen( // internal: rendered offscreen by ShowcaseRender (mark
                                         else -> Res.string.message_claude_hint
                                     },
                                 ),
-                                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                                modifier = Modifier.fillMaxWidth(),
                                 focusRequester = composerFocus,
+                                chrome = false,
                             )
-                            Row(
+                            AppicaToolbar(
                                 // start 8 / end 10: the 44dp targets carry their own inner padding, so the
                                 // glyphs sit optically on the field's 16dp edge (design values)
-                                Modifier.fillMaxWidth().padding(start = 8.dp, end = 10.dp, top = 6.dp).heightIn(min = 44.dp),
-                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth().padding(top = 2.dp).heightIn(min = 44.dp),
                             ) {
                                 val attachInteraction = remember { MutableInteractionSource() }
                                 val attachPressed by attachInteraction.collectIsPressedAsState()
@@ -1795,6 +1802,10 @@ internal fun ChatScreen( // internal: rendered offscreen by ShowcaseRender (mark
                 }
             }
         }
+        AppicaToastHost(
+            toastState,
+            Modifier.align(Alignment.BottomCenter).padding(start = 16.dp, end = 16.dp, bottom = 112.dp),
+        )
         viewer?.let { (imgs, idx) -> ImageViewer(imgs, idx) { viewer = null } }
         videoViewer?.let { VideoPlayerOverlay(it) { videoViewer = null } } // issue #98
         if (repo.micPermissionSheet.value) {
@@ -1948,43 +1959,49 @@ private fun MessageItem(
     onOpenVideo: (dev.ccpocket.app.data.SentFile) -> Unit = {},
 ) {
     when (m) {
-        // accent-rail user turn (design: User Turn Styles.html, direction B) — the terracotta
-        // rail + warm tint mark "what I said" as a quote; no label, assistant flow untouched
-        is ChatItem.User -> Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
-        Row(
-            Modifier.fillMaxWidth(0.92f).height(IntrinsicSize.Min)
-                .clip(RoundedCornerShape(AppicaMetrics.radiusSm))
-                .background(AppicaTok.backgroundSubtle)
-                .border(1.dp, AppicaTok.border, RoundedCornerShape(AppicaMetrics.radiusSm)),
-        ) {
-            Box(Modifier.fillMaxHeight().width(2.dp).clip(RoundedCornerShape(2.dp)).background(Tok.accent.copy(alpha = 0.6f)))
-            Column(
-                Modifier.weight(1f).padding(start = 12.dp, end = 12.dp, top = 9.dp, bottom = 9.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+        // Appica Assistant conversation grammar: customer turns are compact blue bubbles aligned
+        // right; assistant turns use the neutral companion bubble aligned left.
+        is ChatItem.User -> {
+            val (_, copyMessage) = rememberCopied()
+            AppicaContextMenu(
+                items = listOf(AppicaMenuItem("Copy") { copyMessage(m.text) }),
+                modifier = Modifier.fillMaxWidth(),
             ) {
-                if (m.images.isNotEmpty()) SentImages(m.images) { i -> onOpenImages(m.images, i) }
-                // uploaded files (issue #90): chip per file with its @inbox landing path. Videos (issue
-                // #98) render as a 16:9 card that opens the player; both share the "in workspace" grammar.
-                m.files.forEach { f ->
-                    if (isVideoAttachment(f.mediaType, f.name)) SentVideoCard(f) { onOpenVideo(f) } else SentFileChip(f)
-                }
-                if (m.text.isNotBlank()) {
-                    // renderClip: this row is a single Text paragraph — an ~800 KB replayed prompt
-                    // (skill injection) OOM'd iOS on open; render a prefix, copy keeps the whole thing
-                    val shown = renderClip(m.text)
-                    SelectionContainer { Text(shown, color = Tok.tx, fontSize = 14.sp * LocalFontScale.current) } // drag-select to copy (no native toolbar on iOS)
-                    if (shown.length < m.text.length) TruncatedNote(m.text.length)
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                        CopyChip(m.text) // one-tap copy — the reliable path on iOS where select-to-copy has no menu (issue #5)
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+                    Column(
+                        Modifier.fillMaxWidth(0.82f)
+                            .clip(RoundedCornerShape(18.dp, 18.dp, 6.dp, 18.dp))
+                            .background(AppicaTok.secondary.copy(alpha = if (Tok.current.dark) 0.24f else 0.42f))
+                            .border(1.dp, AppicaTok.secondary.copy(alpha = 0.34f), RoundedCornerShape(18.dp, 18.dp, 6.dp, 18.dp))
+                            .padding(horizontal = 14.dp, vertical = 11.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        if (m.images.isNotEmpty()) SentImages(m.images) { i -> onOpenImages(m.images, i) }
+                        m.files.forEach { f ->
+                            if (isVideoAttachment(f.mediaType, f.name)) SentVideoCard(f) { onOpenVideo(f) } else SentFileChip(f)
+                        }
+                        if (m.text.isNotBlank()) {
+                            val shown = renderClip(m.text)
+                            SelectionContainer { Text(shown, color = Tok.tx, fontSize = 14.sp * LocalFontScale.current) }
+                            if (shown.length < m.text.length) TruncatedNote(m.text.length)
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) { CopyChip(m.text) }
+                        }
                     }
                 }
             }
         }
-        }
-        is ChatItem.Assistant -> Column {
-            SelectionContainer { MarkdownText(m.text, Tok.tx) } // drag-select any span to copy
-            if (m.text.isNotBlank()) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                CopyChip(m.text) // one-tap copy of the whole turn
+        is ChatItem.Assistant -> Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
+            Column(
+                Modifier.fillMaxWidth(0.86f)
+                    .clip(RoundedCornerShape(18.dp, 18.dp, 18.dp, 6.dp))
+                    .background(AppicaTok.backgroundMuted)
+                    .border(1.dp, AppicaTok.border, RoundedCornerShape(18.dp, 18.dp, 18.dp, 6.dp))
+                    .padding(horizontal = 14.dp, vertical = 11.dp),
+            ) {
+                SelectionContainer { MarkdownText(m.text, Tok.tx) }
+                if (m.text.isNotBlank()) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    CopyChip(m.text)
+                }
             }
         }
         is ChatItem.Thinking -> ThinkingRow(m)
@@ -2001,20 +2018,18 @@ private fun MessageItem(
             // tools and only when the preview truly reads as a path (Bash/other previews stay plain text).
             val opener = LocalPathOpener.current
             val openablePath = m.tool in TOOL_FILE_PATH_TOOLS && opener != null && looksLikePath(m.preview)
-            Column(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(AppicaMetrics.radiusSm))
+            AppicaCollapsible(
+                expanded = expanded, onExpandedChange = { expanded = it },
+                title = if (isPlan) "⚙ Plan" else "⚙ ${m.tool}",
+                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(AppicaMetrics.radiusSm))
                     .background(AppicaTok.backgroundSubtle)
-                    .border(1.dp, AppicaTok.border, RoundedCornerShape(AppicaMetrics.radiusSm))
-                    .clickable { expanded = !expanded }.padding(10.dp),
+                    .border(1.dp, AppicaTok.border, RoundedCornerShape(AppicaMetrics.radiusSm)),
             ) {
-                Text(if (isPlan) "⚙ Plan" else "⚙ ${m.tool}", color = Tok.accent, fontFamily = FontFamily.Monospace, fontSize = 12.sp)
                 if (m.preview.isNotBlank()) {
-                    if (openablePath) OpenablePathChip(m.preview, Modifier.padding(top = 6.dp)) { opener!!.open(m.preview) }
-                    else if (isPlan && expanded) Box(Modifier.padding(top = 4.dp)) { MarkdownText(m.preview, Tok.tx2) } // plan rendered as markdown
+                    if (openablePath) OpenablePathChip(m.preview) { opener!!.open(m.preview) }
+                    else if (isPlan) MarkdownText(m.preview, Tok.tx2)
                     else Text(
                         m.preview, color = Tok.tx2, fontFamily = FontFamily.Monospace, fontSize = 12.sp,
-                        maxLines = if (expanded) Int.MAX_VALUE else 1,
-                        overflow = if (expanded) TextOverflow.Clip else TextOverflow.Ellipsis,
                         modifier = Modifier.padding(top = 2.dp),
                     )
                 }
@@ -2093,12 +2108,12 @@ private fun Label(text: String) =
 @Composable
 private fun WorkingRow() {
     Row(
-        Modifier.padding(vertical = 2.dp),
+        Modifier.padding(start = 4.dp, top = 5.dp, bottom = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        PulseDot(Tok.muted)
-        Text(stringResource(Res.string.thinking_streaming), color = Tok.muted, fontSize = 12.5.sp, fontStyle = FontStyle.Italic)
+        CircularProgressIndicator(Modifier.size(14.dp), color = AppicaTok.foregroundMuted, strokeWidth = 1.7.dp)
+        Text(stringResource(Res.string.thinking_streaming), color = AppicaTok.foregroundMuted, fontSize = 12.5.sp)
     }
 }
 

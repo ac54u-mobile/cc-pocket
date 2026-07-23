@@ -72,11 +72,12 @@ fun ComposerField(
     placeholder: String,
     modifier: Modifier = Modifier,
     focusRequester: FocusRequester? = null,
+    chrome: Boolean = true,
 ) {
     val shape = RoundedCornerShape(AppicaMetrics.radius)
     Box(
-        modifier.heightIn(min = 46.dp).clip(shape).background(AppicaTok.background)
-            .border(1.dp, AppicaTok.borderStrong, shape)
+        modifier.heightIn(min = 46.dp)
+            .let { if (chrome) it.clip(shape).background(AppicaTok.background).border(1.dp, AppicaTok.borderStrong, shape) else it }
             .padding(horizontal = 14.dp),
         contentAlignment = Alignment.CenterStart,
     ) {

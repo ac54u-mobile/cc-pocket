@@ -4,6 +4,7 @@ import androidx.compose.ui.graphics.Color
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
+import kotlin.test.assertTrue
 
 class AppicaKitTest {
     @Test
@@ -35,5 +36,33 @@ class AppicaKitTest {
     fun appicaBaseRadiusIsFourteenDp() {
         assertEquals(14f, AppicaMetrics.radius.value)
         assertEquals(150, AppicaMetrics.motionFastMs)
+    }
+
+    @Test
+    fun avatarInitialsHandleNamesAndEmptyValues() {
+        assertEquals("CC", initials("Claude Code"))
+        assertEquals("小明", initials("小 明"))
+        assertEquals("?", initials("  "))
+    }
+
+    @Test
+    fun sparklineNormalizationHandlesRangeAndFlatSeries() {
+        assertEquals(listOf(0f, .5f, 1f), sparklineNormalized(listOf(2f, 4f, 6f)))
+        assertTrue(sparklineNormalized(listOf(3f, 3f)).all { it == .5f })
+        assertTrue(sparklineNormalized(emptyList()).isEmpty())
+    }
+
+    @Test
+    fun calendarCalculationsHandleLeapYearsAndMonthOffsets() {
+        assertTrue(isLeapYear(2024))
+        assertTrue(!isLeapYear(2100))
+        assertEquals(29, daysInMonth(2024, 2))
+        assertEquals(28, daysInMonth(2025, 2))
+        assertEquals(3, firstWeekday(2026, 1)) // Thursday, Monday-based.
+    }
+
+    @Test
+    fun appicaDateUsesStableIsoFormatting() {
+        assertEquals("2026-07-03", AppicaDate(2026, 7, 3).toString())
     }
 }

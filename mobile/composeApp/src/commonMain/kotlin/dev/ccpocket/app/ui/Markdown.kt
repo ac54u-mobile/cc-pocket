@@ -1,5 +1,8 @@
 package dev.ccpocket.app.ui
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -14,10 +17,15 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -244,21 +252,35 @@ fun MarkdownText(text: String, color: Color) {
 fun rememberCopied(): Pair<Boolean, (String) -> Unit> {
     val clipboard = LocalClipboardManager.current
     var copied by remember { mutableStateOf(false) }
-    LaunchedEffect(copied) { if (copied) { delay(1500); copied = false } }
+    LaunchedEffect(copied) { if (copied) { delay(2000); copied = false } }
     return copied to { s: String -> clipboard.setText(AnnotatedString(s)); copied = true }
 }
 
-/** A small "copy/copied" affordance that copies [text] to the clipboard and flashes confirmation. */
+/** Appica Copy Button: ghost icon-sm by default, animated copy → check feedback for two seconds. */
 @Composable
 fun CopyChip(text: String, modifier: Modifier = Modifier) {
     val (copied, copy) = rememberCopied()
-    Text(
-        stringResource(if (copied) Res.string.code_copied else Res.string.code_copy),
-        color = if (copied) Tok.ok else Tok.muted, fontFamily = FontFamily.Monospace, fontSize = 10.5.sp * LocalFontScale.current,
-        modifier = modifier.clip(RoundedCornerShape(5.dp))
-            .clickable { copy(text) }
-            .padding(horizontal = 7.dp, vertical = 3.dp),
+    val tint by animateColorAsState(
+        if (copied) AppicaTok.success else AppicaTok.foregroundMuted,
+        tween(AppicaMetrics.motionFastMs), label = "copy-button-tint",
     )
+    val label = stringResource(if (copied) Res.string.code_copied else Res.string.code_copy)
+    Box(
+        modifier.size(AppicaMetrics.controlSm)
+            .clip(RoundedCornerShape(AppicaMetrics.radius2Xs))
+            .background(if (copied) AppicaTok.success.copy(alpha = 0.10f) else Color.Transparent)
+            .clickable { copy(text) },
+        contentAlignment = Alignment.Center,
+    ) {
+        Crossfade(copied, animationSpec = tween(AppicaMetrics.motionFastMs), label = "copy-button-icon") { done ->
+            Icon(
+                if (done) Icons.Rounded.Check else Icons.Rounded.ContentCopy,
+                contentDescription = label,
+                tint = tint,
+                modifier = Modifier.size(16.dp),
+            )
+        }
+    }
 }
 
 /** Fenced block per the design: hairline container, surface header (language + copy), mono body. */
