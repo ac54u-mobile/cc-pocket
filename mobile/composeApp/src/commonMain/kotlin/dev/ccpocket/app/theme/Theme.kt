@@ -1,8 +1,6 @@
 package dev.ccpocket.app.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -14,12 +12,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalTextToolbar
 import dev.ccpocket.app.rememberPlatformTextToolbar
 
-/** The appearance setting (issue #63). SYSTEM follows the OS light/dark, the other two force it.
- *  Absent/garbage → DARK: the app shipped dark-only, so existing users stay dark until they opt into
- *  light or system (dark must not regress). Users pick SYSTEM/LIGHT explicitly in Settings ▸ Appearance. */
+/** Legacy persisted values are retained for migration compatibility, but the product is light-only. */
 enum class ThemeMode { SYSTEM, LIGHT, DARK;
     companion object {
-        fun from(name: String?): ThemeMode = entries.firstOrNull { it.name == name } ?: DARK
+        fun from(name: String?): ThemeMode = LIGHT
     }
 }
 
@@ -91,7 +87,7 @@ val LightPalette = Palette(
  */
 object Tok {
     /** The active palette. [PocketTheme] points this at light/dark; equal-value writes are no-ops. */
-    var current by mutableStateOf(DarkPalette)
+    var current by mutableStateOf(LightPalette)
         internal set
 
     val base: Color get() = current.base
@@ -117,35 +113,27 @@ val LocalFontScale = staticCompositionLocalOf { 1f }
 /** Resolve a [ThemeMode] to an effective dark/light against the current OS setting. Pure seam (extracted
  *  from [PocketTheme]) so the polarity that also drives the system-bar icon color (issue #117) is unit-tested
  *  without a composition: LIGHT is never dark, DARK is always dark, SYSTEM follows [systemDark]. */
-fun ThemeMode.resolvesToDark(systemDark: Boolean): Boolean = when (this) {
-    ThemeMode.LIGHT -> false
-    ThemeMode.DARK -> true
-    ThemeMode.SYSTEM -> systemDark
-}
+fun ThemeMode.resolvesToDark(systemDark: Boolean): Boolean = false
 
 /** Appearance-aware entry point (issue #63): resolves [mode] against the OS so both app roots just pass their
  *  persisted [ThemeMode] — a live system light/dark flip re-themes, LIGHT/DARK force it. Delegates to the
  *  boolean overload, still the default for the ~dozen test/preview `PocketTheme { }` callers. */
 @Composable
 fun PocketTheme(mode: ThemeMode, fontScale: Float = 1f, content: @Composable () -> Unit) {
-    val dark = mode.resolvesToDark(systemDark = isSystemInDarkTheme())
-    // issue #117: align the OS status/navigation-bar FOREGROUND (icon/text) color with the resolved theme so
-    // the bars stay legible in light mode too — Android tints them, iOS/desktop no-op. On the mode overload
-    // only, so the real app roots drive it while the boolean overload used by tests/previews stays inert.
-    SystemBarAppearance(darkTheme = dark)
-    PocketTheme(dark = dark, fontScale = fontScale, content = content)
+    SystemBarAppearance(darkTheme = false)
+    PocketTheme(dark = false, fontScale = fontScale, content = content)
 }
 
 @Composable
 fun PocketTheme(dark: Boolean = true, fontScale: Float = 1f, content: @Composable () -> Unit) {
-    val palette = if (dark) DarkPalette else LightPalette
+    val palette = LightPalette
     // Point the global tokens at the active palette BEFORE children compose, so their first frame reads
     // the right colors (no dark flash for a light-mode launch). The write is idempotent — DarkPalette /
     // LightPalette are stable singletons, so an unchanged theme is a structural no-op and never loops.
     Tok.current = palette
     // one override list over whichever baseline — the unset M3 fields keep each factory's light/dark
     // defaults (identical to spelling both schemes out), so a token add/rename stays in a single place
-    val scheme = (if (dark) darkColorScheme() else lightColorScheme()).copy(
+    val scheme = lightColorScheme().copy(
         primary = palette.accent, onPrimary = Color.White,
         background = palette.base, onBackground = palette.tx,
         surface = palette.surface, onSurface = palette.tx,

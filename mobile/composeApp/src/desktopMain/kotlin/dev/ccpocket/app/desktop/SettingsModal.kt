@@ -88,7 +88,6 @@ import dev.ccpocket.app.resources.settings_cli_default
 import dev.ccpocket.app.resources.settings_consequence_new_session
 import dev.ccpocket.app.resources.settings_follow_model
 import dev.ccpocket.app.resources.settings_group_appearance
-import dev.ccpocket.app.resources.settings_group_appearance_sub
 import dev.ccpocket.app.resources.settings_group_context
 import dev.ccpocket.app.resources.settings_group_context_sub
 import dev.ccpocket.app.resources.settings_group_default_agent
@@ -109,11 +108,7 @@ import dev.ccpocket.app.resources.settings_phone_push_stale
 import dev.ccpocket.app.resources.settings_terminal_embedded
 import dev.ccpocket.app.resources.settings_terminal_external
 import dev.ccpocket.app.resources.settings_title
-import dev.ccpocket.app.resources.appearance_dark
-import dev.ccpocket.app.resources.appearance_light
-import dev.ccpocket.app.resources.appearance_system
 import dev.ccpocket.app.feedback.rememberAppHaptics
-import dev.ccpocket.app.theme.ThemeMode
 import dev.ccpocket.app.theme.Tok
 import dev.ccpocket.app.ui.CLAUDE_MODEL_OPTIONS
 import dev.ccpocket.app.ui.SettingsConsequenceHint
@@ -137,7 +132,6 @@ import org.jetbrains.compose.resources.stringResource
 /** Desktop rail tabs — titles come from [SettingsSection] so phone Hub + desktop stay one IA. */
 private enum class SettingsTab(val section: SettingsSection, val icon: ImageVector) {
     AGENT(SettingsSection.AGENT, Icons.Outlined.Tune),
-    APPEARANCE(SettingsSection.APPEARANCE, Icons.Outlined.Info),
     WORKSPACE(SettingsSection.WORKSPACE, Icons.Rounded.Terminal),
     NOTIFICATIONS(SettingsSection.NOTIFICATIONS, Icons.Rounded.Notifications),
     ADVANCED(SettingsSection.ADVANCED, Icons.Outlined.Tune),
@@ -175,7 +169,6 @@ fun SettingsModal(model: DesktopModel, onDismiss: () -> Unit) {
             Box(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).padding(24.dp)) {
                 when (tab) {
                     SettingsTab.AGENT -> AgentDefaultsDesktopPane(model)
-                    SettingsTab.APPEARANCE -> AppearanceDesktopPane(model)
                     SettingsTab.WORKSPACE -> WorkspaceDesktopPane(model)
                     SettingsTab.NOTIFICATIONS -> NotificationsDesktopPane(model)
                     SettingsTab.ADVANCED -> AdvancedDesktopPane(model)
@@ -244,13 +237,6 @@ private fun Group(title: String, sub: String? = null, content: @Composable () ->
 }
 
 @Composable
-private fun AppearanceDesktopPane(model: DesktopModel) {
-    Group(stringResource(Res.string.settings_group_appearance), stringResource(Res.string.settings_group_appearance_sub)) {
-        AppearanceRow(model)
-    }
-}
-
-@Composable
 private fun AgentDefaultsDesktopPane(model: DesktopModel) {
     Column {
         Group(stringResource(Res.string.settings_group_default_agent), stringResource(Res.string.settings_group_default_agent_sub)) {
@@ -314,51 +300,6 @@ private fun NotificationsDesktopPane(model: DesktopModel) {
 private fun AdvancedDesktopPane(model: DesktopModel) {
     Group(stringResource(Res.string.settings_group_context), stringResource(Res.string.settings_group_context_sub)) {
         ContextWindowRows(model)
-    }
-}
-
-// System / Light / Dark segmented control (issue #63) — a three-way toggle mirroring the mobile Appearance
-// picker. Wired to the shared repo via model.themeMode, so a pick persists and the window root re-themes live.
-@Composable
-private fun AppearanceRow(model: DesktopModel) {
-    val haptics = rememberAppHaptics()
-    val modes = listOf(
-        ThemeMode.SYSTEM to stringResource(Res.string.appearance_system),
-        ThemeMode.LIGHT to stringResource(Res.string.appearance_light),
-        ThemeMode.DARK to stringResource(Res.string.appearance_dark),
-    )
-    Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Tok.base)
-            .border(1.dp, Tok.hair, RoundedCornerShape(10.dp)).padding(3.dp),
-        horizontalArrangement = Arrangement.spacedBy(3.dp),
-    ) {
-        modes.forEach { (mode, label) ->
-            val sel = model.themeMode == mode
-            val bg by animateColorAsState(
-                if (sel) Tok.accent else Color.Transparent,
-                tween(SettingsMetrics.animMs),
-                label = "appearance-bg",
-            )
-            val fg by animateColorAsState(
-                if (sel) Tok.base else Tok.tx2,
-                tween(SettingsMetrics.animMs),
-                label = "appearance-fg",
-            )
-            Box(
-                Modifier.weight(1f).clip(RoundedCornerShape(7.dp))
-                    .background(bg)
-                    .clickable {
-                        haptics.tick()
-                        model.themeMode = mode
-                    }.padding(vertical = 8.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    label, color = fg, fontFamily = Dk.ui, fontSize = 12.5.sp,
-                    fontWeight = if (sel) FontWeight.SemiBold else FontWeight.Normal,
-                )
-            }
-        }
     }
 }
 

@@ -65,4 +65,12 @@ class AppicaKitTest {
     fun appicaDateUsesStableIsoFormatting() {
         assertEquals("2026-07-03", AppicaDate(2026, 7, 3).toString())
     }
+
+    @Test
+    fun scrollChromeAccumulatorResetsAsSoonAsDirectionReverses() {
+        assertEquals(13f, accumulateScrollDelta(8f, 5f))
+        assertEquals(-3f, accumulateScrollDelta(13f, -3f))
+        assertEquals(-10f, accumulateScrollDelta(-3f, -7f))
+        assertEquals(4f, accumulateScrollDelta(-10f, 4f))
+    }
 }

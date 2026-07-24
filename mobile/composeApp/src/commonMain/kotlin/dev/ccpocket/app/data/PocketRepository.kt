@@ -482,13 +482,12 @@ class PocketRepository(private val scope: CoroutineScope, private val pinnedTo: 
         SecureStore.getString(K_FONT_SCALE)?.toFloatOrNull()?.coerceIn(FONT_SCALE_MIN, FONT_SCALE_MAX) ?: 1f,
     )
 
-    /** Appearance: follow the system, or force light/dark (issue #63). Persisted; passed straight to
-     *  PocketTheme(mode = …), which resolves SYSTEM against isSystemInDarkTheme() at the app root. */
+    /** Appearance is light-only. Old SYSTEM/DARK values migrate to LIGHT at startup. */
     val themeMode = mutableStateOf(ThemeMode.from(SecureStore.getString(K_THEME_MODE)))
     fun setThemeMode(mode: ThemeMode) {
-        if (mode == themeMode.value) return
-        themeMode.value = mode
-        SecureStore.putString(K_THEME_MODE, mode.name)
+        if (themeMode.value == ThemeMode.LIGHT) return
+        themeMode.value = ThemeMode.LIGHT
+        SecureStore.putString(K_THEME_MODE, ThemeMode.LIGHT.name)
     }
 
     // Voice engine choice: route captures to the computer's whisper instead of on-device dictation —
@@ -710,6 +709,10 @@ class PocketRepository(private val scope: CoroutineScope, private val pinnedTo: 
     val convoId = mutableStateOf<String?>(null)
     val workdir = mutableStateOf<String?>(null)
     val chatTitle = mutableStateOf<String?>(null)            // session title for the chat header (client-side)
+    private var titleGenerationJob: Job? = null
+    private val titleGenerationAttempted = mutableSetOf<String>()
+    private val generatedTitlesByConvo = mutableMapOf<String, String>()
+    private val generatedTitlesBySession = mutableMapOf<String, String>()
     private var thinkStartMs: Long? = null                   // first Thinking chunk of the in-progress block
     val pendingAsk = mutableStateOf<PermissionAsk?>(null)
     // issue #100: the askId the daemon reported as TIMED_OUT — the permission sheet for THIS exact ask renders
@@ -1938,7 +1941,10 @@ class PocketRepository(private val scope: CoroutineScope, private val pinnedTo: 
                 recomputePhase()
             }
             is Sessions -> {
-                sessionsDir.value = f.workdir; replace(sessions, f.items)
+                sessionsDir.value = f.workdir
+                replace(sessions, f.items.map { item ->
+                    generatedTitlesBySession[item.sessionId]?.let { item.copy(title = it) } ?: item
+                })
                 replace(sessionGroups, f.groups ?: emptyList()) // #119: null (older daemon) → no groups, flat list
                 groupsSupported.value = f.groups != null // groups=[] (owner, none yet) still enables management
                 renameSupported.value = f.renameSupported // #158: false from an older daemon / a guest
@@ -2034,6 +2040,13 @@ class PocketRepository(private val scope: CoroutineScope, private val pinnedTo: 
                 migrateDraft(f.sessionId) // before re-keying: composerKey() still reads the old chain
                 convoId.value = f.convoId; workdir.value = f.workdir; observing.value = f.observing; currentSessionId = f.sessionId
                 f.sessionId?.let { sessionKey.value = it }
+                generatedTitlesByConvo[f.convoId]?.let { generatedTitle ->
+                    if (chatTitle.value.isNullOrBlank()) chatTitle.value = generatedTitle
+                    f.sessionId?.let { sessionId ->
+                        generatedTitlesBySession[sessionId] = generatedTitle
+                        updateVisibleSessionTitle(sessionId, generatedTitle)
+                    }
+                }
                 f.mode?.let { mode.value = it } // daemon is the source of truth — corrects the optimistic badge
                 f.effort?.let { effort.value = it }
                 f.agent?.let { sessionAgent.value = it } // daemon truth for the backend badge
@@ -2903,6 +2916,28 @@ class PocketRepository(private val scope: CoroutineScope, private val pinnedTo: 
         scope.launch { send(RenameSession(dir, sessionId, title.trim())) }
     }
 
+    private fun updateVisibleSessionTitle(sessionId: String, title: String) {
+        val index = sessions.indexOfFirst { it.sessionId == sessionId }
+        if (index >= 0) sessions[index] = sessions[index].copy(title = title)
+    }
+
+    private fun generateTitleInBackground(expectedConvoId: String, prompt: String) {
+        if (!titleGenerationAttempted.add(expectedConvoId)) return
+        titleGenerationJob?.cancel()
+        titleGenerationJob = scope.launch {
+            val generated = withContext(Dispatchers.Default) { generateSessionTitle(prompt) } ?: return@launch
+            // The user may have switched conversations while this independent task was running.
+            if (convoId.value != expectedConvoId || !chatTitle.value.isNullOrBlank()) return@launch
+            generatedTitlesByConvo[expectedConvoId] = generated
+            chatTitle.value = generated
+            sessionKey.value?.let { sessionId ->
+                generatedTitlesBySession[sessionId] = generated
+                updateVisibleSessionTitle(sessionId, generated)
+            }
+            rememberOpenedSession(workdir.value, sessionKey.value, generated, sessionAgent.value)
+        }
+    }
+
     /** Dismiss the inline rename-refusal feedback (Esc on the sidebar's rename row). */
     fun dismissRenameError() { renameError.value = null }
     // startMode defaults to the persisted default mode (mirrors effort), so tapping a session straight from
@@ -3186,12 +3221,8 @@ class PocketRepository(private val scope: CoroutineScope, private val pinnedTo: 
         messages.add(ChatItem.User(text, ready, pending = true, promptId = promptId, files = sentFiles))
         promptPending = true
         turnStartMark = kotlin.time.TimeSource.Monotonic.markNow()
-        if (chatTitle.value == null && text.isNotBlank()) {
-            chatTitle.value = text.take(48) // new session: first prompt becomes the header title
-            // …and the working-set row's label: a brand-new session had no title when SessionLive landed,
-            // so without this it would sit in the switcher under its bare project name forever (#165)
-            rememberOpenedSession(workdir.value, sessionKey.value, chatTitle.value, sessionAgent.value)
-        }
+        val userMessageCount = messages.count { it is ChatItem.User }
+        val shouldGenerateTitle = shouldGenerateSessionTitle(chatTitle.value, userMessageCount, text, c in titleGenerationAttempted)
         pendingImages.clear()
         pendingFiles.clear() // landed refs consumed; failed leftovers clear with the send
         promptQueued = streaming.value // a send into a running turn gets QUEUED by the CLI — flavors the ack→turn watchdog
@@ -3201,6 +3232,9 @@ class PocketRepository(private val scope: CoroutineScope, private val pinnedTo: 
         Telemetry.track(TelEvent.PromptSent)
         scope.launch { send(SendPrompt(c, outText, images, promptId = promptId)) }
         armPromptWatchdog()
+        // Start only after the prompt has been queued and streaming state is live: title work can never
+        // delay the first outbound frame or the chat's immediate streaming UI transition.
+        if (shouldGenerateTitle) generateTitleInBackground(c, text)
         return true
     }
 

@@ -81,12 +81,12 @@ internal fun sessionSections(sessions: List<SessionSummary>, groups: List<Sessio
 @Composable
 internal fun SessionRow(repo: PocketRepository, dir: String, s: SessionSummary, onLongPress: (() -> Unit)?) {
     Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(AppicaMetrics.radiusSm)).background(AppicaTok.background)
-            .border(1.dp, AppicaTok.border, RoundedCornerShape(AppicaMetrics.radiusSm))
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(AppicaTok.background)
+            .border(1.dp, AppicaTok.border, RoundedCornerShape(12.dp))
             .combinedClickable(
                 onClick = { repo.openSession(dir, s.sessionId, title = s.title, agent = s.agent ?: AgentKind.CLAUDE) },
                 onLongClick = onLongPress,
-            ).padding(14.dp),
+            ).padding(horizontal = 12.dp, vertical = 10.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(s.title, color = Tok.tx, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
@@ -99,13 +99,13 @@ internal fun SessionRow(repo: PocketRepository, dir: String, s: SessionSummary, 
             }
         }
         if (s.firstPrompt.isNotBlank()) Text(
-            s.firstPrompt, color = Tok.tx2, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = 2.dp),
+            s.firstPrompt, color = Tok.tx2, fontSize = 11.5.sp, lineHeight = 14.sp,
+            maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 1.dp),
         )
         Text(
             "💬 ${s.messageCount} · ⑂ ${s.gitBranch ?: "-"} · ${relativeTime(s.lastModified)}",
-            color = Tok.muted, fontFamily = FontFamily.Monospace, fontSize = 11.sp,
-            modifier = Modifier.padding(top = 3.dp),
+            color = Tok.muted, fontFamily = FontFamily.Monospace, fontSize = 10.5.sp, lineHeight = 13.sp,
+            modifier = Modifier.padding(top = 2.dp),
         )
     }
 }

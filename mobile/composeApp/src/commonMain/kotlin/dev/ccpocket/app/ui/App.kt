@@ -32,6 +32,13 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.border
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -1156,7 +1163,7 @@ internal fun SessionsScreen(repo: PocketRepository) { // internal: driven end-to
                 }
             }
             IslandPullToRefreshBox(isRefreshing = repo.sessionsRefreshing.value, onRefresh = { repo.refreshSessions() }, modifier = Modifier.fillMaxSize()) {
-            LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 if (af != "both") item { AgentFilterChip(af) { repo.setAgentFilter("both") } }
                 item {
                     // one tap starts right away with the persisted defaults (openSession's own fallbacks);
@@ -1253,6 +1260,20 @@ internal fun SessionsScreen(repo: PocketRepository) { // internal: driven end-to
     }
 }
 
+internal data class ScrollSample(
+    val index: Int,
+    val offset: Int,
+    val scrolling: Boolean,
+    val canScrollBackward: Boolean,
+    val canScrollForward: Boolean,
+)
+
+internal fun accumulateScrollDelta(accumulated: Float, delta: Float): Float = when {
+    delta == 0f -> accumulated
+    accumulated == 0f || accumulated * delta > 0f -> accumulated + delta
+    else -> delta
+}
+
 @Composable
 internal fun ChatScreen( // internal: rendered offscreen by ShowcaseRender (marketing frames), same precedent as SessionsScreen
     repo: PocketRepository,
@@ -1300,6 +1321,47 @@ internal fun ChatScreen( // internal: rendered offscreen by ShowcaseRender (mark
     val launchVideoPicker = rememberVideoAttacher { picked -> repo.attachFiles(picked) } // issue #98 — same upload path, movie-filtered
     var attachSheet by remember { mutableStateOf(false) } // Photo/File/Video chooser anchored above the composer
     val listState = listStateForTest ?: rememberLazyListState()
+    var composerVisible by remember(repo.convoId.value) { mutableStateOf(true) }
+    val density = LocalDensity.current
+    val scrollRevealThresholdPx = with(density) { 18.dp.toPx() }
+    // X-style transcript chrome: a deliberate upward browse collapses the whole composer; reversing
+    // direction restores it. Accumulation filters the one- or two-pixel noise produced while a row is
+    // settling, so the bar never flickers between states.
+    LaunchedEffect(listState, repo.convoId.value, scrollRevealThresholdPx) {
+        var previousIndex = listState.firstVisibleItemIndex
+        var previousOffset = listState.firstVisibleItemScrollOffset
+        var accumulated = 0f
+        snapshotFlow {
+            ScrollSample(
+                listState.firstVisibleItemIndex,
+                listState.firstVisibleItemScrollOffset,
+                listState.isScrollInProgress,
+                listState.canScrollBackward,
+                listState.canScrollForward,
+            )
+        }.collect { sample ->
+            val delta = when {
+                sample.index > previousIndex -> scrollRevealThresholdPx
+                sample.index < previousIndex -> -scrollRevealThresholdPx
+                else -> (sample.offset - previousOffset).toFloat()
+            }
+            previousIndex = sample.index
+            previousOffset = sample.offset
+            if (!sample.canScrollBackward || !sample.canScrollForward) {
+                composerVisible = true
+                accumulated = 0f
+            } else if (sample.scrolling && delta != 0f) {
+                accumulated = accumulateScrollDelta(accumulated, delta)
+                if (accumulated >= scrollRevealThresholdPx) {
+                    composerVisible = false
+                    accumulated = 0f
+                } else if (accumulated <= -scrollRevealThresholdPx) {
+                    composerVisible = true
+                    accumulated = 0f
+                }
+            }
+        }
+    }
     // stick to the bottom only while the user is there ("pinned"); scrolling up unpins and shows
     // the Jump-to-latest pill instead of yanking the viewport down on every streamed chunk.
     // Keyed on the conversation (as the desktop pane always was): the switcher (#165) made chat→chat
@@ -1389,7 +1451,7 @@ internal fun ChatScreen( // internal: rendered offscreen by ShowcaseRender (mark
                 Column(Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).clickable { showSessionInfo = true }.padding(vertical = 2.dp)) {
                     // session title leads (design); the generic "Chat" only before the first prompt names it
                     Text(
-                        repo.chatTitle.value ?: stringResource(Res.string.chat_title),
+                        repo.chatTitle.value ?: stringResource(Res.string.session_title_placeholder),
                         color = Tok.tx, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis,
                     )
                     Row(verticalAlignment = Alignment.CenterVertically) { // connection bar: honest dot (green only when Ready) + machine · folder · model
@@ -1617,6 +1679,17 @@ internal fun ChatScreen( // internal: rendered offscreen by ShowcaseRender (mark
                 val atFileMatches = remember(atListing, atToken, atDir, atLeaf) {
                     if (atToken == null || atListing?.subPath != atDir) emptyList() else atMatches(atListing.entries, atLeaf)
                 }
+                val composerMustStayVisible = attachSheet || suggestions.isNotEmpty() || atFileMatches.isNotEmpty() ||
+                    repo.pendingImages.isNotEmpty() || repo.pendingFiles.isNotEmpty() ||
+                    voiceState is VoiceState.Recording || voiceState is VoiceState.Transcribing
+                LaunchedEffect(composerMustStayVisible) {
+                    if (composerMustStayVisible) composerVisible = true
+                }
+                AnimatedVisibility(
+                    visible = composerVisible || composerMustStayVisible,
+                    enter = slideInVertically(tween(190)) { it / 2 } + expandVertically(tween(190), expandFrom = Alignment.Bottom) + fadeIn(tween(140)),
+                    exit = slideOutVertically(tween(180)) { it } + shrinkVertically(tween(180), shrinkTowards = Alignment.Bottom) + fadeOut(tween(120)),
+                ) {
                 Column(
                     Modifier.fillMaxWidth().background(AppicaTok.background)
                         .border(width = 1.dp, color = AppicaTok.borderMuted),
@@ -1799,6 +1872,7 @@ internal fun ChatScreen( // internal: rendered offscreen by ShowcaseRender (mark
                             }
                         }
                     }
+                }
                 }
             }
         }

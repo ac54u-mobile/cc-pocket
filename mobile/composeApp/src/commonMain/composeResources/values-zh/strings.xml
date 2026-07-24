@@ -103,6 +103,7 @@
 
     <!-- ── 对话 ──────────────────────────────────────────────────── -->
     <string name="chat_title">对话</string>
+    <string name="session_title_placeholder">新对话</string>
     <string name="stop">停止</string>
     <string name="thinking_streaming">思考中…</string>
     <string name="chat_running">运行中</string>
@@ -221,7 +222,7 @@
     <string name="settings_tab_shortcuts">快捷键</string>
     <string name="settings_tab_about">关于</string>
     <string name="settings_group_appearance">外观</string>
-    <string name="settings_group_appearance_sub">本应用的浅色 / 深色主题。</string>
+    <string name="settings_group_appearance_sub">聊天文字大小。</string>
     <string name="settings_group_default_agent">默认 Agent</string>
     <string name="settings_group_default_agent_sub">新会话默认使用的后端。</string>
     <string name="settings_group_default_model">默认模型</string>
@@ -252,7 +253,7 @@
     <string name="settings_hub_agent">Agent 默认值</string>
     <string name="settings_hub_agent_sub">模式、模型、推理强度、显示哪些 Agent</string>
     <string name="settings_hub_appearance">显示与外观</string>
-    <string name="settings_hub_appearance_sub">主题与聊天字号</string>
+    <string name="settings_hub_appearance_sub">聊天字号</string>
     <string name="settings_hub_notifications">通知与语音</string>
     <string name="settings_hub_notifications_sub">完成提醒与听写引擎</string>
     <string name="settings_hub_security_sub">应用锁与自动锁定</string>
@@ -299,11 +300,6 @@
     <string name="ctx_save_for_model">保存到这个模型</string>
     <string name="text_size_section">字体大小</string>
     <string name="text_size_sample">示例消息文字 Sample 123</string>
-    <string name="appearance_section">外观</string>
-    <string name="appearance_system">跟随系统</string>
-    <string name="appearance_light">浅色</string>
-    <string name="appearance_dark">深色</string>
-    <string name="appearance_hint">选择应用配色。跟随系统会随设备的浅色 / 深色设置切换。</string>
     <!-- ── 应用锁 / 安全（issue #109）─────────────────────────────── -->
     <string name="security_section">安全</string>
     <string name="app_lock_require">需要 %1$s</string>

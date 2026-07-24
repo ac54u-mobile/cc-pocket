@@ -53,6 +53,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.SolidColor
@@ -206,9 +207,12 @@ fun AppicaAccordion(
 @Composable
 fun AppicaToolbar(modifier: Modifier = Modifier, content: @Composable RowScope.() -> Unit) {
     Row(
-        modifier.clip(RoundedCornerShape(AppicaMetrics.radiusSm)).background(AppicaTok.background)
-            .border(1.dp, AppicaTok.border, RoundedCornerShape(AppicaMetrics.radiusSm)).padding(4.dp),
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp), content = content,
+        modifier.shadow(1.dp, RoundedCornerShape(AppicaMetrics.radiusSm), clip = false)
+            .clip(RoundedCornerShape(AppicaMetrics.radiusSm)).background(AppicaTok.backgroundMuted)
+            .padding(horizontal = 2.dp, vertical = 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(1.dp),
+        content = content,
     )
 }
 

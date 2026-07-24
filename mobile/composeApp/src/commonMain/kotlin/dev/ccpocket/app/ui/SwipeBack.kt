@@ -1,13 +1,18 @@
 package dev.ccpocket.app.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -15,19 +20,46 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import dev.ccpocket.app.SystemBackHandler
 import dev.ccpocket.app.isPhonePlatform
 import dev.ccpocket.app.theme.Tok
 import kotlin.math.roundToInt
 
-/** Phone: hide ← / ‹ affordances and use edge swipe (+ Android system back). Desktop: keep buttons. */
-fun showBackButton(): Boolean = !isPhonePlatform()
+/** Every platform shows an explicit affordance; phones additionally keep edge swipe/system back. */
+fun showBackButton(): Boolean = true
+
+private val BackChevron: ImageVector by lazy {
+    ImageVector.Builder(
+        name = "BackChevron",
+        defaultWidth = 22.dp,
+        defaultHeight = 22.dp,
+        viewportWidth = 22f,
+        viewportHeight = 22f,
+    ).apply {
+        path(
+            stroke = SolidColor(Color.Black),
+            strokeLineWidth = 2.05f,
+            strokeLineCap = StrokeCap.Round,
+            strokeLineJoin = StrokeJoin.Round,
+        ) {
+            moveTo(13.5f, 4.5f)
+            lineTo(7f, 11f)
+            lineTo(13.5f, 17.5f)
+        }
+    }.build()
+}
 
 /**
  * Left-edge swipe (finger moves right) triggers [onBack]. No-op when [enabled] is false.
@@ -85,9 +117,20 @@ fun BackNavHost(
     )
 }
 
-/** Desktop-only ← TextButton; phone relies on [BackNavHost] edge swipe. */
+/** Compact iOS/X-style back control with a full 44dp accessible touch target. */
 @Composable
-fun BackTextButton(onBack: () -> Unit, glyph: String = "←") {
+fun BackTextButton(onBack: () -> Unit) {
     if (!showBackButton()) return
-    TextButton(onClick = onBack) { Text(glyph, color = Tok.tx2, fontSize = 18.sp) }
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    Box(
+        Modifier
+            .size(44.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (pressed) Tok.tx.copy(alpha = 0.07f) else Color.Transparent)
+            .clickable(interactionSource = interaction, indication = null, onClick = onBack),
+        contentAlignment = androidx.compose.ui.Alignment.Center,
+    ) {
+        Icon(BackChevron, contentDescription = "Back", tint = Tok.tx, modifier = Modifier.size(22.dp))
+    }
 }

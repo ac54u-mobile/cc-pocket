@@ -146,7 +146,7 @@ struct iOSApp: App {
         WindowGroup {
             ContentView()
                 .ignoresSafeArea(.all)
-                .preferredColorScheme(.dark)
+                .preferredColorScheme(.light)
                 .onOpenURL { url in
                     MainViewControllerKt.handleDeepLink(url: url.absoluteString)
                 }

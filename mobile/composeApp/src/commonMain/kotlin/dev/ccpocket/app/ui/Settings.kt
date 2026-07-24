@@ -24,7 +24,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.DarkMode
+import androidx.compose.material.icons.outlined.TextFields
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Shield
@@ -69,7 +69,6 @@ import dev.ccpocket.app.lock.AppLockController
 import dev.ccpocket.app.lock.AutoLockDelay
 import dev.ccpocket.app.pairing.displayName
 import dev.ccpocket.app.resources.*
-import dev.ccpocket.app.theme.ThemeMode
 import dev.ccpocket.app.theme.Tok
 import dev.ccpocket.app.ui.share.JoinFolderScreen
 import dev.ccpocket.app.ui.share.SharedFoldersScreen
@@ -131,7 +130,7 @@ fun SettingsScreen(repo: PocketRepository, onBack: () -> Unit) {
             }
             SettingsDest.APPEARANCE -> SettingsPaneScaffold(
                 stringResource(Res.string.settings_hub_appearance), stringResource(Res.string.settings_hub_appearance_sub),
-                Icons.Outlined.DarkMode, Tok.info, goHub,
+                Icons.Outlined.TextFields, Tok.info, goHub,
             ) {
                 AppearancePane(repo)
             }
@@ -246,7 +245,7 @@ private fun SettingsHub(onBack: () -> Unit, onOpen: (SettingsDest) -> Unit) {
         ),
         HubEntry(
             SettingsDest.APPEARANCE, stringResource(Res.string.settings_hub_appearance),
-            stringResource(Res.string.settings_hub_appearance_sub), Icons.Outlined.DarkMode, Tok.info,
+            stringResource(Res.string.settings_hub_appearance_sub), Icons.Outlined.TextFields, Tok.info,
         ),
         HubEntry(
             SettingsDest.NOTIFICATIONS, stringResource(Res.string.settings_hub_notifications),
@@ -405,25 +404,6 @@ private fun AgentDefaultsPane(repo: PocketRepository) {
 
 @Composable
 private fun AppearancePane(repo: PocketRepository) {
-    SettingsSectionLabel(stringResource(Res.string.appearance_section))
-    SettingsCard {
-        Column(Modifier.padding(14.dp)) {
-            val modes = listOf(
-                ThemeMode.SYSTEM to stringResource(Res.string.appearance_system),
-                ThemeMode.LIGHT to stringResource(Res.string.appearance_light),
-                ThemeMode.DARK to stringResource(Res.string.appearance_dark),
-            )
-            SettingsSegmented(
-                options = modes,
-                selected = modes.first { it.first == repo.themeMode.value },
-                label = { it.second },
-                onPick = { repo.setThemeMode(it.first) },
-                mono = false,
-            )
-            SettingsHint(stringResource(Res.string.appearance_hint), Modifier.padding(top = 10.dp, start = 0.dp))
-        }
-    }
-
     SettingsSectionLabel(stringResource(Res.string.text_size_section))
     SettingsCard {
         Column(Modifier.padding(14.dp)) {

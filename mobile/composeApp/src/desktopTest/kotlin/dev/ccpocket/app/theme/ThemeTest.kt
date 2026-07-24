@@ -10,13 +10,12 @@ import kotlin.test.assertTrue
  *  never touches the global Tok.current, so it can't perturb the screenshot/UI tests that read it. */
 class ThemeTest {
     @Test
-    fun themeMode_defaults_to_dark_and_parses_known_names() {
-        // the app shipped dark-only, so an absent/garbage pref must stay DARK — no surprise flip on update
-        assertEquals(ThemeMode.DARK, ThemeMode.from(null))
-        assertEquals(ThemeMode.DARK, ThemeMode.from("nonsense"))
-        assertEquals(ThemeMode.SYSTEM, ThemeMode.from("SYSTEM"))
+    fun everyPersistedThemeValueMigratesToLight() {
+        assertEquals(ThemeMode.LIGHT, ThemeMode.from(null))
+        assertEquals(ThemeMode.LIGHT, ThemeMode.from("nonsense"))
+        assertEquals(ThemeMode.LIGHT, ThemeMode.from("SYSTEM"))
         assertEquals(ThemeMode.LIGHT, ThemeMode.from("LIGHT"))
-        assertEquals(ThemeMode.DARK, ThemeMode.from("DARK"))
+        assertEquals(ThemeMode.LIGHT, ThemeMode.from("DARK"))
     }
 
     @Test
@@ -32,14 +31,12 @@ class ThemeTest {
     }
 
     @Test
-    fun resolvesToDark_maps_mode_and_os_to_effective_dark() {
-        // this polarity feeds the system-bar icon color (issue #117): dark -> light icons, light -> dark icons
-        assertFalse(ThemeMode.LIGHT.resolvesToDark(systemDark = true), "LIGHT forces light regardless of OS")
+    fun themeResolutionIsAlwaysLight() {
+        assertFalse(ThemeMode.LIGHT.resolvesToDark(systemDark = true))
         assertFalse(ThemeMode.LIGHT.resolvesToDark(systemDark = false))
-        assertTrue(ThemeMode.DARK.resolvesToDark(systemDark = false), "DARK forces dark regardless of OS")
-        assertTrue(ThemeMode.DARK.resolvesToDark(systemDark = true))
-        // SYSTEM tracks the OS, so a live light/dark flip re-tints the bars
-        assertTrue(ThemeMode.SYSTEM.resolvesToDark(systemDark = true))
+        assertFalse(ThemeMode.DARK.resolvesToDark(systemDark = false))
+        assertFalse(ThemeMode.DARK.resolvesToDark(systemDark = true))
+        assertFalse(ThemeMode.SYSTEM.resolvesToDark(systemDark = true))
         assertFalse(ThemeMode.SYSTEM.resolvesToDark(systemDark = false))
     }
 }
